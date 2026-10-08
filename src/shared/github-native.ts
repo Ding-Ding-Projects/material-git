@@ -1,6 +1,10 @@
 import type {CommandOption,CommandArgument} from './types';
 export interface NativeGitHubTask {action:string;title:string;commandId:string;mutation:boolean;destructive:boolean;description:string;options:CommandOption[];arguments:CommandArgument[];initialOptions?:Record<string,unknown>;initialArguments?:Record<string,unknown>}
 export const nativeGitHubTaskRoutes=[
+ {action:'actions.dispatch-with-options',title:'Dispatch with structured inputs or input files',commandId:'workflow run',mutation:true},
+ {action:'repositories.create-with-options',title:'Create from a repository template',commandId:'repo create',mutation:true},
+ {action:'repositories.fork-with-options',title:'Fork into your account or organization',commandId:'repo fork',mutation:true},
+
  {action:'pulls.merge-with-options',title:'Configure merge and automatic merging',commandId:'pr merge',mutation:true},
  {action:'releases.create-with-options',title:'Prepare release notes and assets',commandId:'release create',mutation:true},
  {action:'repositories.default-context',title:'Set the default CLI repository',commandId:'repo set-default',mutation:true},
