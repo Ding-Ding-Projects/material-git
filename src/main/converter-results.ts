@@ -3,6 +3,7 @@ import {lstat,readFile,open,link,unlink,opendir} from 'node:fs/promises';
 import {basename,join,extname} from 'node:path';
 import {atomicJson} from './ollama-manager';
 import {catalogRegex} from './catalog-query';
+import {localRecordDay,recordDateRange} from '../shared/record-filters';
 import type {ConverterResult,LocalToolsPayload} from '../shared/local-tools';
 
 export interface OutputReceipt {path:string;bytes:number;digest:string}
@@ -35,7 +36,7 @@ export class ConverterResults {
   const page=Number(payload.page??1);if(!Number.isInteger(page)||page<1||page>1_000_000)throw new Error('Invalid history page');
   const query=String(payload.query??'');if(query.length>1000)throw new Error('History query exceeds 1000 characters');
   const status=String(payload.status??'all');if(!['all','queued','paused','running','converted','cancelled','failed'].includes(status))throw new Error('Unsupported history status');
-  const date=String(payload.date??'');if(date&&!/^\d{4}-\d{2}-\d{2}$/.test(date))throw new Error('Use an ISO history date');
+  const date=String(payload.date??''),from=String(payload.from??date),to=String(payload.to??date);if([from,to].some(value=>value&&!/^\d{4}-\d{2}-\d{2}$/.test(value)))throw new Error('Use canonical ISO history dates');const range=recordDateRange(from,to);
   if(payload.regex!==undefined&&typeof payload.regex!=='boolean')throw new Error('Regex mode must be boolean');
   if(payload.regex)await catalogRegex([],String(payload.pattern??query),String(payload.flags??'i'));
   const deadline=Date.now()+15000;
@@ -47,7 +48,7 @@ export class ConverterResults {
    if(!/^[a-f0-9-]{36}\.json$/.test(entry.name))continue;
    const file=join(this.directory,entry.name);if(!(await lstat(file)).isFile()||(await lstat(file)).size>256000)continue;
    const result=await reconcile(JSON.parse(await readFile(file,'utf8'))as ConverterResult);
-   if(status!=='all'&&result.status!==status||date&&!(result.at??'').startsWith(date))continue;
+   const day=localRecordDay(result.at??'');if(status!=='all'&&result.status!==status||range.from&&(!day||day<range.from)||range.to&&(!day||day>range.to))continue;
    candidates.push(result);if(candidates.length===40){await consume();if(hasNext)break;}
   }if(!hasNext)await consume();return {items,page,hasNext};
  }
