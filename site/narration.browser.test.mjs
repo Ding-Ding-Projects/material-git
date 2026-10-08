@@ -39,7 +39,7 @@ try{
  await page.evaluate(()=>window.__siteSpeech.spoken=[]);
  await page.locator('#vocabulary-upload').setInputFiles(invalid);await page.waitForFunction(()=>window.__siteSpeech.spoken.length===1);
  await page.locator('#setting-transfer input').setInputFiles(invalid);
- await page.waitForFunction(()=>document.querySelector('.snackbar.error')?.textContent.includes('Invalid preference file'));
+ await page.waitForFunction(()=>[...document.querySelectorAll('.snackbar.error')].some(record=>record.textContent.includes('Invalid preference file')));
  assert.equal(await page.evaluate(()=>window.__siteSpeech.spoken.length),1,'second error waits for the first track');
  await finishAll();const facts=await page.evaluate(()=>window.__siteSpeech.spoken);
  assert.equal(facts.length,4);assert.match(facts[0].text,/vocabulary file is invalid/);assert.match(facts[1].text,/詞彙檔案無效/);assert.match(facts[2].text,/Invalid preference file/);assert.match(facts[3].text,/偏好設定檔案無效/);

@@ -3,7 +3,8 @@ export const notificationCategories:MessageCategory[]=['status','progress','warn
 export const notificationKey='material-git-site.notifications.v1';
 export const notificationLimit=200;
 export const notificationBytes=1_048_576;
-export type NotificationAction='latest-release'|'release-notes'|'preferences';
+export const notificationActions=['latest-release','release-notes','preferences','schedule','appearance','vocabulary','transfer','school','history','logo','reset'] as const;
+export type NotificationAction=typeof notificationActions[number];
 export interface SiteNotification extends MessageFacts {id:string;at:string;category:MessageCategory;dismissed:boolean;action?:NotificationAction}
 export interface NotificationDocument {schemaVersion:1;revision:number;records:SiteNotification[]}
 export function emptyNotifications():NotificationDocument{return {schemaVersion:1,revision:0,records:[]}}
@@ -13,7 +14,7 @@ export function validateNotifications(value:unknown):NotificationDocument {
  if(Object.keys(doc).some(key=>!['schemaVersion','revision','records'].includes(key))||doc.schemaVersion!==1||!Number.isSafeInteger(doc.revision)||doc.revision<0||!Array.isArray(doc.records)||doc.records.length>notificationLimit)throw Error('Invalid notification document');
  const ids=new Set<string>();
  const records=doc.records.map(record=>{
-  if(!record||typeof record!=='object'||Array.isArray(record)||Object.keys(record).some(key=>!['id','at','category','en','yue','dismissed','action'].includes(key))||typeof record.id!=='string'||!/^[-a-zA-Z0-9]{1,80}$/.test(record.id)||ids.has(record.id)||typeof record.at!=='string'||!/^\d{4}-\d{2}-\d{2}T/.test(record.at)||!Number.isFinite(Date.parse(record.at))||!notificationCategories.includes(record.category)||typeof record.dismissed!=='boolean'||['en','yue'].some(key=>typeof record[key as 'en'|'yue']!=='string'||!record[key as 'en'|'yue'].length||record[key as 'en'|'yue'].length>4000)||record.action!==undefined&&!['latest-release','release-notes','preferences'].includes(record.action))throw Error('Invalid notification record');
+  if(!record||typeof record!=='object'||Array.isArray(record)||Object.keys(record).some(key=>!['id','at','category','en','yue','dismissed','action'].includes(key))||typeof record.id!=='string'||!/^[-a-zA-Z0-9]{1,80}$/.test(record.id)||ids.has(record.id)||typeof record.at!=='string'||!/^\d{4}-\d{2}-\d{2}T/.test(record.at)||!Number.isFinite(Date.parse(record.at))||!notificationCategories.includes(record.category)||typeof record.dismissed!=='boolean'||['en','yue'].some(key=>typeof record[key as 'en'|'yue']!=='string'||!record[key as 'en'|'yue'].length||record[key as 'en'|'yue'].length>4000)||record.action!==undefined&&!notificationActions.includes(record.action))throw Error('Invalid notification record');
   ids.add(record.id);return {...record};
  });
  const result={schemaVersion:1 as const,revision:doc.revision,records};
