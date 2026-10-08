@@ -5,10 +5,12 @@ import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {randomUUID} from 'node:crypto';
 import {GitService} from '../src/main/git';
+import {GitHubService} from '../src/main/github';
 import {loadCatalog} from '../src/main/catalog';
 import {createElementLocks} from '../src/main/element-locks';
 import {isOwnedCancellation,nativeLockTargets,protectedLockIds,providerGitLockIds,providerGitKindLockIds,providerGitLockTargets} from '../src/shared/security';
 import type {GitAction,GitPayload} from '../src/shared/git';
+import type {GitHubLocalSourceAction,GitHubPayload} from '../src/shared/github';
 
 async function fixture(){
  const directory=await mkdtemp(join(tmpdir(),'mg-provider-git-locks-'));
@@ -40,6 +42,32 @@ test('original provider destination, command and tab locks protect resolved nati
    await assert.rejects(f.locks.assertUnlocked(providerGitLockIds(action)),/Element is locked/);
   }
  }finally{await f.close();}
+});
+
+test('GitHub-issued opaque source receipts repeat stored issuer locks before provider readback',async()=>{
+ const f=await fixture(),calls:string[]=[];let completed=0;
+ const service=new GitHubService(process.execPath,f.directory,undefined,{
+  resolveHost:hostname=>{if(hostname&&hostname!=='github.com')throw Error('Unapproved fixture host');return 'github.com';},
+  authorize:async action=>{await f.locks.assertUnlocked(providerGitLockIds(action));},
+  completed:async()=>{completed++;},
+  request:async(_method,endpoint)=>{calls.push(endpoint);const data=endpoint==='user'?{id:7}:endpoint==='repos/owner/repo'?{id:88,full_name:'owner/repo',clone_url:'https://github.com/owner/repo.git'}:endpoint==='gists/abcdef'?{id:'abcdef',git_pull_url:'https://gist.github.com/abcdef.git'}:endpoint==='repos/owner/repo/pulls/42'?{id:99042,number:42,base:{ref:'main',repo:{id:88,full_name:'owner/repo'}},head:{sha:'a'.repeat(40)}}:undefined;if(!data)throw Error('Unexpected fixture provider path');return {data,hasNext:false};},
+ });
+ try{
+  const cases:Array<[GitHubLocalSourceAction,GitHubPayload,string]>=[['repositories.clone-source',{repository:'owner/repo',id:88},'destination:repositories'],['gists.clone-source',{id:'abcdef'},'command:gist.clone'],['pulls.checkout-source',{repository:'owner/repo',id:42},'tab:pr.checkout']];
+  for(const [action,payload,lockId] of cases){
+   await f.lock(lockId);await assert.rejects(service.handle(action,payload),/Element is locked/);
+   await f.unlock(lockId);const response=await service.handle(action,payload),id=response.detail?.providerTargetId;
+   assert.equal(typeof id,'string');assert.equal(response.detail?.url,undefined);assert.equal(response.detail?.accountFingerprint,undefined);
+   const target=await service.resolveProviderTarget(String(id));await f.locks.assertUnlocked(providerGitLockIds(action));
+   await f.locks.handle('lockAgain',{id:lockId},false);const reads=calls.length;
+   await f.locks.assertUnlocked(protectedLockIds('git','apply'));
+   await assert.rejects(service.resolveProviderTarget(String(id)),/Element is locked/);assert.equal(calls.length,reads);
+   await f.unlock(lockId);assert.deepEqual(await service.resolveProviderTarget(String(id)),target);
+  }
+  assert.equal(completed,0,'issuing and revalidating a source must not consume a mutation grant');
+  await assert.rejects(service.handle('repositories.clone-source',{repository:'owner/repo',id:88,values:{destination:'gists',command:'alias list'}}),/only the selected/);
+  service.invalidateReviews();await assert.rejects(service.resolveProviderTarget('renderer-created-receipt'),/expired/);
+ }finally{service.close();await f.close();}
 });
 
 test('owned Git cancellation remains reachable under locks and cannot cancel another UUID or authorize writes',async()=>{
