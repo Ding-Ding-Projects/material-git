@@ -22,7 +22,7 @@ export class ConverterResults {
   let bytes:Buffer;
   try{if(!(await lstat(output.path)).isFile())throw new Error('Not a regular output');bytes=await this.readBounded(output.path,64*1024*1024);}catch{throw new Error('Verified output is unavailable or no longer a regular file. Convert the selected original again.');}
   if(bytes.length!==output.bytes||createHash('sha256').update(bytes).digest('hex')!==output.digest)throw new Error('Output changed after conversion. Select the current file as a new source to inspect it.');
-  if(operation!=='export'){if(!this.openResult)throw new Error('Native result handoff is not configured in this build');await this.openResult(output.path,operation);return {completed:true};}
+  if(operation!=='export'){if(!this.openResult)throw new Error('Native result handoff is not configured in this build');try{await this.openResult(output.path,operation);}catch{throw new Error('Native result handoff could not complete. Export a verified copy or check the registered application.');}return {completed:true};}
   const destination=await this.saveDestination(basename(output.path));if(!destination)return {cancelled:true};
   if(extname(destination).toLowerCase()!==extname(output.path).toLowerCase())throw new Error('Keep the verified output extension when exporting a copy');
   const temporary=destination+'.'+randomUUID()+'.tmp';let published=false;
