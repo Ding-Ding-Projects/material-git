@@ -1,0 +1,29 @@
+import{html,render}from'lit';
+import type{AppSettings}from'../shared/types.js';import{localizePair}from'./localization.js';
+import './appearance.js';
+export interface AppearanceRouteOptions{settings:()=>AppSettings;onOpen?:()=>void;onClose?:()=>void}
+export interface AppearanceRoutes{open:(element:HTMLElement)=>void;openById:(id:string)=>boolean;close:()=>void;dispose:()=>void}
+import{appearanceTargetId}from'./appearance-targets.js';
+const safeId=(id:string)=>/^[a-zA-Z0-9._-]{1,128}$/.test(id)&&!['__proto__','constructor','prototype'].includes(id);
+function scopes(root:ParentNode):ParentNode[]{return[root,...[...root.querySelectorAll('*')].flatMap(n=>n.shadowRoot?scopes(n.shadowRoot):[])];}
+function focused():HTMLElement|null{let node:Element|null=document.activeElement;while(node?.shadowRoot?.activeElement)node=node.shadowRoot.activeElement;return node instanceof HTMLElement?node:null;}
+export function installAppearanceRoutes(root:Document|HTMLElement,options:AppearanceRouteOptions):AppearanceRoutes{
+ let panel:HTMLDivElement|null=null,target:HTMLElement|null=null,origin:HTMLElement|null=null,menu=false;const parents:{panel:HTMLDivElement;target:HTMLElement;origin:HTMLElement|null;menu:boolean}[]=[];
+ const inside=(node:HTMLElement,container:HTMLElement)=>{let current:Node|null=node;while(current){if(current===container)return true;const scope=current.getRootNode();current=current.parentNode??(scope instanceof ShadowRoot?scope.host:null);}return false;};
+ const copy=(en:string,yue:string)=>localizePair(en,yue,options.settings());
+ const place=()=>{if(!panel||!target)return;if(!target.isConnected){close();return;}const box=target.getBoundingClientRect(),width=Math.min(menu?300:480,Math.max(240,innerWidth-24)),height=Math.min(panel.scrollHeight,innerHeight-24);panel.style.width=width+'px';panel.style.maxHeight=(innerHeight-24)+'px';panel.style.left=Math.max(12,Math.min(box.right+12,innerWidth-width-12))+'px';panel.style.top=Math.max(12,Math.min(box.top,innerHeight-height-12))+'px';};
+ const close=()=>{if(!panel)return;const restore=origin;panel.remove();const previous=parents.pop();panel=previous?.panel??null;target=previous?.target??null;origin=previous?.origin??null;menu=previous?.menu??false;if(!panel)options.onClose?.();place();restore?.isConnected&&restore.focus({preventScroll:true});};
+ const show=(element:HTMLElement,context=false)=>{
+  if(panel&&target&&inside(element,panel)){parents.push({panel,target,origin,menu});}else while(panel)close();target=element;origin=focused()??element;menu=context;
+  panel=document.createElement('div');panel.dataset.appearancePanel='true';panel.setAttribute('popover','manual');panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','false');panel.setAttribute('aria-label',copy('Element appearance','元素外觀'));panel.tabIndex=-1;
+  panel.style.cssText='position:fixed;margin:0;inset:auto;border:1px solid var(--md-sys-color-outline-variant);border-radius:16px;padding:16px;box-sizing:border-box;overflow:auto;background:var(--md-sys-color-surface-container-high,#fff);color:var(--md-sys-color-on-surface,#111);box-shadow:0 6px 28px #0004;z-index:10000;';
+  const selected=element,id=appearanceTargetId(element);element.dataset.appearanceId=id;
+  render(context?html`<md-text-button @click=${()=>show(selected)}>${copy('Edit appearance…','編輯外觀…')} <kbd>Ctrl+Alt+A</kbd></md-text-button><md-text-button @click=${close}>${copy('Close','關閉')}</md-text-button>`:html`<div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><strong>${copy('Element appearance','元素外觀')}</strong><md-text-button @click=${close}>${copy('Close','關閉')} <kbd>Esc</kbd></md-text-button></div><p>${copy('Edits apply live. Undo and reset remain available. Ctrl+Alt+A edits the focused element.','即時套用修改，可復原或重設。Ctrl+Alt+A 編輯目前焦點元素。')}</p><mg-appearance .target=${element} .targetId=${id} .settings=${options.settings()}></mg-appearance>`,panel);
+  document.body.append(panel);panel.showPopover();place();panel.focus({preventScroll:true});options.onOpen?.();
+ };
+ const context=(event:Event)=>{const e=event as MouseEvent;if(e.defaultPrevented)return;const path=e.composedPath();const element=path.find(n=>n instanceof HTMLElement&&!['html','body','style','script'].includes(n.localName)) as HTMLElement|undefined;if(!element)return;e.preventDefault();show(element,!e.shiftKey);};
+ const key=(event:Event)=>{const e=event as KeyboardEvent;if(e.defaultPrevented)return;if(e.ctrlKey&&e.altKey&&!e.shiftKey&&e.code==='KeyA'){const selected=focused();if(selected){e.preventDefault();show(selected);}return;}if(e.key==='Escape'&&panel&&e.composedPath().includes(panel)){e.preventDefault();e.stopPropagation();close();}};
+ root.addEventListener('contextmenu',context);root.addEventListener('keydown',key);window.addEventListener('resize',place);document.addEventListener('scroll',place,true);
+ const timer=setInterval(place,250);
+ return{open:e=>show(e),openById:id=>{if(!safeId(id))return false;for(const scope of scopes(root)){const node=scope.querySelector<HTMLElement>(`[data-design-id="${id}"],[data-appearance-id="${id}"]`);if(node){show(node);return true;}}return false;},close,dispose:()=>{while(panel)close();clearInterval(timer);root.removeEventListener('contextmenu',context);root.removeEventListener('keydown',key);window.removeEventListener('resize',place);document.removeEventListener('scroll',place,true);}};
+}
