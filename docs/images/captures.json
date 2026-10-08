@@ -185,6 +185,19 @@
       "dataProvenance": "Live GitHub data from the explicitly selected public repository"
     },
     {
+      "name": "download-start",
+      "file": "docs/images/download-start.png",
+      "sourceCommit": "e464ff70f195dbd9584614b92a9547074e49200d",
+      "capturedAt": "2026-10-08T14:41:05.345Z",
+      "timezone": "UTC",
+      "width": 1500,
+      "height": 950,
+      "sha256": "06a57e26909bb492ac87cd7b2b0809efd1e4b5e99df08a983d366800cf68b146",
+      "theme": "system",
+      "language": "en",
+      "dataProvenance": "Live provider SHA256SUMS asset; fully opened native download start dialog; no download initiated in this capture session"
+    },
+    {
       "name": "downloads",
       "file": "docs/images/downloads.png",
       "sourceCommit": "e464ff70f195dbd9584614b92a9547074e49200d",
@@ -302,7 +315,9 @@
       "dataProvenance": "Live GitHub data from the explicitly selected public repository"
     }
   ],
-  "withheld": [
-    "Download Start frame captured during opening transition"
+  "excluded": [
+    "Superseded account loading frame",
+    "Superseded empty download queue frame",
+    "Superseded Download Start opening-transition frame"
   ]
 }
