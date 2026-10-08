@@ -27,8 +27,8 @@ Check a feature only after actual behavior, meaningful verification and a curren
 - [ ] [Scheduled and external settings sources](docs/requirements/personalization/scheduled-settings.md) — app: partial, site: unknown. Re-drive midnight/DST/offline/stale-generation cases, every appearance value, authenticated sources and history restore.
 - [ ] [Renaming the application](docs/requirements/personalization/display-name.md) — app: partial. Verify title/About/notifications together, reset and one append-only sanitized revision per mutation.
 - [ ] [ADHD modes](docs/requirements/personalization/adhd-modes.md) — app: partial, site: unknown. Verify each mode alone and in combinations, discoverable hidden work, quiet/motion interactions and restart.
-- [ ] [Dim sum surprise](docs/requirements/personalization/dim-sum.md) — app: partial, site: unknown. Verify10% startup draw and once-per-launch behavior plus first-run/busy/error/update/School suppression.
-- [ ] [Public dim-sum photo source](docs/requirements/personalization/dim-sum-photo-source.md) — app: partial, site: unknown, repository: partial. Verify catalogue revision/cache provenance and genuine unavailable-photo behavior; do not commit consumer copies.
+- [ ] [Dim sum surprise](docs/requirements/personalization/dim-sum.md) — app: open, site: unknown. Verify10% startup draw and once-per-launch behavior plus first-run/busy/error/update/School suppression.
+- [ ] [Public dim-sum photo source](docs/requirements/personalization/dim-sum-photo-source.md) — app: open, site: unknown, repository: open. Verify catalogue revision/cache provenance and genuine unavailable-photo behavior; do not commit consumer copies.
 
 ## appearance
 
@@ -77,7 +77,7 @@ Check a feature only after actual behavior, meaningful verification and a curren
 
 ## tools
 
-- [ ] [Universal local file converter](docs/requirements/tools/file-converter.md) — app: partial, site: unknown. Expose unavailable dependencies truthfully; prove byte detection, offline adapters, bounded queues, atomic output validation and crash recovery.
+- [ ] [Universal local file converter](docs/requirements/tools/file-converter.md) — app: partial, site: unknown. Prove clean installed/offline operation, source discovery bounds, every native control, durable pause/resume/crash recovery and platform decoder containment. Office formats, advanced PDFs and external multi-volume imports retain explicit unsupported boundaries.
 - [ ] [Universal local Ollama suite manager](docs/requirements/tools/ollama-suite.md) — app: partial, site: unknown. Audit complete API action mapping, attachment capabilities, cancellation, stored secrets, offline troubleshooting and rollback.
 - [ ] [External editor and VS Code hand-off](docs/requirements/tools/external-editor.md) — app: partial. Verify installed variants/portable launch, persisted choice, missing launcher and real folder/file opening on supported platforms.
 - [ ] [Browser-extension download hand-off surfaces](docs/requirements/tools/download-handoff.md) — app: open. Implement actual transfer states, resumable/cancellable progress and no early-success claim where this product captures downloads.

@@ -7,16 +7,22 @@ The primary command catalog was replaced by a domain workspace. Root integrates 
 - Reusable workspace persistence, tabs/groups/pins/reordering, record imports/exports, bounded notifications and offline articles were committed as `b274ff5`/`72acb25`, integrated as `ecb41b5`/`5eb5cab`.
 - Inactive mounted tabs are excluded from palette controls across nested shadow roots (`b2ef620`).
 - Independent read-only Git/GitHub audits and action maps (`bb9d6a7`) separate native/UI gaps, platform/permission limits and unverified behavior; checker declarations are in `28d5688`.
-- All 104 canonical obligations have public-neutral IDs, independent app/site/repository scope, evidence states and categorized articles. Cantonese companions are labelled drafts. Inventory tests reject omitted rows/evidence/articles and false complete claims; strict functional completeness remains red.
+- All 104 canonical obligations have public-neutral IDs, independent app/site/repository scope, evidence states and categorized articles. All 104 Cantonese companions now translate their own requirement, current support and remaining work; known controls/defaults/limits are source-checked. This does not prove full runtime localization. Inventory tests reject omitted rows/evidence/articles and false complete claims; strict functional completeness remains red.
 - Public repository/agent/community records are refreshed. The neutral AGENTS discipline block is exact. Canonical-helper-exported instruction summary is explicitly partial; full-source export currently fails its own public guard.
 
 ## Checks and evidence limits
 
-Research negative checks reject missing CLI leaves/flags/config/environment, REST/GraphQL rows, evidence, Git plumbing/options and missing inventory limits. Palette fixtures cover inactive tabs, nested shadows and accessibility-hidden parents. Requirement checks distinguish a complete inventory from incomplete functionality.
+Research negative checks reject missing CLI leaves/flags/config/environment, REST/GraphQL rows, evidence, Git plumbing/options and missing inventory limits. Palette fixtures cover inactive tabs, nested shadows and accessibility-hidden parents. Requirement checks distinguish a complete inventory from incomplete functionality. Article integrity checks reject missing or generic Cantonese sections, duplicated requirements, altered technical literals and lost numeric facts. They support editorial review rather than certify translation semantics.
 
-Earlier reusable components were driven in isolated Electron profiles through native IPC, including restart, tabs, offline navigation and notifications. Those captures prove only that earlier reusable-component scope. They do not prove the remade final app or every record restorer. Root retains the ledger; final captures must replace obsolete images.
+Earlier reusable components were driven in isolated Electron profiles through native IPC, including restart, tabs, offline navigation and notifications. Those captures prove only that earlier reusable-component scope. They do not prove the remade final app or every record restorer. Root retains the ledger; new source-tagged domain captures replace obsolete images, while untested surfaces remain open.
 
 This older docs worktree references preferences/tools modules before their source integration and does not establish a whole-app typecheck. Root must run type/build checks on the integrated checkout. Linux Git is 2.52.0; Windows MinGit is 2.56.0.windows.2. No installed Windows vault/update proof or remote mutation is claimed by these audits.
+
+## Integrated evidence update
+
+The Linux integrated suite recorded 241 passing tests before later CLI/Git/converter changes, then 275 passing tests with zero failures and zero skips after native converter payloads were available. The latter run preceded subsequent startup and final renderer regression changes; check the current integrated tree again. A separate actual Electron receipt identifies source `ba2330e68c0f404f64f35bb9beaac4d7e28b48b0`, built at `2026-10-08T13:13:40.872Z`, with real read-only domain lists, Accounts navigation, native Git selection and zero renderer errors. Read-only UI receipts do not prove remote writes, every contextual task or Windows installation.
+
+The documentation site deployment succeeded on 2026-10-08 at `13:04:34.624998 UTC`, retaining the owner-private audience and exact URL. Its deployment inventory recorded 255 articles and nine genuine images. This predates later article checkpoints; the deployment alone does not prove that every subsequent article edit is live. See [local verification](docs/local-verification.md).
 
 ## Remaining scope
 
