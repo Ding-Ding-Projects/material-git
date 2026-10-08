@@ -8,7 +8,7 @@ Voice choices come from the browser's actual speech-synthesis list and use stabl
 
 Browsers cannot reliably detect an active screen reader. **Yield to a screen reader** is an explicit persisted choice that cancels narration. **Quiet narration** independently pauses speech and cancels queued lines. These choices retain written messages. Disabling the narrator or removing the site component also cancels and releases its instance. The site does not claim to control an operating-system speech service.
 
-Preference validation, local storage failures, vocabulary and appearance validation, presentation-unlock errors, schedule/external-source failures, and release checks report their factual failure with a next step where available. Error and warning messages remain visible until dismissed or replaced by the next message. A durable message collection is still unfinished.
+Preference validation, local storage failures, vocabulary and appearance validation, presentation-unlock errors, schedule/external-source failures, and release checks report their factual failure with a next step where available. Error and warning messages remain in the [durable notification center](site-notifications.md) until dismissed. The bounded corner stack links to every recorded message.
 
 Visitor-state JSON transfer now exports version 2: settings plus validated schedule, navigation, appearance, presentation, and attention records. Version 1 settings-only imports remain accepted. Version 2 restoration uses the existing presentation-unlock guard and adds a history snapshot; it does not import credentials, uploaded logo bytes, or vocabulary mappings. Other general export formats remain unfinished.
 
