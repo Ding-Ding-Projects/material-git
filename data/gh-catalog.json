@@ -400,10 +400,10 @@
         }
       ],
       "arguments": [],
-      "mutation": false,
-      "destructive": false,
+      "mutation": true,
+      "destructive": true,
       "interactive": true,
-      "availability": "Requires a dedicated native terminal or external-code adapter; unavailable in the guided runner."
+      "availability": "Use the dedicated CLI workflows panel for structured inputs and explicit external-program review."
     },
     {
       "id": "codespace cp",
@@ -466,8 +466,8 @@
           "required": true
         }
       ],
-      "mutation": false,
-      "destructive": false
+      "mutation": true,
+      "destructive": true
     },
     {
       "id": "codespace create",
@@ -681,10 +681,10 @@
         }
       ],
       "arguments": [],
-      "mutation": false,
-      "destructive": false,
+      "mutation": true,
+      "destructive": true,
       "interactive": true,
-      "availability": "Requires a dedicated native terminal or external-code adapter; unavailable in the guided runner."
+      "availability": "Use the dedicated CLI workflows panel for structured inputs and explicit external-program review."
     },
     {
       "id": "codespace list",
@@ -856,8 +856,8 @@
           "required": true
         }
       ],
-      "mutation": false,
-      "destructive": false
+      "mutation": true,
+      "destructive": true
     },
     {
       "id": "codespace ports visibility",
@@ -899,8 +899,8 @@
           "required": true
         }
       ],
-      "mutation": false,
-      "destructive": false
+      "mutation": true,
+      "destructive": true
     },
     {
       "id": "codespace rebuild",
@@ -993,7 +993,7 @@
           "description": "SSH server port number (0 => pick unused)",
           "type": "number",
           "minimum": 0,
-          "maximum": 2147483647
+          "maximum": 65535
         }
       ],
       "arguments": [
@@ -1005,10 +1005,10 @@
           "required": false
         }
       ],
-      "mutation": false,
-      "destructive": false,
+      "mutation": true,
+      "destructive": true,
       "interactive": true,
-      "availability": "Requires a dedicated native terminal or external-code adapter; unavailable in the guided runner."
+      "availability": "Use the dedicated CLI workflows panel for structured inputs and explicit external-program review."
     },
     {
       "id": "codespace stop",
@@ -9448,13 +9448,13 @@
           "description": "[<filename> | -]",
           "position": 0,
           "type": "file",
-          "required": false
+          "required": true
         }
       ],
       "mutation": true,
       "destructive": true,
       "interactive": true,
-      "availability": "Requires a dedicated native terminal or external-code adapter; unavailable in the guided runner."
+      "availability": "Use the dedicated CLI workflows panel for structured inputs and explicit external-program review."
     },
     {
       "id": "alias list",
@@ -10059,7 +10059,7 @@
       ],
       "title": "copilot",
       "summary": "Runs the GitHub Copilot CLI.",
-      "description": "Runs the GitHub Copilot CLI.\n\nExecuting the Copilot CLI through `gh` is currently in preview and subject to change.\n\nIf already installed, `gh` will execute the Copilot CLI found in your `PATH`.\nIf the Copilot CLI is not installed, it will be downloaded to /home/agent/.local/share/gh/copilot.\n\nUse `--remove` to remove the downloaded Copilot CLI.\n\nThis command is only supported on Windows, Linux, and Darwin, on amd64/x64\nor arm64 architectures.\n\nTo prevent `gh` from interpreting flags intended for Copilot,\nuse `--` before Copilot flags and args.\n\nLearn more at https://gh.io/copilot-cli",
+      "description": "Runs the GitHub Copilot CLI.\n\nExecuting the Copilot CLI through `gh` is currently in preview and subject to change.\n\nIf already installed, `gh` will execute the Copilot CLI found in your `PATH`.\nIf the Copilot CLI is not installed, it will be downloaded to ~/.local/share/gh/copilot.\n\nUse `--remove` to remove the downloaded Copilot CLI.\n\nThis command is only supported on Windows, Linux, and Darwin, on amd64/x64\nor arm64 architectures.\n\nTo prevent `gh` from interpreting flags intended for Copilot,\nuse `--` before Copilot flags and args.\n\nLearn more at https://gh.io/copilot-cli",
       "usage": "gh copilot [flags] [args]",
       "group": "copilot",
       "options": [
@@ -10075,13 +10075,14 @@
           "description": "[args]",
           "position": 0,
           "type": "text",
-          "required": false
+          "required": false,
+          "multiple": true
         }
       ],
-      "mutation": false,
-      "destructive": false,
+      "mutation": true,
+      "destructive": true,
       "interactive": true,
-      "availability": "Requires a dedicated native terminal or external-code adapter; unavailable in the guided runner."
+      "availability": "Use CLI workflows to review an installed Copilot executable; implicit executable downloads are unavailable."
     },
     {
       "id": "extension browse",
@@ -10110,7 +10111,7 @@
       "mutation": false,
       "destructive": false,
       "interactive": true,
-      "availability": "Requires a dedicated native terminal or external-code adapter; unavailable in the guided runner."
+      "availability": "Use the dedicated CLI workflows panel for structured inputs and explicit external-program review."
     },
     {
       "id": "extension create",
@@ -10127,7 +10128,11 @@
         {
           "name": "precompiled",
           "description": "Create a precompiled extension. Possible values: go, other",
-          "type": "text"
+          "type": "choice",
+          "choices": [
+            "go",
+            "other"
+          ]
         }
       ],
       "arguments": [
@@ -10136,13 +10141,13 @@
           "description": "[<name>]",
           "position": 0,
           "type": "text",
-          "required": false
+          "required": true
         }
       ],
       "mutation": true,
       "destructive": true,
       "interactive": true,
-      "availability": "Requires a dedicated native terminal or external-code adapter; unavailable in the guided runner."
+      "availability": "Use the dedicated CLI workflows panel for structured inputs and explicit external-program review."
     },
     {
       "id": "extension exec",
@@ -10169,13 +10174,14 @@
           "description": "[args]",
           "position": 1,
           "type": "text",
-          "required": false
+          "required": false,
+          "multiple": true
         }
       ],
-      "mutation": false,
-      "destructive": false,
+      "mutation": true,
+      "destructive": true,
       "interactive": true,
-      "availability": "Requires a dedicated native terminal or external-code adapter; unavailable in the guided runner."
+      "availability": "Use the dedicated CLI workflows panel for structured inputs and explicit external-program review."
     },
     {
       "id": "extension install",
@@ -10213,7 +10219,7 @@
       "mutation": true,
       "destructive": true,
       "interactive": true,
-      "availability": "Requires a dedicated native terminal or external-code adapter; unavailable in the guided runner."
+      "availability": "Use the dedicated CLI workflows panel for structured inputs and explicit external-program review."
     },
     {
       "id": "extension list",
@@ -10443,7 +10449,7 @@
       "mutation": true,
       "destructive": true,
       "interactive": true,
-      "availability": "Requires a dedicated native terminal or external-code adapter; unavailable in the guided runner."
+      "availability": "Use the dedicated CLI workflows panel for structured inputs and explicit external-program review."
     },
     {
       "id": "gpg-key add",
@@ -10814,14 +10820,26 @@
           "name": "prompt-type",
           "description": "[prompt type]",
           "position": 0,
-          "type": "text",
-          "required": false
+          "type": "choice",
+          "required": false,
+          "choices": [
+            "select",
+            "multi-select",
+            "multi-select-with-search",
+            "input",
+            "password",
+            "confirm",
+            "auth-token",
+            "confirm-deletion",
+            "input-hostname",
+            "markdown-editor"
+          ]
         }
       ],
       "mutation": false,
       "destructive": false,
       "interactive": true,
-      "availability": "Requires a dedicated native terminal or external-code adapter; unavailable in the guided runner."
+      "availability": "Native preview requires an interactive terminal; the CLI workflows panel provides clearly labelled Material previews."
     },
     {
       "id": "ruleset check",
