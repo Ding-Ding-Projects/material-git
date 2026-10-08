@@ -1,5 +1,6 @@
 /** Application-owned Git editor copy. Repository data and native diagnostics remain literal. */
 export const gitEditorYue:Record<string,string>={
+'Message metadata':'訊息中繼資料','Draft request to pull commits':'草擬拉取提交請求',
 'Record or reuse conflict resolutions':'記錄或重用衝突解決','Forget selected conflict resolution':'忘記所選衝突解決','Clear unresolved conflict reuse records':'清除未解決重用記錄','Remove old conflict resolutions':'移除舊衝突解決','Permanently clean old resolved and unresolved cache variants using explicit retention days. Working files and staged contents stay unchanged.':'按明確保留日數永久清理舊解決同未解決快取，工作檔案同已暫存內容保持不變。','Resolved retention days':'已解決保留日數','Unresolved retention days':'未解決保留日數',
 'Default branch':'預設分支','Filter provider branches':'篩選來源分支','Search branches':'搜尋分支','Previous branches':'上一頁分支','Next branches':'下一頁分支','Branch page':'分支頁面',
 'Check out selected pull request':'檢出所選合併請求','Choose a clean local repository with a matching remote during review. Its exact provider head is fetched and verified before switching to a fresh branch. Existing changes and ignored-file collisions are preserved.':'檢查時揀乾淨而遠端吻合嘅本機儲存庫。程式會擷取並核對來源提交，先切換到新分支，保留現有變更同衝突嘅忽略檔案。','New local branch name':'新本機分支名稱','Leave empty to use pr followed by the selected pull request number.':'留空就用 pr 加所選合併請求編號。',
