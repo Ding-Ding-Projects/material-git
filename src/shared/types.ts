@@ -40,16 +40,16 @@ export interface Bootstrap {
   account: string | null; repository: string | null; operations: Operation[];
 }
 export interface HistoryEntry { id: string; at: string; action: string; snapshot?: AppSettings }
-export type AuthAction = 'status' | 'login' | 'refresh' | 'setup-git' | 'cancel' | 'switch' | 'logout';
+export type AuthAction = 'status' | 'login' | 'refresh' | 'setup-git' | 'cancel' | 'switch' | 'logout' | 'copy-token' | 'register-host';
 export interface AuthAccount {
   host: string; login: string; active: boolean; state: string;
   scopes: string[]; gitProtocol: string; tokenSource: 'environment' | 'credential-store' | 'config-file' | 'unknown';
 }
-export interface AuthPayload { hostname?: string; login?: string; scopes?: string[]; removeScopes?: string[]; resetScopes?: boolean; confirmed?: boolean }
+export interface AuthPayload { hostname?: string; login?: string; scopes?: string[]; removeScopes?: string[]; resetScopes?: boolean; confirmed?: boolean; reviewedHostname?: string; clipboardConsent?: boolean }
 export interface AuthState {
   status: 'idle' | 'checking' | 'starting' | 'waiting' | 'authenticated' | 'failed' | 'cancelled';
   accounts: AuthAccount[]; allowedHosts: string[]; allowedScopes: string[];
-  hostname?: string; deviceCode?: string; verificationUrl?: string; message?: string; error?: string;
+  hostname?: string; deviceCode?: string; verificationUrl?: string; message?: string; error?: string; tokenCopyAvailable?: boolean; hostRegistrationAvailable?: boolean;
 }
 export interface MaterialBridge {
   workspace(action:import('./workspace').WorkspaceAction,payload?:unknown):Promise<import('./workspace').WorkspaceResponse>;
