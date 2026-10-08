@@ -11,7 +11,8 @@ export interface CatalogStatus {state:'empty'|'refreshing'|'ready'|'offline'|'fa
 export interface HardwareEvidence {at:string;ram:number;freeRam:number;cpu:string;cpuCores:number;architecture:string;diskFree?:number;gpu:{status:'unknown'|'verified';name?:string;vram?:number;backend?:string;reason:string}}
 export interface FitEvidence {verdict:'Runs well'|'Runs with limits'|'Unlikely'|'Unknown';at:string;evidence:string[]}
 export interface PullItem {id:string;tag:string;status:'queued'|'pulling'|'pulled'|'skipped'|'cancelled'|'failed';completed?:number;total?:number;digest?:string;message?:string;error?:string}
-export interface ChatMessage {role:'system'|'user'|'assistant';content:string}
+export interface ChatAttachment {id:string;name:string;mime:'image/png';bytes:number;digest:string}
+export interface ChatMessage {role:'system'|'user'|'assistant';content:string;attachments?:ChatAttachment[]}
 export interface ChatSession {id:string;name:string;model:string;at:string;system:string;messages:ChatMessage[]}
 export interface ChatRun {id:string;session:string;status:'running'|'succeeded'|'cancelled'|'failed';content:string;error?:string;tokens?:number}
 export interface HarnessState {id:string;state:'review'|'starting'|'ready'|'exited'|'failed'|'restored';profile:'ollama-service';executable:string;arguments:string[];environmentKeys:string[];blockers:string[];snapshot?:string;message?:string}

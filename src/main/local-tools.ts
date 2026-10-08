@@ -4,6 +4,7 @@ import { basename, join, extname, dirname } from 'node:path';
 import type { LocalToolsAction, LocalToolsPayload, FileGrant, ConverterResult } from '../shared/local-tools';
 import { converterRegistry, inspectBytes, FILE_LIMIT, imageDimensions, isolatedCodec } from './local-tools-codecs';
 import { OllamaManager, atomicJson } from './ollama-manager';
+import {CHAT_IMAGE_LIMIT,type PreparedChatImage} from './chat-attachments';
 import {bundledRegistry} from './bundled-engines-registry';
 import {ConverterQueue,type QueueRecord} from './converter-queue';
 import type {BundledEngineFacade,ConverterOptions,EngineOutput} from '../shared/bundled-engines';
@@ -16,7 +17,7 @@ export interface LocalToolsOptions {
     fetcher?: typeof fetch;
     engines?:BundledEngineFacade;
 }
-const schemas: Record<LocalToolsAction, string[]> = { 'converter-catalog': [], 'converter-pick': [],'converter-inspect':['grant'], 'converter-start': ['grant', 'grants', 'adapter','options'], 'converter-status': ['page'], 'converter-cancel': ['id'],'converter-enqueue':['grant','grants','adapter','options'],'converter-queue':[],'converter-pause':[],'converter-resume':[], 'catalog-status': [], 'catalog-refresh': [], 'catalog-page': ['page', 'size', 'query', 'regex', 'pattern', 'flags', 'family', 'capability', 'sort', 'state', 'variant', 'quantization', 'maxBytes', 'fit'], 'hardware': [], 'pull-review': ['tags'], 'pull-start': ['tags', 'confirmed', 'parallel'], 'pull-status': [], 'pull-cancel': ['id'], 'pull-retry': ['id'], 'sessions': ['id'], 'session-create': ['model', 'name'], 'session-rename': ['id', 'name'], 'session-delete': ['id', 'confirmed'], 'session-export': ['id'], 'chat-start': ['session', 'prompt', 'system', 'temperature', 'tokens', 'context', 'regenerate'], 'chat-status': ['id'], 'chat-cancel': ['id'], 'harness-preflight': [], 'harness-launch': ['id', 'confirmed'], 'harness-status': ['id'], 'harness-restore': ['id'] };
+const schemas: Record<LocalToolsAction, string[]> = { 'converter-catalog': [], 'converter-pick': [],'converter-inspect':['grant'], 'converter-start': ['grant', 'grants', 'adapter','options'], 'converter-status': ['page'], 'converter-cancel': ['id'],'converter-enqueue':['grant','grants','adapter','options'],'converter-queue':[],'converter-pause':[],'converter-resume':[], 'catalog-status': [], 'catalog-refresh': [], 'catalog-page': ['page', 'size', 'query', 'regex', 'pattern', 'flags', 'family', 'capability', 'sort', 'state', 'variant', 'quantization', 'maxBytes', 'fit'], 'hardware': [], 'pull-review': ['tags'], 'pull-start': ['tags', 'confirmed', 'parallel'], 'pull-status': [], 'pull-cancel': ['id'], 'pull-retry': ['id'], 'sessions': ['id'], 'session-create': ['model', 'name'], 'session-rename': ['id', 'name'], 'session-delete': ['id', 'confirmed'], 'session-export': ['id'], 'chat-start': ['session', 'prompt', 'system', 'temperature', 'tokens', 'context', 'regenerate', 'attachments'], 'chat-status': ['id'], 'chat-cancel': ['id'], 'harness-preflight': [], 'harness-launch': ['id', 'confirmed'], 'harness-status': ['id'], 'harness-restore': ['id'] };
 interface PrivateGrant extends FileGrant {
     path: string;
     mtime: number;
@@ -29,13 +30,13 @@ export class LocalToolsService {
     private options: LocalToolsOptions;
     private directory: string;
     private ready: Promise<void>;
-    private jobs = new Map<string, AbortController>();private admissions=0;
+    private jobs = new Map<string, AbortController>();private admissions=0;private preparations=new Set<AbortController>();
     private results = new Map<string, ConverterResult>();
     private models: OllamaManager;private queue:ConverterQueue;
     constructor(options: LocalToolsOptions) { this.options = options; this.directory = join(options.storageDirectory, 'local-tools'); this.ready = mkdir(join(this.directory, 'grants'), { recursive: true, mode: 0o700 }).then(() => mkdir(join(this.directory, 'results'), { recursive: true, mode: 0o700 })).then(() => { }); this.models = new OllamaManager({ directory: join(this.directory, 'ollama'), fetcher: options.fetcher });this.queue=new ConverterQueue(join(this.directory,'queue'),join(this.directory,'results'),()=>this.jobs.size+this.admissions,async(record)=>{await this.ready;await this.convert({grants:record.grants,adapter:record.adapter,options:record.options},false,record);}); }
-    activeJobs() { return this.jobs.size > 0 || this.models.activeJobs(); }
+    activeJobs() { return this.jobs.size > 0 || this.admissions > 0 || this.models.activeJobs(); }
     cancelAll() { for (const controller of this.jobs.values())
-        controller.abort();void this.queue.pause().catch(()=>{}); this.models.cancelAll(); }
+        controller.abort();for(const controller of this.preparations)controller.abort();void this.queue.pause().catch(()=>{}); this.models.cancelAll(); }
     dispose() { this.queue.dispose();this.cancelAll(); this.models.dispose(); }
     async request(action: LocalToolsAction, payload: LocalToolsPayload = {}): Promise<unknown> {
         await this.ready;
@@ -73,7 +74,7 @@ export class LocalToolsService {
             case 'session-rename': return this.models.renameSession(payload);
             case 'session-delete': return this.models.deleteSession(payload);
             case 'session-export': return this.models.exportSession(payload);
-            case 'chat-start': return this.models.startChat(payload);
+            case 'chat-start': return this.models.startChat(payload,await this.prepareChatImages(payload.attachments));
             case 'chat-status': return this.models.chatStatus(payload);
             case 'chat-cancel': return this.models.cancelChat(payload);
             case 'harness-preflight': return this.models.preflight();
@@ -113,6 +114,32 @@ export class LocalToolsService {
     } return result; }
     private async grant(identifier: unknown): Promise<PrivateGrant> { const record = JSON.parse(await readFile(join(this.directory, 'grants', id(identifier) + '.json'), 'utf8')); if (typeof record.path !== 'string' || typeof record.digest !== 'string')
         throw new Error('Invalid source capability'); return record; }
+    private async prepareChatImages(values: unknown): Promise<PreparedChatImage[]> {
+        if (values === undefined) return [];
+        if (!Array.isArray(values) || values.length > 4 || new Set(values).size !== values.length) throw new Error('Select at most four distinct opaque image grants');
+        if (!values.length) return [];
+        if (!this.options.engines) throw new Error('The bundled image decoder is unavailable; build the converter worker');
+        if (this.jobs.size + this.admissions >= 2) throw new Error('Wait for an active conversion before preparing attachments');
+        this.admissions++;const controller=new AbortController();this.preparations.add(controller);
+        try {
+            const result: PreparedChatImage[] = []; let total = 0;
+            for (const value of values) {
+                if(controller.signal.aborted)throw new Error('Attachment preparation cancelled');
+                const grant = await this.grant(value);
+                if (!['png','jpeg'].includes(grant.type) || grant.bytes > CHAT_IMAGE_LIMIT) throw new Error('Choose a PNG or JPEG image no larger than 4 MiB');
+                const bytes = await this.readBounded(grant.path,CHAT_IMAGE_LIMIT);
+                if (bytes.length !== grant.bytes || createHash('sha256').update(bytes).digest('hex') !== grant.digest) throw new Error('Attachment source changed; select it again');
+                const dimensions = imageDimensions(bytes);
+                if (!dimensions || dimensions.width * dimensions.height > 2000000) throw new Error('Chat images support at most two million pixels');
+                const normalized = await this.options.engines.convert({ adapter:'isolated-png',inputs:[{name:grant.name,bytes}],options:{} },AbortSignal.any([controller.signal,AbortSignal.timeout(45000)]));
+                const output = normalized.outputs[0]?.bytes;
+                if (normalized.outputs.length !== 1 || !output) throw new Error('Image decoder did not return a verified PNG');
+                total += output.length; if (total > CHAT_IMAGE_LIMIT) throw new Error('Selected images exceed 4 MiB after normalization; choose smaller images');
+                result.push({name:grant.name,bytes:output});
+            }
+            return result;
+        } finally { this.admissions--;this.preparations.delete(controller); }
+    }
     private async registry(){const native=this.options.engines?bundledRegistry(await this.options.engines.status()):bundledRegistry([]);const existing=converterRegistry();return [...existing.filter(a=>!['pdf','ffmpeg-audio','ffmpeg-video','zip'].includes(a.id)&&!a.id.startsWith('image-')),...native];}
     private async convert(payload:LocalToolsPayload,enqueue=false,record?:QueueRecord){if(!enqueue&&this.jobs.size+this.admissions>=2)throw new Error('Two conversions are active or awaiting admission');if(!enqueue)this.admissions++;try{return await this.convertAdmitted(payload,enqueue,record);}finally{if(!enqueue)this.admissions--;}}
     private async convertAdmitted(payload:LocalToolsPayload,enqueue=false,record?:QueueRecord){

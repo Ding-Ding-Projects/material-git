@@ -28,3 +28,38 @@ test('native archives verify empty, binary and Unicode entries; wrong passwords 
  await assert.rejects(engines.convert({adapter:'7z-create',inputs,options:{}},cancelled.signal),/cancelled/);
  for(const name of ['CON.txt','file:stream','trailing.','unsafe '])await assert.rejects(request('7z-create',[{name,bytes:Buffer.from('fixture')}]),/safe basenames/);
 });
+
+test('native opaque image grants normalize actual PNG bytes and gate chat on reported vision; streaming snapshots survive restart',async()=>{
+ const dir=await mkdtemp(join(tmpdir(),'material-vision-fixture-')),source=join(dir,'synthetic-image.png');
+ const png=new PNG({width:4,height:3});png.data.fill(128);await writeFile(source,PNG.sync.write(png));
+ let vision=false,release:(()=>void)|undefined;const sent:Array<Record<string,unknown>>=[];
+ const fetcher:typeof fetch=async(input,init)=>{
+  if(String(input).endsWith('/api/show'))return Response.json({capabilities:vision?['completion','vision']:['completion']});
+  if(String(input).endsWith('/api/chat')){sent.push(JSON.parse(String(init?.body)));return new Response(new ReadableStream({start(controller){controller.enqueue(new TextEncoder().encode(JSON.stringify({message:{content:'Synthetic partial'}})+'\n'));release=()=>{controller.enqueue(new TextEncoder().encode(JSON.stringify({message:{content:' reply'},done:true})+'\n'));controller.close();};}}));}
+  throw new Error('Unexpected synthetic vision fixture route');
+ };
+ const service=new LocalToolsService({storageDirectory:dir,engines,fetcher,pickSources:async()=>[source],pickDestination:async()=>null});
+ try{
+  const session=await service.request('session-create',{model:'synthetic:vision'})as{id:string};
+  const selected=await service.request('converter-pick')as Array<{id:string}>;
+  await assert.rejects(service.request('chat-start',{session:session.id,prompt:'Synthetic image prompt',attachments:[selected[0].id]}),/vision support/);assert.equal(sent.length,0);
+  vision=true;await writeFile(source,Buffer.from('changed source'));
+  await assert.rejects(service.request('chat-start',{session:session.id,prompt:'Synthetic image prompt',attachments:[selected[0].id]}),/source changed/);
+  await writeFile(source,PNG.sync.write(png));const granted=await service.request('converter-pick')as Array<{id:string}>;
+  await assert.rejects(service.request('chat-start',{session:session.id,prompt:'Synthetic image prompt',attachments:['/tmp/ungranted.png']}),/opaque/);
+  const run=await service.request('chat-start',{session:session.id,prompt:'Synthetic image prompt',attachments:[granted[0].id]})as{id:string};
+  await eventually(async()=>sent.length===1);
+  const message=(sent[0].messages as Array<{images?:string[]}>)[0];assert.ok(message.images?.length===1);const image=PNG.sync.read(Buffer.from(message.images[0],'base64'));assert.equal(image.width,4);assert.deepEqual(image.data,png.data);
+  await eventually(async()=>{const saved=await service.request('sessions',{id:session.id})as{messages:Array<{content:string}>};return saved.messages.at(-1)?.content==='Synthetic partial';});
+  const restored=new LocalToolsService({storageDirectory:dir,engines,fetcher,pickSources:async()=>[],pickDestination:async()=>null});
+  const snapshot=await restored.request('sessions',{id:session.id})as{messages:Array<{content:string;attachments?:Array<{id:string;name:string}>}>};assert.equal(snapshot.messages.at(-1)?.content,'Synthetic partial');assert.equal(snapshot.messages[0].attachments?.[0].name,'synthetic-image.png');restored.dispose();
+  await assert.rejects(service.request('chat-start',{session:session.id,prompt:'Second simultaneous response'}),/Only one/);
+  release!();await eventually(async()=>(await service.request('chat-status',{id:run.id})as{status:string}).status==='succeeded');
+  const exported=await service.request('session-export',{id:session.id});assert.ok(!JSON.stringify(exported).includes(message.images[0]));assert.ok(JSON.stringify(exported).includes('Image content is not included'));
+  const regenerated=await service.request('chat-start',{session:session.id,prompt:'Synthetic image prompt',regenerate:true})as{id:string};await eventually(async()=>sent.length===2);assert.equal((sent[1].messages as Array<{images:string[]}>)[0].images[0],message.images[0]);release!();await eventually(async()=>(await service.request('chat-status',{id:regenerated.id})as{status:string}).status==='succeeded');
+  const saved=await service.request('sessions',{id:session.id})as{messages:Array<{attachments?:Array<{id:string}>}>};assert.equal(saved.messages.length,2);
+  const attachment=saved.messages[0].attachments![0];await writeFile(join(dir,'local-tools','ollama','attachments',attachment.id+'.png'),Buffer.alloc(PNG.sync.write(png).length));
+  const changed=await service.request('chat-start',{session:session.id,prompt:'Changed image fixture'})as{id:string};await eventually(async()=>(await service.request('chat-status',{id:changed.id})as{status:string}).status==='failed');assert.equal(sent.length,2);
+  await service.request('session-delete',{id:session.id,confirmed:true});await assert.rejects(readFile(join(dir,'local-tools','ollama','attachments',attachment.id+'.png')));
+ }finally{service.dispose();await rm(dir,{recursive:true,force:true});}
+});
