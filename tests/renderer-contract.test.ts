@@ -95,3 +95,13 @@ test('reduced motion and build-bound provenance remain honest',()=>{
 test('Material control template boundaries remain paired in the shell',()=>{
  const app=source('src/renderer/app.ts');const tags=new Set([...app.matchAll(/<\/?(md-[a-z-]+)\b/g)].map(m=>m[1]));for(const tag of tags)assert.equal([...app.matchAll(new RegExp(`<${tag}(?=[\\s>])`,'g'))].length,[...app.matchAll(new RegExp(`</${tag}>`,'g'))].length,tag);
 });
+
+test('Tools discard uses its public child boundary only after a durable receipt and busy recheck',async()=>{
+ const key=controllerMethod('src/renderer/app.ts','workStateKey');
+ for(const outcome of ['saved','failed','became-busy']as const){let release!:()=>void,discarded=0;const gate=new Promise<void>(resolve=>release=resolve),calls:unknown[]=[];
+  const close=controllerMethod('src/renderer/app.ts','closeTabNow',{window:{material:{workspace:async(...args:unknown[])=>{calls.push(args);await gate;if(outcome==='failed')throw Error('Fixture record failure');}}}});
+  const stateKey=String(key.call({},'tools')),context={workStateKey:(id:string)=>key.call({},id),workStates:{[stateKey]:{dirty:true,busy:false}},workspace:{tabs:[{id:'repositories'},{id:'tools'}]},closeTabs:['tools'],lane:'repositories',notify:()=>{},copy:(en:string)=>en,persist:()=>{},navigate:()=>{},querySelectorAll:(selector:string)=>selector==='mg-tools'?[{discardDrafts:()=>discarded++}]:[]};
+  const pending=close.call(context,['tools']);assert.equal(discarded,0);assert.equal(context.workspace.tabs.length,2);if(outcome==='became-busy')context.workStates[stateKey].busy=true;release();await pending;
+  assert.deepEqual(calls,[['discard',{ids:['tools']}]]);assert.equal(discarded,outcome==='saved'?1:0);assert.equal(context.workspace.tabs.length,outcome==='saved'?1:2);if(outcome!=='saved')assert.deepEqual(context.closeTabs,['tools']);
+ }
+});
