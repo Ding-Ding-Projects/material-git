@@ -36,35 +36,35 @@ Run `node scripts/check-feature-coverage.mjs` to validate rows and links while r
 
 ## navigation
 
-- [Browser-style tabbed navigation](navigation/tabs.md) · [粵語草稿](navigation/tabs.yue.md) — `tabs`
-- [Regex builder on every search surface](navigation/regex-search.md) · [粵語草稿](navigation/regex-search.yue.md) — `regex-search`
-- [`Ctrl+Shift+F` command palette](navigation/command-palette.md) · [粵語草稿](navigation/command-palette.yue.md) — `command-palette`
-- [A context menu on every element](navigation/context-menus.md) · [粵語草稿](navigation/context-menus.yue.md) — `context-menus`
-- [Context menus show working shortcuts](navigation/menu-shortcuts.md) · [粵語草稿](navigation/menu-shortcuts.yue.md) — `menu-shortcuts`
-- [Rich controls wherever a value is shown](navigation/rich-controls.md) · [粵語草稿](navigation/rich-controls.yue.md) — `rich-controls`
-- [Guided forms](navigation/guided-forms.md) · [粵語草稿](navigation/guided-forms.yue.md) — `guided-forms`
-- [Settings that explain themselves](navigation/settings-explanations.md) · [粵語草稿](navigation/settings-explanations.yue.md) — `settings-explanations`
-- [Presets for blank-slate editors](navigation/blank-editors.md) · [粵語草稿](navigation/blank-editors.yue.md) — `blank-editors`
+- [Browser-style tabbed navigation](navigation/tabs.md) · [粵語文章](navigation/tabs.yue.md) — `tabs`
+- [Regex builder on every search surface](navigation/regex-search.md) · [粵語文章](navigation/regex-search.yue.md) — `regex-search`
+- [`Ctrl+Shift+F` command palette](navigation/command-palette.md) · [粵語文章](navigation/command-palette.yue.md) — `command-palette`
+- [A context menu on every element](navigation/context-menus.md) · [粵語文章](navigation/context-menus.yue.md) — `context-menus`
+- [Context menus show working shortcuts](navigation/menu-shortcuts.md) · [粵語文章](navigation/menu-shortcuts.yue.md) — `menu-shortcuts`
+- [Rich controls wherever a value is shown](navigation/rich-controls.md) · [粵語文章](navigation/rich-controls.yue.md) — `rich-controls`
+- [Guided forms](navigation/guided-forms.md) · [粵語文章](navigation/guided-forms.yue.md) — `guided-forms`
+- [Settings that explain themselves](navigation/settings-explanations.md) · [粵語文章](navigation/settings-explanations.yue.md) — `settings-explanations`
+- [Presets for blank-slate editors](navigation/blank-editors.md) · [粵語文章](navigation/blank-editors.yue.md) — `blank-editors`
 
 ## safety
 
-- [Two-key super confirmation](safety/super-confirmation.md) · [粵語草稿](safety/super-confirmation.yue.md) — `super-confirmation`
-- [Toy locks on every element](safety/element-locks.md) · [粵語草稿](safety/element-locks.yue.md) — `element-locks`
-- [Support Tickets recovery desk](safety/support-tickets.md) · [粵語草稿](safety/support-tickets.yue.md) — `support-tickets`
-- [The unlock ladder](safety/unlock-ladder.md) · [粵語草稿](safety/unlock-ladder.yue.md) — `unlock-ladder`
-- [Built-in authenticator](safety/authenticator.md) · [粵語草稿](safety/authenticator.yue.md) — `authenticator`
-- [QR pairing for OTP registration](safety/qr-pairing.md) · [粵語草稿](safety/qr-pairing.yue.md) — `qr-pairing`
-- [Free by default, honest when paid, never nagging](safety/honest-monetization.md) · [粵語草稿](safety/honest-monetization.yue.md) — `honest-monetization`
+- [Two-key super confirmation](safety/super-confirmation.md) · [粵語文章](safety/super-confirmation.yue.md) — `super-confirmation`
+- [Toy locks on every element](safety/element-locks.md) · [粵語文章](safety/element-locks.yue.md) — `element-locks`
+- [Support Tickets recovery desk](safety/support-tickets.md) · [粵語文章](safety/support-tickets.yue.md) — `support-tickets`
+- [The unlock ladder](safety/unlock-ladder.md) · [粵語文章](safety/unlock-ladder.yue.md) — `unlock-ladder`
+- [Built-in authenticator](safety/authenticator.md) · [粵語文章](safety/authenticator.yue.md) — `authenticator`
+- [QR pairing for OTP registration](safety/qr-pairing.md) · [粵語文章](safety/qr-pairing.yue.md) — `qr-pairing`
+- [Free by default, honest when paid, never nagging](safety/honest-monetization.md) · [粵語文章](safety/honest-monetization.yue.md) — `honest-monetization`
 
 ## records
 
-- [Local version history](records/local-history.md) · [粵語草稿](records/local-history.yue.md) — `local-history`
-- [Export everything, in every format](records/exports.md) · [粵語草稿](records/exports.yue.md) — `exports`
-- [Bulk actions everywhere](records/bulk-actions.md) · [粵語草稿](records/bulk-actions.yue.md) — `bulk-actions`
-- [Changelog viewer](records/changelog.md) · [粵語草稿](records/changelog.yue.md) — `changelog`
-- [Offline documentation browser in every application](records/offline-docs.md) · [粵語草稿](records/offline-docs.yue.md) — `offline-docs`
-- [Provider-authored text is rendered](records/rendered-provider-text.md) · [粵語草稿](records/rendered-provider-text.yue.md) — `rendered-provider-text`
-- [Non-blocking notifications and their centre](records/notifications.md) · [粵語草稿](records/notifications.yue.md) — `notifications`
+- [Local version history](records/local-history.md) · [粵語文章](records/local-history.yue.md) — `local-history`
+- [Export everything, in every format](records/exports.md) · [粵語文章](records/exports.yue.md) — `exports`
+- [Bulk actions everywhere](records/bulk-actions.md) · [粵語文章](records/bulk-actions.yue.md) — `bulk-actions`
+- [Changelog viewer](records/changelog.md) · [粵語文章](records/changelog.yue.md) — `changelog`
+- [Offline documentation browser in every application](records/offline-docs.md) · [粵語文章](records/offline-docs.yue.md) — `offline-docs`
+- [Provider-authored text is rendered](records/rendered-provider-text.md) · [粵語文章](records/rendered-provider-text.yue.md) — `rendered-provider-text`
+- [Non-blocking notifications and their centre](records/notifications.md) · [粵語文章](records/notifications.yue.md) — `notifications`
 
 ## tools
 
