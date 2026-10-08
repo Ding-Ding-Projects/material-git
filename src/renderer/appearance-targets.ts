@@ -6,8 +6,8 @@ export function appearanceTargetId(node:HTMLElement):string{
  if(node.dataset.appearanceId&&safeId(node.dataset.appearanceId))return node.dataset.appearanceId;
  const path:string[]=[];let current:Element|null=node;
  while(current&&path.length<32){const stable=current.getAttribute('data-design-id');if(stable&&safeId(stable)){path.unshift('anchor:'+stable);break;}const parent:HTMLElement|null=current.parentElement;
-  const siblings=parent?[...parent.children].filter(c=>c.localName===current!.localName):[];
-  path.unshift(current.localName+':'+siblings.indexOf(current));
+  const container=parent??current.getRootNode();const siblings='children' in container?[...((container as ParentNode).children)].filter(c=>c.localName===current!.localName):[];
+  const key=current.getAttribute('data-testid');path.unshift(current.localName+':'+(key&&safeId(key)?'key-'+key:siblings.indexOf(current)));
   if(parent)current=parent;else{const root=current.getRootNode();current=root instanceof ShadowRoot?root.host:null;path.unshift('shadow');}
  }
  const id='element-'+hash(path.join('/'));return id;

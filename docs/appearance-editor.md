@@ -35,6 +35,14 @@ Out-of-sRGB values remain a pending choice: the editor warns before changing the
 | Universal focus/context route | Composed tree and structural/explicit target IDs; anchored non-modal panel | Compiled Electron fixture, keyboard, mouse, focus return, narrow viewport; integrated app hook owned by shell |
 | Application history | `appearance-change` emits schema version, target ID, validated record and timestamp | Local bounded history exists; native append-only Git history requires the shell/native integration |
 | Raster/vector document tools | Existing CSS fills, masks, transforms and layers | Channels, brush painting, color-range/freehand selections, smart objects, mesh warp, guides and a full document compositor remain unavailable |
-| Complete parity | No claim of complete Word/Photoshop parity | Live variable-axis discovery, every-property localization, global rainbow color animation and platform-specific evidence remain open |
+| Complete parity | No claim of complete Word/Photoshop parity | Live variable-axis discovery, every-property localization and platform-specific evidence remain open |
 
 The component browser test uses a clearly labeled local fixture and a fixture font bridge. It does not establish provider permissions, Windows installation, native font enumeration or the final integrated app's behavior. No fixture image belongs in the product gallery.
+
+## Animated rainbow
+
+Foreground, background and border color modes can select **Animated rainbow** from the same color editor. This is a validated mode marker, not a hex string or palette swatch. Solid colors remain saved underneath; returning to solid restores them. Rainbow renders at full saturation and 50% lightness while retaining the selected alpha.
+
+One application-wide speed level is stored locally. Levels 1–5 map to 32, 16, 8, 4 and 2 seconds per cycle. A single registered CSS custom property animates on the document root and is inherited by every rainbow surface, including shadow-root controls. There are no per-frame renderer callbacks or per-element animation clocks. System reduced motion or the app's motion-off setting stops the cycle at hue 270. The color editor explains the shared scope and duration. Corrupt or invalid stored speed returns to level 3; out-of-range writes are rejected.
+
+Pure tests cover the sentinel, speed validation and reduced-motion rules. The compiled Electron fixture verifies actual hue changes, then emulates reduced motion and verifies that the rendered color stays fixed. The global speed remains a local setting; appearance-record export currently carries the per-element mode but not this global speed.
