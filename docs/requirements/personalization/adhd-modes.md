@@ -12,6 +12,10 @@ Five independent preference fields exist; complete adaptation of the new domain 
 
 This is a scoped implementation assessment, not a claim that the whole requirement is finished. Surface states: **app: partial; site: unknown; repository: not-applicable**. See [implementation reference](../../personalization.md) and the [complete inventory](../../coverage/features.json). Controls belong in the destination that owns the data; the primary UI must remain a productive task workspace.
 
+## Controls, defaults and limits
+
+`focus`, `lowStimulation`, `timeAwareness`, `oneThing` and `momentum` default independently to `false`. `currentTask` defaults empty and accepts at most `2000` characters. Low stimulation participates in effective motion; a saved flag is not evidence of complete adaptation of every destination.
+
 ## Failures and remaining work
 
 Verify each mode alone and in combinations, discoverable hidden work, quiet/motion interactions and restart.
@@ -24,6 +28,6 @@ Personal vocabulary mappings, credentials, authentication headers, private keys 
 
 ## Checks
 
-Inventory integrity is tested independently from feature behavior. Close this row only after feature-specific source/validation review, persistence and negative-regression checks, final built GUI interaction and genuine capture at the same revision. Linux evidence does not prove Windows installation or credential-storage behavior. Cantonese draft articles below do not certify complete app/site localization.
+Inventory integrity is tested independently from feature behavior. Close this row only after feature-specific source/validation review, persistence and negative-regression checks, final built GUI interaction and genuine capture at the same revision. Linux evidence does not prove Windows installation or credential-storage behavior. Article translation is separate from complete app/site localization and live interface verification.
 
-Suggested articles: [requirements index](../README.md) · [GitHub actions audit](../../coverage/github-actions-audit.md) · [Git actions audit](../../coverage/git-actions-audit.md) · [Cantonese draft](adhd-modes.yue.md).
+Suggested articles: [requirements index](../README.md) · [GitHub actions audit](../../coverage/github-actions-audit.md) · [Git actions audit](../../coverage/git-actions-audit.md) · [Cantonese article](adhd-modes.yue.md).

@@ -8,9 +8,13 @@ Every user-facing application and GitHub Pages ships a real local converter that
 
 ## Current support and configuration
 
-Local structured/text/color/time conversion is implemented; universal document/PDF/media/archive adapter coverage is incomplete.
+A native bounded converter registry, file grants, atomic output validation and cancellable result journal are integrated. Supported structured/text/image adapters remain distinct from unavailable PDF/audio/video/archive families.
 
 This is a scoped implementation assessment, not a claim that the whole requirement is finished. Surface states: **app: partial; site: unknown; repository: not-applicable**. See [implementation reference](../../converters.md) and the [complete inventory](../../coverage/features.json). Controls belong in the destination that owns the data; the primary UI must remain a productive task workspace.
+
+## Controls, defaults and limits
+
+The native converter detects bounded bytes and caps one source at `32` MiB, allows two active conversions and requires at least `64` MiB reported destination free space. It refuses overwriting an existing path, verifies source hash/dimensions or codec output, writes atomically and reopens output. Unsupported PDF/audio/video/archive adapters remain disabled with reasons.
 
 ## Failures and remaining work
 
@@ -24,6 +28,6 @@ Personal vocabulary mappings, credentials, authentication headers, private keys 
 
 ## Checks
 
-Inventory integrity is tested independently from feature behavior. Close this row only after feature-specific source/validation review, persistence and negative-regression checks, final built GUI interaction and genuine capture at the same revision. Linux evidence does not prove Windows installation or credential-storage behavior. Cantonese draft articles below do not certify complete app/site localization.
+Inventory integrity is tested independently from feature behavior. Close this row only after feature-specific source/validation review, persistence and negative-regression checks, final built GUI interaction and genuine capture at the same revision. Linux evidence does not prove Windows installation or credential-storage behavior. Article translation is separate from complete app/site localization and live interface verification.
 
-Suggested articles: [requirements index](../README.md) · [GitHub actions audit](../../coverage/github-actions-audit.md) · [Git actions audit](../../coverage/git-actions-audit.md) · [Cantonese draft](file-converter.yue.md).
+Suggested articles: [requirements index](../README.md) · [GitHub actions audit](../../coverage/github-actions-audit.md) · [Git actions audit](../../coverage/git-actions-audit.md) · [Cantonese article](file-converter.yue.md).

@@ -12,6 +12,10 @@ Native two-key confirmation guards reviewed destructive actions. New Git action 
 
 This is a scoped implementation assessment, not a claim that the whole requirement is finished. Surface states: **app: partial; site: unknown; repository: not-applicable**. See [implementation reference](../../security.md) and the [complete inventory](../../coverage/features.json). Controls belong in the destination that owns the data; the primary UI must remain a productive task workspace.
 
+## Controls, defaults and limits
+
+Destructive domain apply is blocked unless both independent confirmation controls are true and the confirmation value is exactly `100`. Saving reentry is also blocked. Non-destructive mutation still needs a valid native review receipt; a visible confirm dialog cannot bypass native validation.
+
 ## Failures and remaining work
 
 Verify independent keys/full slider/Emergency exit/Escape/focus, exact target scope and no mutation before completion.
@@ -24,6 +28,6 @@ Personal vocabulary mappings, credentials, authentication headers, private keys 
 
 ## Checks
 
-Inventory integrity is tested independently from feature behavior. Close this row only after feature-specific source/validation review, persistence and negative-regression checks, final built GUI interaction and genuine capture at the same revision. Linux evidence does not prove Windows installation or credential-storage behavior. Cantonese draft articles below do not certify complete app/site localization.
+Inventory integrity is tested independently from feature behavior. Close this row only after feature-specific source/validation review, persistence and negative-regression checks, final built GUI interaction and genuine capture at the same revision. Linux evidence does not prove Windows installation or credential-storage behavior. Article translation is separate from complete app/site localization and live interface verification.
 
-Suggested articles: [requirements index](../README.md) · [GitHub actions audit](../../coverage/github-actions-audit.md) · [Git actions audit](../../coverage/git-actions-audit.md) · [Cantonese draft](super-confirmation.yue.md).
+Suggested articles: [requirements index](../README.md) · [GitHub actions audit](../../coverage/github-actions-audit.md) · [Git actions audit](../../coverage/git-actions-audit.md) · [Cantonese article](super-confirmation.yue.md).

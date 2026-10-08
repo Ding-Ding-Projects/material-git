@@ -12,6 +12,10 @@ This inventory enumerates all104 public-neutral obligations and separate surface
 
 This is a scoped implementation assessment, not a claim that the whole requirement is finished. Surface states: **app: partial; site: unknown; repository: partial**. See [implementation reference](../../requirements/README.md) and the [complete inventory](../../coverage/features.json). Controls belong in the destination that owns the data; the primary UI must remain a productive task workspace.
 
+## Controls, defaults and limits
+
+`check-feature-coverage.mjs` fixes the required `104` IDs and reviewed app/site/repository applicability table. Structural validation rejects omitted rows/evidence/articles and unsupported exclusions. Ordinary mode reports unresolved obligations; `--require-complete` fails until applicable proof is complete.
+
 ## Failures and remaining work
 
 Close each open implementation/localization/persistence/gate/interaction/capture item; strict completeness mode must remain red until supported.
@@ -24,6 +28,6 @@ Personal vocabulary mappings, credentials, authentication headers, private keys 
 
 ## Checks
 
-Inventory integrity is tested independently from feature behavior. Close this row only after feature-specific source/validation review, persistence and negative-regression checks, final built GUI interaction and genuine capture at the same revision. Linux evidence does not prove Windows installation or credential-storage behavior. Cantonese draft articles below do not certify complete app/site localization.
+Inventory integrity is tested independently from feature behavior. Close this row only after feature-specific source/validation review, persistence and negative-regression checks, final built GUI interaction and genuine capture at the same revision. Linux evidence does not prove Windows installation or credential-storage behavior. Article translation is separate from complete app/site localization and live interface verification.
 
-Suggested articles: [requirements index](../README.md) · [GitHub actions audit](../../coverage/github-actions-audit.md) · [Git actions audit](../../coverage/git-actions-audit.md) · [Cantonese draft](completeness-parity.yue.md).
+Suggested articles: [requirements index](../README.md) · [GitHub actions audit](../../coverage/github-actions-audit.md) · [Git actions audit](../../coverage/git-actions-audit.md) · [Cantonese article](completeness-parity.yue.md).

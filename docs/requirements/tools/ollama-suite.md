@@ -8,9 +8,13 @@ Every user-facing application and GitHub Pages independently ships a complete Ol
 
 ## Current support and configuration
 
-Local endpoint models/chat/pull/delete subset exists. Full official catalogue/tag/hardware-fit/harness suite is not established.
+Native model catalogue crawling, hardware evidence, reviewed persistent pull batches, stored streaming chat sessions and allowlisted harness lifecycle are integrated. Full live catalogue/tag/GPU/attachment/platform proof remains incomplete.
 
 This is a scoped implementation assessment, not a claim that the whole requirement is finished. Surface states: **app: partial; site: unknown; repository: not-applicable**. See [implementation reference](../../ollama.md) and the [complete inventory](../../coverage/features.json). Controls belong in the destination that owns the data; the primary UI must remain a productive task workspace.
+
+## Controls, defaults and limits
+
+Catalogue pages default to `40` rows (`1`–`100`); discovery permits at most `10000` official pages. A reviewed pull batch accepts `1`–`100` exact tags and parallelism `1`–`3` (default `1`). Streams cap at `8` MiB; saved sessions cap at `500`, with `128` messages and `1` MiB per session. GPU backend compatibility remains unverified even if telemetry reports VRAM; fit can truthfully remain Unknown.
 
 ## Failures and remaining work
 
@@ -24,6 +28,6 @@ Personal vocabulary mappings, credentials, authentication headers, private keys 
 
 ## Checks
 
-Inventory integrity is tested independently from feature behavior. Close this row only after feature-specific source/validation review, persistence and negative-regression checks, final built GUI interaction and genuine capture at the same revision. Linux evidence does not prove Windows installation or credential-storage behavior. Cantonese draft articles below do not certify complete app/site localization.
+Inventory integrity is tested independently from feature behavior. Close this row only after feature-specific source/validation review, persistence and negative-regression checks, final built GUI interaction and genuine capture at the same revision. Linux evidence does not prove Windows installation or credential-storage behavior. Article translation is separate from complete app/site localization and live interface verification.
 
-Suggested articles: [requirements index](../README.md) · [GitHub actions audit](../../coverage/github-actions-audit.md) · [Git actions audit](../../coverage/git-actions-audit.md) · [Cantonese draft](ollama-suite.yue.md).
+Suggested articles: [requirements index](../README.md) · [GitHub actions audit](../../coverage/github-actions-audit.md) · [Git actions audit](../../coverage/git-actions-audit.md) · [Cantonese article](ollama-suite.yue.md).

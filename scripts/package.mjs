@@ -10,7 +10,7 @@ if (process.platform !== 'win32') throw new Error('Squirrel.Windows packaging re
 // Reverify the Windows x64 dependency before copying executable payloads.
 const { fetchGh } = await import('./fetch-gh.mjs');
 await fetchGh('win32', 'x64');
-const { fetchGit } = await import('./fetch-git.mjs');
+const { fetchGit,verifyGitPayload } = await import('./fetch-git.mjs');
 await fetchGit('win32');
 const pkg = JSON.parse(await readFile('package.json', 'utf8'));
 pkg.version = resolveBuildVersion(pkg.version);
@@ -40,14 +40,20 @@ async function copyVendor(directory, relative = '') {
 }
 await copyVendor('vendor');
 await cp('vendor/git', 'out/staging/vendor/git', { recursive: true });
+const {copyConverterEngines}=await import('./fetch-converter-engines.mjs');
+await copyConverterEngines('out/staging','win32','x64');
 if (!vendorFiles.some(file => path.basename(file) === 'gh.exe')) throw new Error('Verified Windows x64 GitHub CLI is missing.');
 if (!vendorFiles.some(file => /LICENSE|COPYING/i.test(path.basename(file)))) throw new Error('Bundled GitHub CLI license is missing.');
 await copyFile('LICENSE', 'out/staging/LICENSE');
+await copyFile('data/converter-engines.json','out/staging/vendor/converters/manifest.json');
+await copyFile('docs/converter-engine-notices.md','out/staging/vendor/converters/NOTICES.md');
 const { writeThirdPartyNotices } = await import('./third-party-notices.mjs');
 await writeThirdPartyNotices('out/staging/THIRD_PARTY_NOTICES.txt');
 await writeFile('out/staging/package.json', JSON.stringify({ name: pkg.name, productName: pkg.productName, version: pkg.version, description: pkg.description, author: pkg.author, license: pkg.license, main: pkg.main }));
 const { existsSync } = await import('node:fs');
-const [appDirectory] = await packager({ dir: 'out/staging', out: 'out/app', name: 'MaterialGit', executableName: 'MaterialGit', platform: 'win32', arch: 'x64', electronVersion: pkg.devDependencies.electron, asar: { unpackDir: 'vendor' }, overwrite: true, prune: false, ...(existsSync(path.resolve('assets/icon.ico')) ? { icon: path.resolve('assets/icon.ico') } : {}) });
+const [appDirectory] = await packager({ dir: 'out/staging', out: 'out/app', name: 'MaterialGit', executableName: 'MaterialGit', platform: 'win32', arch: 'x64', electronVersion: pkg.devDependencies.electron, asar: { unpackDir: 'vendor', unpack: '**/bundled-engines-worker.cjs' }, overwrite: true, prune: false, ...(existsSync(path.resolve('assets/icon.ico')) ? { icon: path.resolve('assets/icon.ico') } : {}) });
+const unpackedWorker = path.join(appDirectory, 'resources/app.asar.unpacked/dist/main/bundled-engines-worker.cjs');
+if (!(await readFile(unpackedWorker)).equals(await readFile('out/staging/dist/main/bundled-engines-worker.cjs'))) throw new Error('Packaged converter worker mismatch.');
 for (const file of ['MaterialGit.exe', 'resources/app.asar']) if (!(await stat(path.join(appDirectory, file))).size) throw new Error(`Empty packaged file: ${file}`);
 for (const relative of vendorFiles) {
  const original = await readFile(path.join('out/staging/vendor', relative));
@@ -59,10 +65,13 @@ const ghExecutable = path.join(appDirectory, 'resources/app.asar.unpacked/vendor
 const smoke = spawnSync(ghExecutable, ['--version'], { encoding: 'utf8', windowsHide: true, timeout: 30000 });
 if (smoke.error || smoke.status !== 0 || !smoke.stdout.startsWith('gh version ')) throw new Error(`Packaged GitHub CLI smoke check failed: ${smoke.error?.message ?? smoke.stderr}`);
 console.log(smoke.stdout.trim());
+const {converterManifest}=await import('./fetch-converter-engines.mjs');
+for(const [name,expected] of Object.entries(converterManifest.files['win32-x64'])){const payload=await readFile(path.join(appDirectory,'resources/app.asar.unpacked/vendor/converters/win32-x64',name));if(createHash('sha256').update(payload).digest('hex')!==expected)throw new Error('Packaged converter hash mismatch: '+name);}
 const packagedGit = path.join(appDirectory, 'resources/app.asar.unpacked/vendor/git/cmd/git.exe');
 const gitSmoke = spawnSync(packagedGit, ['--version'], { encoding: 'utf8', windowsHide: true, timeout: 30000 });
-if (gitSmoke.error || gitSmoke.status !== 0 || !gitSmoke.stdout.includes('git version 2.56.0.windows.2')) throw new Error(`Packaged MinGit smoke check failed: ${gitSmoke.error?.message ?? gitSmoke.stderr}`);
+if (gitSmoke.error || gitSmoke.status !== 0 || !gitSmoke.stdout.includes('git version 2.56.0.windows.2')) throw new Error(`Packaged PortableGit smoke check failed: ${gitSmoke.error?.message ?? gitSmoke.stderr}`);
 console.log(gitSmoke.stdout.trim());
+await verifyGitPayload(path.join(appDirectory,'resources/app.asar.unpacked/vendor/git'));
 const icon = path.resolve('assets/icon.ico');
 console.log('Creating unsigned Squirrel.Windows installer. Windows may display an unknown-publisher warning.');
 await winstaller.createWindowsInstaller({ appDirectory, outputDirectory: 'out/installer', authors: pkg.author, exe: 'MaterialGit.exe', setupExe: 'Setup.exe', name: 'MaterialGit', version: pkg.version, description: pkg.description, noMsi: true, skipUpdateIcon: true, ...(existsSync(icon) ? { setupIcon: icon } : {}) });

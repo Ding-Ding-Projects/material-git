@@ -12,6 +12,10 @@ Workspace/notification JSON records have typed reviewed imports; API/result/tool
 
 This is a scoped implementation assessment, not a claim that the whole requirement is finished. Surface states: **app: partial; site: unknown; repository: not-applicable**. See [implementation reference](../../workspace.md) and the [complete inventory](../../coverage/features.json). Controls belong in the destination that owns the data; the primary UI must remain a productive task workspace.
 
+## Controls, defaults and limits
+
+Workspace records use schema `material-git-records`, version `1`, encoding `UTF-8` and kinds `workspace`, `notifications` or `revisions`. Import preview is bounded to `2` MiB; collections permit at most `500` records. Revision export is read-only. Other JSON/CSV/Markdown/text exports do not establish every archive or faithful-format requirement.
+
 ## Failures and remaining work
 
 Per-datum format/loss/encoding/version matrix, reimport, ZIP/7z options and sensitive-data guards remain required.
@@ -24,6 +28,6 @@ Personal vocabulary mappings, credentials, authentication headers, private keys 
 
 ## Checks
 
-Inventory integrity is tested independently from feature behavior. Close this row only after feature-specific source/validation review, persistence and negative-regression checks, final built GUI interaction and genuine capture at the same revision. Linux evidence does not prove Windows installation or credential-storage behavior. Cantonese draft articles below do not certify complete app/site localization.
+Inventory integrity is tested independently from feature behavior. Close this row only after feature-specific source/validation review, persistence and negative-regression checks, final built GUI interaction and genuine capture at the same revision. Linux evidence does not prove Windows installation or credential-storage behavior. Article translation is separate from complete app/site localization and live interface verification.
 
-Suggested articles: [requirements index](../README.md) · [GitHub actions audit](../../coverage/github-actions-audit.md) · [Git actions audit](../../coverage/git-actions-audit.md) · [Cantonese draft](exports.yue.md).
+Suggested articles: [requirements index](../README.md) · [GitHub actions audit](../../coverage/github-actions-audit.md) · [Git actions audit](../../coverage/git-actions-audit.md) · [Cantonese article](exports.yue.md).
