@@ -1,4 +1,4 @@
-import {app,BrowserWindow,ipcMain,dialog,shell,safeStorage,clipboard,nativeImage,type IpcMainInvokeEvent} from 'electron';
+import {app,BrowserWindow,ipcMain,dialog,shell,safeStorage,clipboard,nativeImage,net,type IpcMainInvokeEvent} from 'electron';
 import {existsSync,readFileSync,writeFileSync,statSync} from 'node:fs';
 import {randomUUID} from 'node:crypto';
 import {execFile} from 'node:child_process';
@@ -23,6 +23,7 @@ import {createSecurityService} from './security';
 import {startUpdater,getUpdateState,checkForUpdates,restartToInstallUpdate,updateEvents} from './updater';
 import {loadCatalog} from './catalog';
 import {LocalStore} from './store';
+import {StartupPersonalizationService,recordStartupLaunch} from './startup-personalization';
 import {readBoundedFile} from './bounded-file';
 import {listChoices,runGh,ollamaRequest} from './services';
 import type {ExecutionRequest,AppSettings} from '../shared/types';
@@ -71,15 +72,17 @@ function exportText(data:unknown,format:string):string {
  return [keys.map(cell).join(','),...rows.map(row=>keys.map(key=>cell(row[key])).join(','))].join('\r\n');
 }
 if(!installerLifecycle)app.whenReady().then(async()=>{
+ let startupFirstRun=true;
+ try{startupFirstRun=recordStartupLaunch(app.getPath('userData'));}catch{/* Unreadable launch state suppresses decoration without blocking the workspace. */}
  if(!existsSync(binary)){dialog.showErrorBox('Bundled GitHub CLI is missing','Run npm run fetch-dependencies for a source checkout, or reinstall Material Git.');app.quit();return;}
  const workspaceRecords=new WorkspaceStore(app.getPath('userData'),(kind,_id,snapshot)=>{if(kind!=='settings')throw new Error('This record contains review-only metadata. Restore it through its original feature.');return store.update(snapshot);});
  store=new LocalStore(app.getPath('userData'),(action,snapshot)=>{workspaceRecords.recordExternal(snapshot?'settings':'activity',snapshot?'base':'events',action,snapshot??{action});});
  handle('workspace',(action,payload)=>workspaceRecords.dispatch(action,payload));
  const security=createSecurityService({directory:path.join(process.env.MATERIAL_GIT_TEST==='1'?app.getPath('userData'):app.getPath('appData'),'shared-ui-state'),authenticatorDirectory:path.join(app.getPath('userData'),'authenticator'),vault:safeStorage,openRecoveryDirectory:async directory=>{const error=await shell.openPath(directory);if(error)throw new Error(error);},recordMutation:async(action,metadata)=>{workspaceRecords.recordExternal('security','local',action,metadata);}});
- await security.start();
+ let startupSecurity=await security.start();
  security.registerTargets(nativeLockTargets(loadCatalog(path.join(__dirname,'gh-catalog.json')).commands));
  actionGuard=async(channel,args)=>{if(['bootstrap','security','window','operation','cancel','pick','external','workspace'].includes(channel)||(channel==='github'&&args[0]==='actions.watch-cancel'))return()=>{};const mapped=channel==='cli-config'?'cliConfig':channel==='preferences-advanced'?'settings':channel==='local-tools'||channel==='ollama'?'tools':channel==='cli-workflows'?'execute':channel;const action=typeof args[0]==='string'?args[0]:undefined;const command=channel==='execute'?(args[0] as ExecutionRequest)?.commandId:channel==='cli-workflows'?(args[1] as {commandId?:string})?.commandId:undefined;const ids=protectedLockIds(mapped,action,command);await security.assertUnlocked(ids);return()=>{for(const id of ids)security.consumeSurfaceUnlock(id);};};
- security.subscribe(state=>{if(window&&!window.isDestroyed())window.webContents.send('material:security-update',state);});
+ security.subscribe(state=>{startupSecurity=state;if(window&&!window.isDestroyed())window.webContents.send('material:security-update',state);});
  handle('security',(action,payload)=>security.handle(action,payload));
  app.once('will-quit',()=>security.close());
  const hostRegistry=createAuthHostRegistry(app.getPath('userData'));
@@ -127,12 +130,14 @@ if(!installerLifecycle)app.whenReady().then(async()=>{
  const gitTasks=new GitService({binary:process.platform==='win32'?path.join(gitDirectory,'git.exe'):'git',directory:app.getPath('userData'),pickWorktree:async()=>{const result=await dialog.showOpenDialog(window,{title:'Choose a Git working tree',properties:['openDirectory']});return result.canceled?null:result.filePaths[0]??null;},pickFile:async()=>{const result=await dialog.showOpenDialog(window,{title:'Choose a Git patch file',properties:['openFile'],filters:[{name:'Git patches',extensions:['patch','diff','mbox']}]});return result.canceled?null:result.filePaths[0]??null;}});
  handle('git',async(action,payload)=>{if(payload!==undefined&&sizeBound(payload).length>1024*1024)throw new Error('Git request exceeds the input limit');const id=payload?.reviewId??randomUUID();if(action!=='cancel')activeOperations.add(id);try{return await gitTasks.handle(action,payload);}finally{activeOperations.delete(id);}});
  app.once('will-quit',()=>gitTasks.close());
+ const startupPersonalization=new StartupPersonalizationService({directory:path.join(app.getPath('userData'),'startup-personalization'),fetch:(url,init)=>net.fetch(url,init),context:()=>{const effective=preferencesAdvanced.status().effective,phase=getUpdateState().phase;return {firstRun:startupFirstRun,busy:activeOperations.size>0||githubTasks.activeOperations.size>0||localTools.activeJobs()||accountChanging(),error:!startupSecurity.available||Boolean(startupSecurity.error)||phase==='failed',updating:!['idle','unsupported'].includes(phase),schoolMode:startupSecurity.schoolMode.active,quiet:effective.lowStimulation||effective.quietNarration};}});
+ handle('startup-personalization',(...args:unknown[])=>{if(args.length)throw new Error('Startup personalization takes no arguments');return startupPersonalization.startup();});
  handle('updates',(action:string)=>{if(action==='check')return checkForUpdates();if(action==='restart'){if(activeOperations.size||githubTasks.activeOperations.size||localTools.activeJobs())throw new Error('Wait for running operations or cancel them before restarting');const previous=quitApproved;quitApproved=true;try{restartToInstallUpdate();}catch(error){quitApproved=previous;throw error;}}else if(action!=='status')throw new Error('Unknown update action');return getUpdateState();});
  handle('bootstrap',async()=>{
   const settled=await Promise.allSettled([runGh(binary,['--version'],workspace),runGh(binary,['api','user'],workspace),runGh(binary,['repo','view','--json','nameWithOwner'],workspace)]);
   const output=(i:number)=>settled[i].status==='fulfilled'?(settled[i] as PromiseFulfilledResult<string>).value:null;
   let provenance:{version:string;builtAt:string|null}={version:app.getVersion(),builtAt:null};try{provenance=JSON.parse(readFileSync(path.join(__dirname,'provenance.json'),'utf8'));}catch{}
-  return {catalog:loadCatalog(path.join(__dirname,'gh-catalog.json')),settings:store.settings(),persistedSettingsKeys:store.persistedSettingsKeys(),preferencesAdvanced:preferencesAdvanced.status(),...provenance,platform:process.platform,ghVersion:output(0)?.split('\n')[0]??null,authenticated:!!output(1),account:output(1)?JSON.parse(output(1)!).login:null,repository:output(2)?JSON.parse(output(2)!).nameWithOwner:null,operations:[]};
+  return {startupFirstRun,catalog:loadCatalog(path.join(__dirname,'gh-catalog.json')),settings:store.settings(),persistedSettingsKeys:store.persistedSettingsKeys(),preferencesAdvanced:preferencesAdvanced.status(),...provenance,platform:process.platform,ghVersion:output(0)?.split('\n')[0]??null,authenticated:!!output(1),account:output(1)?JSON.parse(output(1)!).login:null,repository:output(2)?JSON.parse(output(2)!).nameWithOwner:null,operations:[]};
  });
  handle('execute',(request:ExecutionRequest)=>{if(sizeBound(request).length>256000)throw new Error('Request too large');const selected=request.cwd?path.resolve(request.cwd):workspace;const op=engine(selected).execute(request);store.record(`Started ${op.commandId}`);return op;});
  handle('operation',(id:string)=>{for(const e of engineByRoot.values()){try{return e.operation(id);}catch{}}throw new Error('Unknown operation');});

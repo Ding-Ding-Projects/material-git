@@ -1,6 +1,7 @@
 import {contextBridge,ipcRenderer} from 'electron';
 import type {MaterialBridge,Operation} from '../shared/types';
 const api:MaterialBridge={
+ startupPersonalization:()=>ipcRenderer.invoke('material:startup-personalization'),
  git:(action,payload)=>ipcRenderer.invoke('material:git',action,payload),
  github:(action,payload)=>ipcRenderer.invoke('material:github',action,payload),
  workspace:(action,payload)=>ipcRenderer.invoke('material:workspace',action,payload),

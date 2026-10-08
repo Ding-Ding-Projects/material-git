@@ -4,7 +4,7 @@ import {mkdtemp, rm, writeFile, readdir, readFile, symlink} from 'node:fs/promis
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {createHash} from 'node:crypto';
-import {DIM_SUM_CATALOG, DIM_SUM_RELEASES, STARTUP_LIMITS, StartupPersonalizationService, fetchStartupBytes, parseStartupMetadata, validateStartupPhoto} from '../src/main/startup-personalization.js';
+import {DIM_SUM_CATALOG, DIM_SUM_RELEASES, STARTUP_LIMITS, StartupPersonalizationService, fetchStartupBytes, parseStartupMetadata, validateStartupPhoto, recordStartupLaunch} from '../src/main/startup-personalization.js';
 import {startupDrawWins, startupSuppressed, type StartupContext} from '../src/shared/startup-personalization.js';
 const context = (): StartupContext => ({firstRun: false, busy: false, error: false, updating: false, schoolMode: false, quiet: false});
 const dish = {id: 'hk-dish-0001', name: {en: 'Catalog English name', zhHant: '目錄名稱'}, image: {path: 'images/hk-dish-0001-catalog-name.png'}};
@@ -16,6 +16,16 @@ const invalidPhoto = Buffer.alloc(33); // Deliberately invalid parser input; nev
 const digest = createHash('sha256').update(invalidPhoto).digest('hex');
 const asset = {name: 'hk-dish-0001-catalog-name.png', browser_download_url: photoUrl, digest: 'sha256:' + digest, size: 33, content_type: 'image/png'};
 const fetchMetadata = async (url: string) => new Response(url === DIM_SUM_CATALOG ? catalogue : bytes([]));
+
+test('dedicated startup marker recognizes unchanged returning profiles and rejects corrupt state', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'mg-startup-marker-'));
+  try {
+    assert.equal(recordStartupLaunch(directory), true); assert.equal(recordStartupLaunch(directory), false);
+    assert.deepEqual(await readdir(directory), ['startup-launch.marker']);
+    await writeFile(join(directory, 'startup-launch.marker'), 'unknown-version');
+    assert.throws(() => recordStartupLaunch(directory));
+  } finally {await rm(directory, {recursive: true, force: true});}
+});
 
 test('startup draw has precisely the [0, 0.1) boundary; invalid values never win', () => {
   for (const value of [0, .099999999]) assert.equal(startupDrawWins(value), true);

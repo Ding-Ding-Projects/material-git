@@ -1,8 +1,9 @@
 import {createHash, randomInt} from 'node:crypto';
-import {constants} from 'node:fs';
+import {constants, mkdirSync, openSync, closeSync, writeFileSync, lstatSync} from 'node:fs';
 import {mkdir, open, readdir, rename, rm, lstat} from 'node:fs/promises';
 import {join} from 'node:path';
 import {PNG} from 'pngjs';
+import {readBoundedFile} from './bounded-file';
 import {startupDrawWins, startupSuppressed, type StartupContext, type StartupDish, type StartupResult} from '../shared/startup-personalization.js';
 
 export const DIM_SUM_CATALOG = 'https://raw.githubusercontent.com/Ding-Ding-Projects/dim-sum-photos/main/catalog/index.json';
@@ -15,6 +16,22 @@ type Fetcher = (url: string, init: RequestInit) => Promise<Response>;
 const hash = (bytes: Uint8Array) => createHash('sha256').update(bytes).digest('hex');
 const text = (value: unknown, max: number) => typeof value === 'string' && value.length > 0 && value.length <= max && !/[\u0000-\u001f\u007f]/.test(value);
 const assetUrl = (value: unknown): value is string => typeof value === 'string' && /^https:\/\/github\.com\/Ding-Ding-Projects\/dim-sum-photos\/releases\/download\/catalog-v1[A-Za-z0-9._-]*\/hk-dish-[a-z0-9-]+\.png$/.test(value);
+
+/** A dedicated launch record recognizes returning profiles even when preferences stay at defaults. */
+export function recordStartupLaunch(directory: string): boolean {
+  mkdirSync(directory, {recursive: true, mode: 0o700});
+  const file = join(directory, 'startup-launch.marker');
+  let descriptor: number;
+  try {descriptor = openSync(file, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL, 0o600);}
+  catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
+    const stat = lstatSync(file);
+    if (!stat.isFile() || stat.isSymbolicLink() || readBoundedFile(file, 32).toString() !== 'material-git-startup-v1\n') throw new Error('Invalid startup launch record');
+    return false;
+  }
+  try {writeFileSync(descriptor, 'material-git-startup-v1\n');} finally {closeSync(descriptor);}
+  return true;
+}
 
 /** Only fixed metadata endpoints or catalog-v1 public photos may begin a transfer. */
 export async function fetchStartupBytes(url: string, limit: number, signal: AbortSignal, fetcher: Fetcher = globalThis.fetch): Promise<Buffer> {

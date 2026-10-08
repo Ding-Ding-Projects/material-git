@@ -2,7 +2,7 @@ import {LitElement, html, css, nothing} from './material';
 import './components';
 import {defaults} from '../shared/preferences.js';
 import type {AppSettings} from '../shared/types.js';
-import {startupPhotoCopy, startupSuppressed, type StartupBridge, type StartupContext, type StartupDish} from '../shared/startup-personalization.js';
+import {startupPhotoCopy, startupSuppressed, type StartupBridge, type StartupContext, type StartupDish, type StartupResult} from '../shared/startup-personalization.js';
 import {localizePair, message} from './localization.js';
 
 /** Registered Material composition. It never opens a dialog, focuses a control or delays app readiness. */
@@ -22,6 +22,7 @@ export class StartupPersonalization extends LitElement {
   ready = false;
   private dish?: StartupDish;
   private attempted = false;
+  private outcome?: StartupResult['status'];
   private stopped = false;
   private timer?: ReturnType<typeof setTimeout>;
   private onInteraction = (event: Event) => {
@@ -54,10 +55,11 @@ export class StartupPersonalization extends LitElement {
   private async start() {
     try {
       const result = await (window.material as typeof window.material & Partial<StartupBridge>).startupPersonalization?.();
+      this.outcome = result?.status ?? 'unavailable';
       if (!this.isConnected || this.stopped || startupSuppressed(this.context) || this.settings.lowStimulation || this.settings.quietNarration || document.hidden || result?.status !== 'shown' || !result.dish) return;
       this.dish = result.dish; this.hidden = false;
       this.timer = setTimeout(() => this.dismiss(), 7000);
-    } catch {/* The app remains usable when decoration is unavailable. */}
+    } catch {this.outcome = 'unavailable'; /* The app remains usable when decoration is unavailable. */}
   }
   private dismiss() {this.stopped = true; clearTimeout(this.timer); this.dish = undefined; this.hidden = true;}
   private name() {
