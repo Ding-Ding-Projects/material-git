@@ -8,7 +8,7 @@ Informational, success, progress, and non-decision issue messages appear as non-
 
 ## Current support and configuration
 
-Durable bounded notification state/actions and reviewed history exports exist. Complete final-shell event integration is still unverified.
+The shell persists authored English/Cantonese message facts and task routes, shows the latest three active notifications in a bounded custom scroll surface, and restores undismissed warnings/errors after restart. Informational cards leave the corner after eight seconds; warnings and errors require dismissal. Native save failures stay visible in the current window. Low-stimulation mode suppresses routine corner cards and speech. The centre provides filtering, selection and reviewed exports. Complete event coverage across every feature remains open.
 
 This is a scoped implementation assessment, not a claim that the whole requirement is finished. Surface states: **app: partial; site: unknown; repository: not-applicable**. See [implementation reference](../../workspace.md) and the [complete inventory](../../coverage/features.json). Controls belong in the destination that owns the data; the primary UI must remain a productive task workspace.
 
@@ -18,7 +18,7 @@ Notification records have `info`, `success`, `warning` or `error` kind, timestam
 
 ## Failures and remaining work
 
-Drive warning persistence/toast stacking/actions, focus/announcements, dismiss/restart/search and scoped bulk operations.
+Actual compiled 360 px controls and native restart/dismissal/failure tests cover the new stack. Final packaged-app captures, complete event coverage, live speech availability, and platform-specific verification remain open.
 
 Missing native dependencies, OS facilities, remote permissions and verification are reported separately. Disabled or unavailable behavior must explain the actual cause and preserve the existing data; no sample entity or fake success fills an empty state.
 
