@@ -12,6 +12,7 @@ export class LocalStore {
  private read(name:string):unknown {try{return JSON.parse(readBoundedFile(this.file(name),name==='history'?2097152:65536).toString('utf8'));}catch{return null;}}
  private write(name:string,value:unknown){const file=this.file(name),temporary=file+'.tmp';writeFileSync(temporary,JSON.stringify(value),{mode:0o600});renameSync(temporary,file);}
  settings():AppSettings {try{return {...defaults,...validateSettings(this.read('settings')??{})};}catch{return {...defaults};}}
+ persistedSettingsKeys():string[]{try{return Object.keys(validateSettings(this.read('settings')??{}));}catch{return [];}}
  update(patch:unknown):AppSettings {const valid=validateSettings(patch),settings={...this.settings(),...valid};this.write('settings',settings);this.record('Settings updated',settings);return settings;}
  history():HistoryEntry[]{const rows=this.read('history');return Array.isArray(rows)?rows.filter(v=>v&&typeof v.id==='string'&&typeof v.action==='string').slice(-500):[];}
  record(action:string,snapshot?:AppSettings){const entries=this.history();entries.push({id:randomUUID(),at:new Date().toISOString(),action,...(snapshot?{snapshot}:{})});this.write('history',entries.slice(-500));}

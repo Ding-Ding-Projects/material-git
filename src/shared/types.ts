@@ -34,6 +34,7 @@ export interface AppSettings {
   oneThing: boolean; momentum: boolean; currentTask: string;
 }
 export interface Bootstrap {
+  persistedSettingsKeys?:string[]; preferencesAdvanced?:import('./preferences-advanced').PreferenceStatus;
   catalog: Catalog; settings: AppSettings; version: string; builtAt: string | null;
   platform: string; ghVersion: string | null; authenticated: boolean;
   account: string | null; repository: string | null; operations: Operation[];
@@ -51,7 +52,12 @@ export interface AuthState {
   hostname?: string; deviceCode?: string; verificationUrl?: string; message?: string; error?: string;
 }
 export interface MaterialBridge {
-  api(action:'catalogue'|'describe'|'execute'|'graphqlCatalogue'|'graphqlDescribe'|'graphqlBuild'|'graphqlExecute'|'pick-body-file',payload?:unknown):Promise<unknown>;
+  workspace(action:import('./workspace').WorkspaceAction,payload?:unknown):Promise<import('./workspace').WorkspaceResponse>;
+  cliWorkflows(action:import('./cli-workflows').CliWorkflowAction,payload?:import('./cli-workflows').CliWorkflowPayload):Promise<import('./cli-workflows').CliWorkflowResponse>;
+  localTools(action:import('./local-tools').LocalToolsAction,payload?:import('./local-tools').LocalToolsPayload):Promise<import('./local-tools').LocalToolsResponse>;
+  preferencesAdvanced(action:import('./preferences-advanced').PreferenceAction,payload?:unknown):Promise<import('./preferences-advanced').PreferenceStatus>;
+  onPreferencesAdvanced(callback:(status:import('./preferences-advanced').PreferenceStatus)=>void):()=>void;
+  api(action:'hosts'|'catalogue'|'describe'|'execute'|'graphqlCatalogue'|'graphqlDescribe'|'graphqlBuild'|'graphqlExecute'|'pick-body-file',payload?:unknown):Promise<unknown>;
   cliConfig(action:import('./cli-config').CliConfigAction,payload?:import('./cli-config').CliConfigPayload):Promise<import('./cli-config').CliConfigResponse>;
   onCloseRequested(callback:()=>void):()=>void;
   security(action:string,payload?:Record<string,unknown>):Promise<unknown>;
