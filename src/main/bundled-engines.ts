@@ -14,7 +14,7 @@ export interface BundledEngineOptions {
 const MAX_BYTES = 64 * 1024 * 1024;
 async function sha(path: string) { const hash = createHash('sha256'); for await (const chunk of createReadStream(path))
     hash.update(chunk); return hash.digest('hex'); }
-function safeName(name: string) { if (!name || name.length > 200 || /[\x00-\x1f\\/]/.test(name) || name === '.' || name === '..' || name.startsWith('output.') || ['__proto__','constructor','prototype'].includes(name))
+function safeName(name: string) { if (!name || name.length > 200 || /[\x00-\x1f\\/:]/.test(name) || name === '.' || name === '..' || /[. ]$/.test(name) || /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(name) || name.startsWith('output.') || ['__proto__','constructor','prototype'].includes(name))
     throw new Error('Archive sources require distinct safe basenames'); return name; }
 function validateOptions(options: ConverterOptions) { const allowed = ['pages', 'rotation', 'metadata', 'quality', 'compression', 'level', 'dictionaryMiB', 'solid', 'threads', 'volumeMiB', 'encryption', 'password', 'sourceFormat', 'table']; for (const key of Object.keys(options))
     if (!allowed.includes(key))
@@ -69,45 +69,52 @@ export class BundledEngines implements BundledEngineFacade {
         return reject(new Error('Worker output exceeded safety bounds')); resolve(result); }; const timer = setTimeout(() => finish(new Error('Isolated converter exceeded 45-second deadline')), 45000); const cancel = () => finish(new Error('Conversion cancelled')); signal.addEventListener('abort', cancel, { once: true }); if (signal.aborted)
         return cancel(); worker.once('message', m => m.ok ? finish(undefined, m.result) : finish(new Error(String(m.error).slice(0, 500)))); worker.once('error', e => finish(e)); worker.once('exit', c => { if (!settled)
         finish(new Error(`Isolated converter exited (${c})`)); }); }); }
-    /** Every child receives app-owned files, fixed argv, a stripped environment and bounded output/time/resources. */
-    private run(binary: string, args: string[], cwd: string, signal: AbortSignal, password?: string): Promise<string> { return new Promise((resolve, reject) => { const child = spawn(binary, args, { cwd, shell: false, windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'], env: { PATH: '', HOME: cwd, TMPDIR: cwd, TEMP: cwd, TMP: cwd, SYSTEMROOT: process.env.SYSTEMROOT ?? '' } }); let out = '', err = '', settled = false, reason = ''; const finish = (error?: Error) => { if (settled)
-        return; settled = true; clearTimeout(timer); clearInterval(monitor); signal.removeEventListener('abort', cancel); if (error) {
-        child.kill('SIGKILL');
-        reject(error);
+    /** All native paths share limits, including streamed archive entries. Secrets use stdin only. */
+    private execute(binary: string, args: string[], cwd: string, signal: AbortSignal, outputLimit: number, timeout: number, password?: string): Promise<Buffer> {
+        return new Promise((resolve, reject) => {
+            const child = spawn(binary, args, { cwd, shell: false, windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'], env: { PATH: '', HOME: cwd, TMPDIR: cwd, TEMP: cwd, TMP: cwd, SYSTEMROOT: process.env.SYSTEMROOT ?? '' } });
+            const chunks: Buffer[] = []; let bytes = 0, diagnostics = '', failure: Error | undefined, settled = false, inspecting = false;
+            const stop = (error: Error) => { if (failure || settled) return; failure = error; child.kill('SIGKILL'); };
+            const cancel = () => stop(new Error('Conversion cancelled'));
+            const timer = setTimeout(() => stop(new Error('Native converter exceeded its execution deadline')), timeout);
+            const monitor = setInterval(() => {
+                if (inspecting || settled || failure) return;
+                inspecting = true;
+                void (async () => {
+                    try {
+                        let total = 0;
+                        for (const entry of await readdir(cwd)) { const info = await stat(join(cwd, entry)); if (info.isFile()) total += info.size; }
+                        if (total > MAX_BYTES * 2) stop(new Error('Native converter temporary bytes exceeded 128 MiB'));
+                        if (platform() === 'linux' && child.pid) {
+                            const rss = /VmRSS:\s+(\d+)\s+kB/.exec(await readFile(`/proc/${child.pid}/status`, 'utf8'));
+                            if (rss && Number(rss[1]) * 1024 > 512 * 1024 * 1024) stop(new Error('Native converter resident memory exceeded 512 MiB'));
+                        }
+                    } catch { /* The process may have exited between the monitor reads. */ }
+                    finally { inspecting = false; }
+                })();
+            }, 100);
+            const cleanup = () => { clearTimeout(timer); clearInterval(monitor); signal.removeEventListener('abort', cancel); };
+            signal.addEventListener('abort', cancel, { once: true });
+            child.stdout.on('data', (part: Buffer) => { bytes += part.length; if (bytes > outputLimit) stop(new Error('Native converter output exceeded its verified byte bound')); else if (!failure) chunks.push(part); });
+            child.stderr.on('data', (part: Buffer) => { diagnostics += part.toString('utf8'); if (diagnostics.length > 1024 * 1024) stop(new Error('Native converter diagnostics exceeded 1 MiB')); });
+            child.once('error', () => { failure ??= new Error('Verified native converter could not start'); });
+            child.once('close', code => {
+                if (settled) return; settled = true; cleanup();
+                if (!failure && code !== 0) {
+                    const text = (diagnostics || Buffer.concat(chunks).toString('utf8')).replaceAll(cwd, '[temporary directory]').replaceAll(password ?? '\0', '[REDACTED]').slice(-700);
+                    failure = new Error(`Native converter failed (${code}): ${text}`);
+                }
+                // Wait for closed stdio before deleting the private input/output directory.
+                failure ? reject(failure) : resolve(Buffer.concat(chunks, bytes));
+            });
+            child.stdin.on('error', () => {});
+            child.stdin.end(password ? password + '\n' + password + '\n' : undefined);
+            if (signal.aborted) cancel();
+        });
     }
-    else
-        resolve(out); }; const cancel = () => finish(new Error('Conversion cancelled')); const timer = setTimeout(() => finish(new Error('Native converter exceeded 90-second deadline')), 90000); const monitor = setInterval(() => { void (async () => { try {
-        const entries = await readdir(cwd);
-        let total = 0;
-        for (const entry of entries) {
-            const s = await stat(join(cwd, entry));
-            if (s.isFile())
-                total += s.size;
-        }
-        if (total > MAX_BYTES * 2)
-            finish(new Error('Native converter temporary bytes exceeded 128 MiB'));
-        if (platform() === 'linux' && child.pid) {
-            const status = await readFile(`/proc/${child.pid}/status`, 'utf8');
-            const rss = /VmRSS:\s+(\d+)\s+kB/.exec(status);
-            if (rss && Number(rss[1]) * 1024 > 512 * 1024 * 1024)
-                finish(new Error('Native converter resident memory exceeded 512 MiB'));
-        }
+    private async run(binary: string, args: string[], cwd: string, signal: AbortSignal, password?: string): Promise<string> {
+        return (await this.execute(binary, args, cwd, signal, 1024 * 1024, 90000, password)).toString('utf8');
     }
-    catch { } })(); }, 100); signal.addEventListener('abort', cancel, { once: true }); if (signal.aborted)
-        return cancel(); for (const [stream, kind] of [[child.stdout, 'out'], [child.stderr, 'err']] as const)
-        stream.on('data', b => { if (kind === 'out')
-            out += b.toString('utf8');
-        else
-            err += b.toString('utf8'); if (out.length + err.length > 1024 * 1024)
-            finish(new Error('Native converter diagnostics exceeded 1 MiB')); }); child.once('error', () => finish(new Error('Verified native converter could not start'))); child.once('close', code => { if (code !== 0) {
-        const diagnostic = (err || out).replaceAll(cwd, '[temporary directory]').replaceAll(password ?? '\0', '[REDACTED]').slice(-700);
-        finish(new Error(`Native converter failed (${code}): ${diagnostic}`));
-    }
-    else
-        finish(); }); if (password)
-        child.stdin.end(password + '\n' + password + '\n');
-    else
-        child.stdin.end(); child.stdin.on('error',()=>{}); }); }
     private async owned<T>(task: (directory: string) => Promise<T>): Promise<T> { const directory = await mkdtemp(join(tmpdir(), 'material-conversion-')); try {
         return await task(directory);
     }
@@ -126,7 +133,7 @@ export class BundledEngines implements BundledEngineFacade {
         throw new Error('Source has no video stream'); const output = join(directory, 'output.' + target), binary = join(this.directory(), platform() === 'win32' ? 'ffmpeg.exe' : 'ffmpeg'); const threads = request.options.threads ?? 1; await this.run(binary, ['-nostdin', '-hide_banner', '-v', 'error','-max_alloc','67108864', '-protocol_whitelist', 'file','-format_whitelist','mov,mp4,m4a,3gp,3g2,mj2,matroska,webm,mp3,wav,flac,ogg,avi', '-threads', String(threads), '-filter_threads', '1', '-filter_complex_threads', '1', '-i', input, '-map', '0:v:0?', '-map', '0:a:0?', '-map_metadata', '-1', '-sn', '-dn', ...presets[target], '-threads', String(threads), '-t', '300', '-fs', String(MAX_BYTES), '-n', output], directory, signal); const after = await this.probe(output, directory, signal); if (Math.abs(Number(after.format.duration) - Number(before.format.duration)) > Math.max(1, Number(before.format.duration) * .02))
         throw new Error('Converted media duration failed reopening validation'); const size = (await stat(output)).size; if (size < 1 || size > MAX_BYTES)
         throw new Error('Converted media exceeds output limits'); return { outputs: [{ suffix: '.' + target, bytes: await readFile(output) }], details: { source: before, output: after }, disclosures: ['Media transcoding may be lossy. It removes metadata, subtitles, data streams and additional audio/video tracks; sources are untouched. Maximum duration 300 seconds; no network protocols are allowed.'] }; }); }
-    private async archive(request: EngineRequest, signal: AbortSignal) { return this.owned(async (directory) => { const binary = join(this.directory(), platform() === 'win32' ? '7za.exe' : '7zz'), password = request.options.password, encrypted = request.options.encryption && request.options.encryption !== 'none'; if (encrypted && !password)
+    private async archive(request: EngineRequest, signal: AbortSignal) { signal = AbortSignal.any([signal, AbortSignal.timeout(120000)]); return this.owned(async (directory) => { const binary = join(this.directory(), platform() === 'win32' ? '7za.exe' : '7zz'), password = request.options.password, encrypted = request.options.encryption && request.options.encryption !== 'none'; if (encrypted && !password)
         throw new Error('Enter the archive password before encrypting'); const secretArgs:string[] = []; /* Encrypted archive readers prompt on stdin; -p without a value means an empty reader password. */ if (request.adapter === '7z-extract') {
         const source = join(directory, 'source.7z');
         await writeFile(source, request.inputs[0].bytes);
@@ -136,7 +143,7 @@ export class BundledEngines implements BundledEngineFacade {
             throw new Error('Archive extraction exceeds 250 files or 64 MiB expanded bytes');
         const outputs = [];
         for (const file of records.files) {
-            const bytes = await this.extractEntry(binary, source, file.name, directory, signal, password);
+            const bytes = await this.extractEntry(binary, source, file.name, file.bytes, directory, signal, password);
             if (bytes.length !== file.bytes)
                 throw new Error('Archive entry size failed verification');
             outputs.push({ suffix: '-' + file.name.replaceAll('/', '-'), bytes });
@@ -165,21 +172,26 @@ export class BundledEngines implements BundledEngineFacade {
             args.push('-mhe=' + (request.options.encryption === 'content-and-headers' ? 'on' : 'off'));
     } args.push(output, ...[...names].map(name => join(directory, name))); await this.run(binary, args, directory, signal, encrypted ? password : undefined); const files = (await readdir(directory)).filter(n => n.startsWith('output.')).sort(); if (files.length < 1 || files.length > 32)
         throw new Error('Archive output volumes exceed supported bounds'); const first = join(directory, files[0]); await this.run(binary, ['t','-mmt=1', ...secretArgs, first], directory, signal, password); const listing = this.archiveListing(await this.run(binary, ['l', '-slt','-mmt=1', ...secretArgs, first], directory, signal, password)); if (listing.files.length !== request.inputs.length || request.inputs.some(i => !listing.files.some(f => f.name === i.name && f.bytes === i.bytes.length)))
-        throw new Error('Archive reopened contents do not match selected inputs'); let total = 0; const outputs = []; for (const file of files) {
+        throw new Error('Archive reopened contents do not match selected inputs');
+        for (const input of request.inputs) {
+            const reopened = await this.extractEntry(binary, first, input.name, input.bytes.length, directory, signal, password);
+            if (!Buffer.from(input.bytes).equals(reopened)) throw new Error('Archive reopened bytes do not match selected inputs');
+        }
+        let total = 0; const outputs = []; for (const file of files) {
         const bytes = await readFile(join(directory, file));
         total += bytes.length;
         if (total > MAX_BYTES)
             throw new Error('Archive output exceeds 64 MiB');
         outputs.push({ suffix: file.slice('output'.length), bytes });
     } return { outputs, disclosures: ['Archive stores source basenames. Compression options are bounded to 64 MiB dictionary and four threads. Passwords enter controlled stdin only, never argument arrays or durable history. ZIP header encryption and solid mode are unavailable.'] }; }); }
-    private archiveListing(source: string) { const records = source.slice(source.indexOf('----------') + 10).split(/\r?\n\r?\n/); const files: Array<{
+    private archiveListing(source: string) { const marker = source.indexOf('----------'); if (marker < 0) throw new Error('Archive inventory is incomplete'); const records = source.slice(marker + 10).split(/\r?\n\r?\n/); const files: Array<{
         name: string;
         bytes: number;
     }> = []; let total = 0; for (const record of records) {
         const path = /^Path = (.+)$/m.exec(record)?.[1]?.trim();
         if (!path)
             continue;
-        if (path.startsWith('/') || /^[A-Za-z]:/.test(path) || path.includes('\\') || path.split('/').some(p => p === '..' || p === '.') || path.length > 240 || path.split('/').length > 20 || /[\x00-\x1f]/.test(path))
+        if (path.startsWith('/') || /^[A-Za-z]:/.test(path) || path.includes('\\') || path.includes(':') || path.split('/').some(p => !p || p === '..' || p === '.' || /[. ]$/.test(p) || /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(p)) || path.length > 240 || path.split('/').length > 20 || /[\x00-\x1f]/.test(path))
             throw new Error('Archive path is unsafe');
         if (/Symbolic Link =|Hard Link =|^Mode = l|^Attributes =.*\bL\b/m.test(record))
             throw new Error('Archive links are unsupported');
@@ -195,17 +207,8 @@ export class BundledEngines implements BundledEngineFacade {
             throw new Error('Archive contains duplicate paths');
         files.push({ name: path, bytes: size });
     } return { files, total }; }
-    private extractEntry(binary: string, archive: string, name: string, directory: string, signal: AbortSignal, password?: string): Promise<Uint8Array> { return new Promise((resolve, reject) => { const child = spawn(binary, ['x', '-so','-mmt=1','-spd', archive, name], { cwd: directory, shell: false, windowsHide: true, env: { PATH: '', HOME: directory, SYSTEMROOT: process.env.SYSTEMROOT ?? '' }, stdio: ['pipe', 'pipe', 'pipe'] }); const chunks: Buffer[] = []; let bytes = 0, settled = false; const finish = (error?: Error) => { if (settled)
-        return; settled = true; clearTimeout(timer); signal.removeEventListener('abort', cancel); if (error) {
-        child.kill('SIGKILL');
-        reject(error);
+    private async extractEntry(binary: string, archive: string, name: string, expectedBytes: number, directory: string, signal: AbortSignal, password?: string): Promise<Buffer> {
+        return this.execute(binary, ['x', '-so', '-mmt=1', '-spd', archive, name], directory, signal, expectedBytes, 30000, password);
     }
-    else
-        resolve(Buffer.concat(chunks)); }; const cancel = () => finish(new Error('Archive extraction cancelled')); const timer = setTimeout(() => finish(new Error('Archive entry exceeded 30-second deadline')), 30000); signal.addEventListener('abort', cancel, { once: true }); if (signal.aborted)
-        return cancel(); child.stdout.on('data', b => { bytes += b.length; if (bytes > MAX_BYTES)
-        return finish(new Error('Archive entry exceeds expanded byte bound')); chunks.push(b); }); child.stderr.resume(); child.once('error', () => finish(new Error('Archive extractor could not start'))); child.once('close', c => finish(c === 0 ? undefined : new Error('Archive entry extraction failed'))); if (password)
-        child.stdin.end(password + '\n');
-    else
-        child.stdin.end(); child.stdin.on('error',()=>{}); }); }
 }
 export function createBundledEngines(options: BundledEngineOptions) { return new BundledEngines(options); }
