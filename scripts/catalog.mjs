@@ -53,6 +53,7 @@ function walk(path) {
  if(id==='skill install'){const agentValues=[...h.matchAll(/^  - .+ \(([a-z0-9.-]+)\)$/gm)].map(m=>m[1]);if(agentValues.length)enumOption('agent',agentValues);}
  if(id==='completion'){args.length=0;enumOption('shell',['bash','zsh','fish','powershell']);option('shell').required=true;}
  if(id==='config set'&&argument('value'))argument('value').type='text';
+ if(id==='repo sync'&&option('source')){option('source').type='entity';option('source').entity='repository';}
  if(id==='api'){if(option('method'))delete option('method').default;enumOption('method',['GET','POST','PUT','PATCH','DELETE','HEAD','OPTIONS']);enumOption('hostname',['github.com']);}
  if(['issue create','pr create','pr revert'].includes(id)){for(const name of ['title','body'])if(option(name))option(name).required=true;}
  if(id==='gist create'){args.splice(0,args.length,{name:'filename-pattern',description:'One or more local filenames or glob patterns. Standard input is unavailable in this runner.',position:0,type:'file',multiple:true,required:true});}
