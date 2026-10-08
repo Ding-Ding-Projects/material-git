@@ -7,22 +7,22 @@ import {CliConfigService,type CliConfigServiceOptions} from '../src/main/cli-con
 import {CLI_CONFIG_DEFINITIONS,type CliConfigPayload,type CliConfigReview,type CliConfigKey} from '../src/shared/cli-config';
 import reference from '../data/gh-reference.json';
 
-function fixture(environment:NodeJS.ProcessEnv={}) {
+function fixture(environment:NodeJS.ProcessEnv={},options:Pick<CliConfigServiceOptions,'resolveHost'|'approvedHosts'>={}) {
  const global=Object.fromEntries(CLI_CONFIG_DEFINITIONS.map(definition=>[definition.key,definition.defaultValue]));
- const host:Record<string,string>={};const calls:string[][]=[];let failSetKey='';let mismatchKey='';let currentTime=100000;
+ const host:Record<string,string>={};const hosts:Record<string,Record<string,string>>={'github.com':host};const calls:string[][]=[];let failSetKey='';let mismatchKey='';let currentTime=100000;
  const run:NonNullable<CliConfigServiceOptions['run']>=async(_binary,args,options)=>{
   assert.equal(options.shell,false);assert.equal(options.windowsHide,true);calls.push([...args]);
   if(args[0]==='--version')return {code:0,stdout:'gh version 2.102.0 (2026-10-06)\n'};
-  const values=args.includes('--host=github.com')?{...global,...host}:global;
+  const scope=args.find(value=>value.startsWith('--host='))?.slice(7);const values=scope?{...global,...hosts[scope]}:global;
   if(args[1]==='list')return {code:0,stdout:Object.entries(values).map(([key,value])=>`${key}=${value}`).join('\n')+'\n'};
   if(args[1]==='get')return {code:0,stdout:(mismatchKey===args[2]?'unexpected':values[args[2]])+'\n'};
-  if(args[1]==='set'){if(failSetKey===args[2])return {code:1,stdout:'sensitive native error should not surface'};(args.includes('--host=github.com')?host:global)[args[2]]=args[3];return {code:0,stdout:''};}
+  if(args[1]==='set'){if(failSetKey===args[2])return {code:1,stdout:'sensitive native error should not surface'};(scope?(hosts[scope]??={}):global)[args[2]]=args[3];return {code:0,stdout:''};}
   throw new Error('Unexpected native operation');
  };
- const service=new CliConfigService('pinned-gh',{run,environment,now:()=>currentTime});
- return {service,global,host,calls,run,setFailure:(key:string)=>{failSetKey=key;},setMismatch:(key:string)=>{mismatchKey=key;},advance:()=>{currentTime+=300001;}};
+ const service=new CliConfigService('pinned-gh',{run,environment,now:()=>currentTime,...options});
+ return {service,global,host,hosts,calls,run,setFailure:(key:string)=>{failSetKey=key;},setMismatch:(key:string)=>{mismatchKey=key;},advance:()=>{currentTime+=300001;}};
 }
-async function review(service:CliConfigService,scope:'global'|'github.com'='global',key:CliConfigKey='prompt',value='disabled'):Promise<CliConfigReview>{const result=await service.action('review',{scope,changes:[{key,mode:'set',value}]});assert.equal(result.kind,'review');return result as CliConfigReview;}
+async function review(service:CliConfigService,scope:string='global',key:CliConfigKey='prompt',value='disabled'):Promise<CliConfigReview>{const result=await service.action('review',{scope,changes:[{key,mode:'set',value}]});assert.equal(result.kind,'review');return result as CliConfigReview;}
 
 test('generated pinned reference agrees with every guided key, enum and default',()=>{
  assert.equal(reference.version,'2.102.0');assert.equal(reference.coverage.catalogLeaves,reference.commands.length);
@@ -133,4 +133,35 @@ test('non-mutating actual pinned CLI distinguishes isolated Global and host fixt
 
 test('a mismatched native CLI version is rejected before config access',async()=>{
  const calls:string[][]=[];const service=new CliConfigService('wrong-gh',{run:async(_binary,args)=>{calls.push(args);return {code:0,stdout:'gh version 2.99.0\n'};}});await assert.rejects(service.action('snapshot'),/2\.102\.0/);assert.deepEqual(calls,[['--version']]);
+});
+
+
+test('approved Enterprise configuration reads and one-use writes stay on the exact reviewed hostname',async()=>{
+ const hosts=['github.com','forge.example'],options={approvedHosts:()=>hosts.map(hostname=>({hostname})),resolveHost:(hostname='forge.example')=>{if(!hosts.includes(hostname))throw Error('Host is not approved');return {hostname};}};
+ const f=fixture({},options);f.host.git_protocol='ssh';f.hosts['forge.example']={git_protocol:'https'};
+ const snapshot=await f.service.action('snapshot',{scope:'forge.example'});assert.equal(snapshot.kind,'snapshot');if(snapshot.kind!=='snapshot')return;assert.equal(snapshot.hostname,'forge.example');assert.deepEqual(snapshot.scopes,['global','github.com','forge.example']);assert.equal(snapshot.values.find(value=>value.key==='git_protocol')?.value,'https');assert.equal(snapshot.values.find(value=>value.key==='git_protocol')?.hostRelation,'same-as-global');assert.ok(!f.calls.some(args=>args.includes('--host=github.com')));
+ const pending=await review(f.service,'forge.example','git_protocol','ssh');assert.equal(pending.hostname,'forge.example');f.host.git_protocol='https';const result=await f.service.action('apply',{reviewId:pending.reviewId,confirmed:true});assert.equal(result.kind,'mutation');assert.equal(f.hosts['forge.example'].git_protocol,'ssh');assert.equal(f.global.git_protocol,'https');assert.equal(f.host.git_protocol,'https');assert.ok(f.calls.some(args=>JSON.stringify(args)===JSON.stringify(['config','set','git_protocol','ssh','--host=forge.example'])));assert.ok(!f.calls.some(args=>args[1]==='set'&&!args.includes('--host=forge.example')));await assert.rejects(f.service.action('apply',{reviewId:pending.reviewId,confirmed:true}),/already applied|expired/);
+ const global=await f.service.action('snapshot',{scope:'global'});assert.equal(global.kind,'snapshot');if(global.kind==='snapshot'){assert.equal(global.hostname,'forge.example');assert.equal(global.values.find(value=>value.key==='git_protocol')?.value,'https');assert.equal(global.values.find(value=>value.key==='git_protocol')?.hostValue,'ssh');}
+});
+test('revoked hosts, Enterprise drift and selected Global comparison changes cannot use a stored config review',async()=>{
+ for(const mode of ['revoke','drift','selected','invalidate'] as const){let selected='forge.example';const hosts=['github.com','forge.example'],f=fixture({},{approvedHosts:()=>hosts.map(hostname=>({hostname})),resolveHost:(hostname=selected)=>{if(!hosts.includes(hostname))throw Error('Host is not approved');return {hostname};}});f.hosts['forge.example']={};const pending=await review(f.service,mode==='selected'?'global':'forge.example');if(mode==='revoke')hosts.pop();if(mode==='drift')f.hosts['forge.example'].prompt='disabled';if(mode==='selected')selected='github.com';if(mode==='invalidate')f.service.invalidateReviews();await assert.rejects(f.service.action('apply',{reviewId:pending.reviewId,confirmed:true}),/approved|changed|expired/);assert.equal(f.calls.filter(args=>args[1]==='set').length,0);}
+});
+test('Enterprise does not enable globally read or unavailable routing keys',async()=>{
+ const f=fixture({},{approvedHosts:()=>[{hostname:'forge.example'}],resolveHost:()=>({hostname:'forge.example'})});for(const key of ['clipboard','telemetry'])await assert.rejects(review(f.service,'forge.example',key as CliConfigKey),/Global|globally/);for(const key of ['api_host','http_unix_socket'])await assert.rejects(review(f.service,'forge.example',key as CliConfigKey),/unavailable adapter/);for(const scope of ['forge.example --host=other','https://forge.example','FORGE.EXAMPLE','unapproved.example'])await assert.rejects(f.service.action('snapshot',{scope}),/approved/);assert.equal(f.calls.filter(args=>args[1]==='set').length,0);
+});
+test('actual pinned CLI applies Enterprise config only inside an isolated local config fixture',async t=>{
+ const binary=process.env.GH_REFERENCE_BINARY||join(process.cwd(),'vendor','gh_2.102.0_linux_amd64','bin','gh');try{await access(binary);}catch{t.skip('Official pinned Linux binary is not available on this machine.');return;}
+ const directory=await mkdtemp(join(tmpdir(),'material-git-enterprise-config-'));
+ try{await writeFile(join(directory,'config.yml'),'version: "1"\ngit_protocol: https\n');await writeFile(join(directory,'hosts.yml'),'github.com:\n    git_protocol: https\nforge.example:\n    git_protocol: https\n');const service=new CliConfigService(binary,{environment:{PATH:process.env.PATH,GH_CONFIG_DIR:directory,GH_HOST:'forge.example',GH_TELEMETRY:'0',XDG_STATE_HOME:join(directory,'state'),XDG_CACHE_HOME:join(directory,'cache')},approvedHosts:()=>[{hostname:'github.com'},{hostname:'forge.example'}],resolveHost:(hostname='forge.example')=>({hostname})});const pending=await review(service,'forge.example','git_protocol','ssh');const result=await service.action('apply',{reviewId:pending.reviewId,confirmed:true});assert.equal(result.kind,'mutation');if(result.kind==='mutation'){assert.equal(result.snapshot.hostname,'forge.example');assert.equal(result.snapshot.values.find(value=>value.key==='git_protocol')?.value,'ssh');assert.equal(result.snapshot.values.find(value=>value.key==='git_protocol')?.globalValue,'https');}const publicHost=await service.action('snapshot',{scope:'github.com'});assert.equal(publicHost.kind,'snapshot');if(publicHost.kind==='snapshot')assert.equal(publicHost.values.find(value=>value.key==='git_protocol')?.value,'https');}finally{await rm(directory,{recursive:true,force:true});}
+});
+
+
+test('native context invalidation during a deferred Enterprise read cannot mint a fresh review',async()=>{
+ const f=fixture();let held=false,release!:()=>void,started!:()=>void;const gate=new Promise<void>(resolve=>release=resolve),began=new Promise<void>(resolve=>started=resolve);
+ const service=new CliConfigService('fixture-gh',{approvedHosts:()=>[{hostname:'forge.example'}],resolveHost:()=>({hostname:'forge.example'}),run:async(binary,args,options)=>{if(args[1]==='get'&&!held){held=true;started();await gate;}return f.run(binary,args,options);}});
+ const pending=review(service,'forge.example');await began;service.invalidateReviews();release();await assert.rejects(pending,/context changed while preparing/);assert.equal(f.calls.filter(args=>args[1]==='set').length,0);
+});
+
+test('expiry reached during native Enterprise preflight prevents the first config write',async()=>{
+ const f=fixture();let armed=false,currentTime=100000;const service=new CliConfigService('fixture-gh',{now:()=>currentTime,approvedHosts:()=>[{hostname:'forge.example'}],resolveHost:()=>({hostname:'forge.example'}),run:async(binary,args,options)=>{if(armed&&args[1]==='get')currentTime=400001;return f.run(binary,args,options);}});const pending=await review(service,'forge.example');armed=true;await assert.rejects(service.action('apply',{reviewId:pending.reviewId,confirmed:true}),/expired/);assert.equal(f.calls.filter(args=>args[1]==='set').length,0);
 });
