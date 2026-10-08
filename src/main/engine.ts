@@ -97,14 +97,15 @@ export class Engine {
  return this.executeAdapter(command.id,argv,{secrets,cwd});
  }
  /** Main-process adapters alone may call this method; never expose argv directly over IPC. */
- executeAdapter(commandId:string,argv:string[],options:{secrets?:string[];cwd?:string;executable?:string;timeoutMs?:number}={}):Operation {
+ executeAdapter(commandId:string,argv:string[],options:{secrets?:string[];cwd?:string;executable?:string;timeoutMs?:number;hostname?:string}={}):Operation {
  if(typeof commandId!=='string'||!Array.isArray(argv)||argv.length>200||argv.some(value=>typeof value!=='string'||value.includes('\0')||value.length>65536))throw new Error('Invalid adapter arguments');
+ if(options.hostname&&!/^[a-zA-Z0-9.-]+$/.test(options.hostname))throw new Error('Invalid adapter hostname');
  const cwd=realpathSync(options.cwd||this.cwd),root=realpathSync(this.cwd);
  if(cwd!==root&&!cwd.startsWith(root+path.sep))throw new Error('Working directory must remain within the workspace');
  const secrets=[...(options.secrets||[]),...Object.entries(process.env).filter(([key,value])=>/TOKEN|PASSWORD|SECRET/.test(key)&&value).map(([,value])=>value!)];
  const op:Operation={id:randomUUID(),status:'running',commandId,startedAt:new Date().toISOString(),stdout:'',stderr:''};
  this.operations.set(op.id,op);
- const env={...process.env,GH_PROMPT_DISABLED:'1',GH_PAGER:'cat',PAGER:'cat',GH_EDITOR:'',GIT_TERMINAL_PROMPT:'0',NO_COLOR:'1',GH_FORCE_TTY:'',GH_BROWSER:''};
+ const env={...process.env,...(options.hostname?{GH_HOST:options.hostname}:{}),GH_PROMPT_DISABLED:'1',GH_PAGER:'cat',PAGER:'cat',GH_EDITOR:'',GIT_TERMINAL_PROMPT:'0',NO_COLOR:'1',GH_FORCE_TTY:'',GH_BROWSER:''};
  const child=spawn(options.executable||this.ghPath,argv,{cwd,env,shell:false,windowsHide:true,detached:process.platform!=='win32',stdio:['ignore','pipe','pipe']}); this.children.set(op.id,child);
  const redact=(value:string)=>new OutputRedactor(secrets).write(value,true);
  const buffers={stdout:'',stderr:''};const byteCounts={stdout:0,stderr:0};const capped={stdout:false,stderr:false};
