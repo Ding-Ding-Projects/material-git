@@ -204,7 +204,8 @@ export class Search extends LitElement {
             this.expanded = true;
             this.placeBuilder();
             this.schedulePreview();
-        } }}>${this.regex ? 'Regex on' : 'Regex'}</md-outlined-button></div>${this.expanded ? html `<div class="builder" popover="manual" data-side=${this.anchorSide} style=${this.anchorStyle} @keydown=${(event: KeyboardEvent) => { if (event.key === 'Escape') {
+        } }}>${this.regex ? 'Regex on' : 'Regex'}</md-outlined-button></div>${this.expanded ? html `<div class="builder" popover="manual" data-side=${this.anchorSide} style=${this.anchorStyle} @keydown=${(event: KeyboardEvent) => { if (event.key === 'Escape' && !event.defaultPrevented) {
+            event.preventDefault();
             event.stopPropagation();
             this.closeBuilder();
         } }} role="dialog" aria-label="Regular expression workbench"><mg-layout spread><mg-text kind="eyebrow">Regular expression workbench</mg-text><md-text-button @click=${() => this.closeBuilder()}>Done</md-text-button></mg-layout><mg-layout><md-switch aria-label="Use regular expression for this search" .selected=${this.regex} @change=${(e: Event) => { this.regex = (e.target as unknown as {
