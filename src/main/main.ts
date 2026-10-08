@@ -15,6 +15,8 @@ import {WorkspaceStore} from './workspace';
 import {PreferencesAdvancedService} from './preferences-advanced';
 import {LocalToolsService} from './local-tools';
 import {createAuthHostRegistry} from './auth-hosts';
+import {GitHubService} from './github';
+import {githubDomains} from '../shared/github';
 import {createSecurityService} from './security';
 import {startUpdater,getUpdateState,checkForUpdates,restartToInstallUpdate,updateEvents} from './updater';
 import {loadCatalog} from './catalog';
@@ -80,11 +82,16 @@ if(!installerLifecycle)app.whenReady().then(async()=>{
  app.once('will-quit',()=>security.close());
  const hostRegistry=createAuthHostRegistry(app.getPath('userData'));
  await hostRegistry.load();
+ security.registerTargets(githubDomains.map(domain=>({id:`destination:${domain}`,label:domain})));
+ const githubTasks=new GitHubService(binary,workspace,engine(),{resolveHost:hostname=>hostRegistry.resolveHost(hostname).hostname});
+ handle('github',async(action,payload)=>{if(payload!==undefined&&sizeBound(payload).length>128000)throw new Error('GitHub task exceeds the request limit');if(accountChanging())throw new Error('Finish or cancel the current account change before starting a GitHub task');const id=randomUUID();activeOperations.add(id);try{return await githubTasks.handle(action,payload);}finally{activeOperations.delete(id);}});
  const auth=new AuthService(binary,workspace,{allowedHosts:hostRegistry.list().map(host=>host.hostname),registerHost:async hostname=>{await hostRegistry.register(hostname);},copyToken:token=>{clipboard.writeText(token);}});
+ let accountMutation=false;
+ const accountChanging=()=>accountMutation||['starting','waiting'].includes(auth.snapshot().status);
  app.once('will-quit',()=>{void auth.action('cancel');});
  let accountSnapshot='';
  auth.subscribe(state=>{if(state.status==='authenticated'||state.status==='idle'){const snapshot=JSON.stringify(state.accounts);if(snapshot!==accountSnapshot){workspaceRecords.recordExternal('accounts','github','GitHub account status changed',{accounts:state.accounts,credentialsOmitted:true});accountSnapshot=snapshot;}}if(window&&!window.isDestroyed())window.webContents.send('material:auth-update',state);});
- handle('auth',(action,payload)=>auth.action(action,payload));
+ handle('auth',async(action,payload)=>{const changing=['login','switch','logout','refresh','setup-git','register-host'].includes(action);if(changing&&activeOperations.size)throw new Error('Wait for current GitHub operations to finish before changing accounts');if(changing&&accountMutation)throw new Error('An account change is already running');if(changing)accountMutation=true;try{return await auth.action(action,payload);}finally{if(changing)accountMutation=false;}});
  const apiFiles=new Map<string,{file:string;size:number;modified:number}>();
  const githubApi=createApiService({binary,cwd:workspace,resolveHost:hostname=>hostRegistry.resolveHost(hostname),
   readBodyFile:async handle=>{const grant=apiFiles.get(handle);if(!grant)throw new Error('Choose the upload file again');const current=statSync(grant.file);if(current.size!==grant.size||current.mtimeMs!==grant.modified)throw new Error('The upload file changed. Choose it again before reviewing this request.');return {bytes:readBoundedFile(grant.file,64*1024*1024),filename:path.basename(grant.file)};},
@@ -93,9 +100,10 @@ if(!installerLifecycle)app.whenReady().then(async()=>{
  handle('api',async(action:string,payload:unknown)=>{
   if(action==='hosts')return hostRegistry.list().map(({hostname,label})=>({hostname,label}));
   if(action==='pick-body-file'){const result=await dialog.showOpenDialog(window,{title:'Choose a file to upload to GitHub',properties:['openFile']});if(result.canceled||!result.filePaths[0])return null;const file=result.filePaths[0],stats=statSync(file);if(!stats.isFile()||stats.size>64*1024*1024)throw new Error('Choose a regular file smaller than 64 MiB');if(apiFiles.size>=32)apiFiles.delete(apiFiles.keys().next().value!);const handle=randomUUID();apiFiles.set(handle,{file,size:stats.size,modified:stats.mtimeMs});return {handle,filename:path.basename(file),size:stats.size};}
-  if(!['catalogue','describe','execute','graphqlCatalogue','graphqlDescribe','graphqlBuild','graphqlExecute'].includes(action))throw new Error('Unknown GitHub API action');
+  if(!['catalogue','describe','execute','graphqlCatalogue','graphqlDescribe','graphqlBuild','graphqlExecute','review','graphqlReview','apply','cancelReview'].includes(action))throw new Error('Unknown GitHub API action');
   if(payload!==undefined&&sizeBound(payload).length>256000)throw new Error('API request exceeds 256 KB');
-  const id=randomUUID();if(action==='execute'||action==='graphqlExecute')activeOperations.add(id);
+  const bound=['execute','graphqlExecute','review','graphqlReview','apply'].includes(action);if(bound&&accountChanging())throw new Error('Finish or cancel the current account change before starting an API request');
+  const id=randomUUID();if(bound)activeOperations.add(id);
   try{return await (githubApi[action as keyof typeof githubApi] as (input:unknown)=>unknown)(payload);}finally{activeOperations.delete(id);}
  });
  const cliConfiguration=new CliConfigService(binary,{chooseExecutable:async definition=>{const result=await dialog.showOpenDialog(window,{title:definition.filePicker?.title,properties:['openFile'],...(process.platform==='win32'?{filters:[{name:'Executable applications',extensions:['exe']}]}:{})});return result.canceled?null:result.filePaths[0]??null;}});
