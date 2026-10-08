@@ -1,6 +1,6 @@
 # Reachable Git command coverage
 
-This map compares implementation checkpoint `ef32b64 + native three-file merge workflow` with all 173 names in the source-derived Git 2.56 inventory. It counts command names, not reviewed task identifiers. The supplemental contrib/subtree helper is recorded separately.
+This map compares implementation checkpoint `4857c42 + native provider-bound clone workflow` with all 173 names in the source-derived Git 2.56 inventory. It counts command names, not reviewed task identifiers. The supplemental contrib/subtree helper is recorded separately.
 
 | Fully covered | Partial reachable forms | Missing command contracts |
 | --- | --- | --- |

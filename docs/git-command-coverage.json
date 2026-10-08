@@ -1,7 +1,7 @@
 {
   "version": 1,
   "checkedAt": "2026-10-08",
-  "implementationCheckpoint": "ef32b64 + native three-file merge workflow",
+  "implementationCheckpoint": "4857c42 + native provider-bound clone workflow",
   "auditSource": "coverage/git-action-map.json",
   "auditOfficialCommit": "a018953688f1b10bddf91bff8747068f5f4746a4",
   "auditSourceDigest": "daa7a7fa2fb22ab5d48639a6ba8036db8707db8faaeaec21960aab3ea595a436",
@@ -1136,13 +1136,14 @@
         "src/renderer/git-workspace.ts",
         "src/renderer/git-workspace-forms.ts"
       ],
-      "verification": "source route; exact successful form still needs execution evidence",
+      "verification": "representative isolated native fixtures; complete form/option audit remains open",
       "evidence": [
         "tests/git-native.test.ts",
-        "tests/git-advanced.test.ts"
+        "tests/git-advanced.test.ts",
+        "tests/git-provider.test.ts"
       ],
       "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback, three-file preview/edit/reviewed save and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
-      "remaining": "New-folder URL clone exists; local approved source, bare/mirror/reference/template/submodule and authenticated transport proofs remain open."
+      "remaining": "Fresh native-picked clone and native provider-bound repository/gist source contracts exist. Actual owned HTTPS clone, source replacement/relock/stale receipt and discard tests pass; local source, bare/mirror/reference/template/submodule and live authenticated provider transport remain open."
     },
     {
       "command": "column",
