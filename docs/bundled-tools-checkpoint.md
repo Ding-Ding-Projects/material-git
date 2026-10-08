@@ -1,5 +1,9 @@
 # Bundled converter dependency research checkpoint
 
+## Dependency security update
+
+The original dependency findings below are superseded by pinned DOMPurify 3.4.16, fast-xml-parser 5.11.2, YAML 2.9.1 and fflate 0.8.3. Existing development dependencies were updated to Electron Packager 20.3.0 and Vite 7.3.7, both compatible with the Node 24 toolchain. The complete npm audit, including development dependencies, reports zero findings. PDF/image packages retain their previously pinned versions. Converter worker and engine implementation remains separate work; Windows packaging has not been exercised with the updated packager.
+
 Implementation paused before converter-engine source, download helper, worker or export serializer changes. Only pinned npm dependency preparation and upstream read-only research were completed. This checkpoint must not be treated as a finished converter implementation or integrated without dependency review.
 
 ## Prepared npm dependencies
