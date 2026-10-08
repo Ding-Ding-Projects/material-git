@@ -7,7 +7,7 @@ export interface DiscoveryRoute {lane:string;setting?:string;owner?:string;field
 export interface DiscoveryEntry extends DiscoveryRoute {id:string;label:string;detail:string;keywords:string;settingKey?:keyof AppSettings;editable?:boolean;control?:HTMLElement;unavailable?:string}
 export const nestedDiscoveryFields={
  schedules:['timezone','label','priority','enabled','startDate','endDate','startTime','endTime','everyDay','source','connection','entity','values','elementIdentifier','connectionLabel','sourceUrl','refreshSeconds','token'],
- security:['currentCredential','newCredential','modeName','otpUri','account','issuer','verifyCredential','setCredential','renameMode','addAuthenticator','recovery'],
+ security:['currentCredential','newCredential','modeName','verifyCredential','setCredential','changeCredential','renameMode','newPairingAccount','generatePairing','pasteUri','revealPairing','confirmCode','enroll','authenticatorSearch'],
  vocabulary:['vocabulary','clear'],
 } as const;
 export const concealedSettings=new Set(['language','englishHumor','cantoneseHumor','vocabulary','cantoneseVoice','narrationLanguage']);
