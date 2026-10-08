@@ -10,7 +10,8 @@ export function validateTotpParameters(input:unknown):TotpParameters{
  if(Object.keys(value).some(k=>!['secret','algorithm','digits','period','issuer','account'].includes(k)))throw new Error('Unexpected authenticator parameter');
  const {secret,algorithm='SHA1',digits=6,period=30,issuer='',account=''}=value;
  if(typeof secret!=='string'||!secret.length||secret.length>256||!/^[A-Z2-7]+={0,6}$/i.test(secret)||!['SHA1','SHA256','SHA512'].includes(String(algorithm))||![6,7,8].includes(Number(digits))||typeof digits!=='number'||typeof period!=='number'||!Number.isInteger(period)||period<1||period>86400||typeof issuer!=='string'||issuer.length>128||typeof account!=='string'||!account.length||account.length>256||/[\u0000-\u001f]/.test(issuer+account))throw new Error('Invalid authenticator parameters');
- return {secret:secret.toUpperCase().replace(/=+$/,''),algorithm:algorithm as TotpAlgorithm,digits:digits as 6|7|8,period,issuer,account};
+ const normalized=secret.toUpperCase().replace(/=+$/,''),residue=normalized.length%8,padding=secret.length-normalized.length;if(![0,2,4,5,7].includes(residue)||padding!==0&&padding!==(8-residue)%8||('ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'.indexOf(normalized.at(-1)!)&((1<<((normalized.length*5)%8))-1))!==0)throw new Error('Invalid base32 authenticator parameters');
+ return {secret:normalized,algorithm:algorithm as TotpAlgorithm,digits:digits as 6|7|8,period,issuer,account};
 }
 export function parseOtpAuth(uri:string):TotpParameters{
  if(uri.length>4096)throw new Error('Authenticator URI is too long');let url:URL;try{url=new URL(uri);}catch{throw new Error('Invalid authenticator URI');}
