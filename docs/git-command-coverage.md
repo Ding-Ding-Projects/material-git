@@ -1,12 +1,12 @@
 # Reachable Git command coverage
 
-This map compares implementation checkpoint `4857c42 + native provider-bound clone workflow` with all 173 names in the source-derived Git 2.56 inventory. It counts command names, not reviewed task identifiers. The supplemental contrib/subtree helper is recorded separately.
+This map compares implementation checkpoint `e25b13b + reviewed conflict reuse workflows` with all 173 names in the source-derived Git 2.56 inventory. It counts command names, not reviewed task identifiers. The supplemental contrib/subtree helper is recorded separately.
 
 | Fully covered | Partial reachable forms | Missing command contracts |
 | --- | --- | --- |
-| 0 | 90 | 83 |
+| 0 | 91 | 82 |
 
-Of the partial forms, 88 directly invoke the named command, one delegates GC through `maintenance --task=gc`, and one shows current-branch state derived from `symbolic-ref`. Six missing command contracts have equivalent natural workflows using another native command. Internal helper execution, help text, executable presence and proposed destinations are not direct coverage.
+Of the partial forms, 89 directly invoke the named command, one delegates GC through `maintenance --task=gc`, and one shows current-branch state derived from `symbolic-ref`. Six missing command contracts have equivalent natural workflows using another native command. Internal helper execution, help text, executable presence and proposed destinations are not direct coverage.
 
 No command is fully covered: the complete form, option and per-control execution audits remain open. Representative native fixtures and selected browser interactions prove narrower behavior. The [machine-readable map](git-command-coverage.json) preserves every audited option mention, exact native form, reachable route, evidence limit and remaining work. Official option mentions include cross-references and are not an argument grammar.
 
@@ -142,7 +142,7 @@ No command is fully covered: the complete form, option and per-control execution
 | `replay` | missing | History > Replay selected commits into explicit refs with conflict and compare-and-swap review. |
 | `repo` | missing | Worktrees/Settings > Inspect and manage repository registration using supported runtime capabilities. |
 | `request-pull` | missing | Remotes/Patches > Compose a reviewable request message from selected local/remote refs. |
-| `rerere` | missing | Conflicts > Inspect recorded resolutions and review reuse/forget/clear/gc effects. |
+| `rerere` | partial | Conflicts > Recorded conflict resolutions |
 | `reset` | partial | History > Reset branch |
 | `restore` | partial | Changes > Unstage / Discard; Maintenance > Tracked files > Restore |
 | `rev-list` | partial | Maintenance > Inspect repository > Commit ancestors |
@@ -192,11 +192,11 @@ No command is fully covered: the complete form, option and per-control execution
 
 1. Explicit multi-ref/delete/lease remote policies after the advertised reference chooser.
 2. Interactive rebase todo controls with owned native editors and recovery.
-3. Recorded conflict resolution (rerere), trailer editing and patch identity.
+3. Structured commit trailer editing and repository/range-bound request-pull drafts.
 4. Pack inspection/import/verification and symbolic/ref transaction tools.
 5. Explicit trusted regression test/program orchestration and integration/protocol lifecycles.
 6. Git 2.56-only workflows must remain gated until the actual runtime is proved.
 
 ## Cantonese coverage note
 
-呢個表逐個比較 173 個已審核 Git 指令名稱。90 個指令有部分可到達嘅原生操作，83 個仲未有獨立介面契約，冇任何指令已驗證全部形式同選項。工作流程數目、程式存在或者內部程序執行，唔等於完整指令覆蓋。
+呢個表逐個比較 173 個已審核 Git 指令名稱。91 個指令有部分可到達嘅原生操作，82 個仲未有獨立介面契約，冇任何指令已驗證全部形式同選項。工作流程數目、程式存在或者內部程序執行，唔等於完整指令覆蓋。

@@ -19,7 +19,7 @@ test('corresponding-source payload includes the exact archives, build scripts, c
  const {execFileSync}=await import('node:child_process');
  if(process.platform==='linux'){
   const names=execFileSync('tar',['-tf',join(directory,'corresponding-source.tar')],{encoding:'utf8',timeout:10000,maxBuffer:1024*1024});
-  for(const file of ['recipe/build.sh','recipe/Dockerfile','recipe/ffmpeg-source-build.mjs','recipe/source-manifest.json','configuration/ffmpeg-config.h','configuration/build-toolchain-packages.txt'])assert.ok(names.includes(file),file);
+  for(const file of ['recipe/build.sh','recipe/Dockerfile','recipe/ffmpeg-source-build.mjs','recipe/verified-download.mjs','recipe/source-manifest.json','configuration/ffmpeg-config.h','configuration/build-toolchain-packages.txt'])assert.ok(names.includes(file),file);
   for(const asset of Object.keys(proof.sources))assert.ok(names.includes('sources/'+asset),asset);
   assert.ok(names.includes('licenses/ffmpeg.LICENSE'));
  }
