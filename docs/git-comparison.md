@@ -2,6 +2,8 @@
 
 The `mg-git-comparison` Material panel offers focused read-only comparisons. References and commits come from the host's native repository records. It contains no command console or arbitrary argument field.
 
+For three local text files, use the separate [native file merge guide](git-file-merge.md), including its [Cantonese counterpart](git-file-merge.yue.md). That workflow offers editable conflict previews and a reviewed fresh-file save; it does not change the read-only scope of this comparison panel.
+
 | Destination | Native form | Supported choices |
 | --- | --- | --- |
 | Contributors | `shortlog --summary --numbered --group=… --max-count=… --skip=… <refs> --` | 1 to 20 selected references; author or committer; optional email; commit-window paging |

@@ -16,6 +16,20 @@ The current article bundle includes all 104 feature-specific Cantonese article c
 
 另行記錄嘅 Windows 版本係 Material Git 0.16.1（`build-16-1`），喺 `2026-10-08T13:45:56Z` 發佈，由來源 `85070852a673696c1881041b4bdc90112523dd9a` 建置。GitHub 公開記錄已確認真實 `Setup.exe` 檔案同校驗碼。網站會將呢個已記錄版本，同即時查詢嘅最新版本分開標示；唔會將較早嘅安裝程式當成目前來源。安裝程式未簽署，發佈成功唔代表 Windows 安裝、憑證儲存、更新或者所有功能已驗證。104 篇廣東話功能文章已包含喺文件建置，但文章齊全唔代表介面翻譯同功能驗證已全部完成。
 
+## Native workflow guides
+
+The documentation includes a [three-file merge guide](git-file-merge.md) and its [Cantonese counterpart](git-file-merge.yue.md). The desktop picks three local text files through native selectors, previews structured conflict options on temporary copies, accepts an edited result, and reviews a fresh-file save. Saving does not overwrite an existing destination or stage the result. A new file saved inside a working tree can become an untracked change.
+
+The [selected issue and pull request guide](github-selection.md), with its [Cantonese counterpart](github-selection.yue.md), explains visible repository numbers, separately retained provider identities, and refreshing stale selections before detail or reviewed mutation requests.
+
+These guides distinguish real native Git fixture execution and compiled Material interactions from live Windows behavior and live provider write permission. The website only publishes the articles. Its existing 21 captures remain bound to `e464ff70`, before these newer workflows; the separately recorded Windows installer remains `build-16-1`. Neither source documentation nor focused fixture checks replace platform or deployment evidence.
+
+### 廣東話工作流程說明
+
+新嘅[三檔合併指南](git-file-merge.yue.md)會講解原生檔案選擇、衝突顯示同處理選項、可編輯預覽，以及檢查後儲存新檔案。既有目的地唔會被覆寫，結果唔會自動加入暫存區；工作樹入面嘅新檔案可能成為未追蹤修改。[議題同拉取要求選擇指南](github-selection.yue.md)會講解顯示編號、另外保留嘅提供者身份，同舊選擇需要重新整理嘅情況。
+
+文章會將真實原生 Git 測試檔案同已建置 Material 操作證據，同真實 Windows 操作及提供者寫入權限分開。網站只發佈文件。21 張既有畫面仍然綁定 `e464ff70`，已記錄 Windows 安裝程式仍然係 `build-16-1`，唔會因為新增文章而改標籤。
+
 ## Build and source provenance
 
 Run `node scripts/build-site.mjs` after installing the repository dependencies. Source lives in `site/` and browser-only reusable compositions live in `src/site-shared/`. The static output is ignored at `site/dist/`.
@@ -90,6 +104,8 @@ A passing static build or these focused checks do not establish universal featur
 
 ## Suggested articles
 
+- [Merge three local text files](git-file-merge.md) · [廣東話](git-file-merge.yue.md)
+- [Selected issue and pull request identity](github-selection.md) · [廣東話](github-selection.yue.md)
 - [Authentication and account permissions](authentication.md)
 - [Personalization](personalization.md)
 - [Regex search](regex.md)
