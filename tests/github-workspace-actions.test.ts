@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {nativeAreas,taskLabels} from '../src/renderer/github-workspace-actions.js';
+import {nativeAreas,taskLabels,nativeAreaEligible} from '../src/renderer/github-workspace-actions.js';
 import {nativeGitHubTaskRoutes} from '../src/shared/github-native.js';
 
 test('every native GitHub task has one localized contextual destination',()=>{
@@ -13,3 +13,5 @@ test('every native GitHub task has one localized contextual destination',()=>{
   for(const action of area.actions)assert.ok(taskLabels[action.split('.').at(-1)!],`${action} needs Cantonese copy`);
  }
 });
+
+test('run monitoring and release preparation have appropriate live contexts',()=>{const monitor=nativeAreas.actions!.find(area=>area.actions.includes('actions.watch'))!;assert.equal(monitor.selected,true);assert.equal(nativeAreaEligible(monitor,'runs'),true);assert.equal(nativeAreaEligible(monitor,'workflows'),false);assert.equal(nativeAreas.releases!.find(area=>area.actions.includes('releases.create-with-options'))!.selected,undefined);});
