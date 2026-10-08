@@ -17,8 +17,8 @@ class Request extends EventEmitter {
   setHeader(name: string, value: string) {this.headers[name] = value;}
   end() {queueMicrotask(() => this.start());}
   abort() {this.aborted = true; this.incoming?.destroy(); this.emit('close');}
-  response() {
-    const response = Object.assign(new PassThrough({highWaterMark: 64 * 1024}), {headers: {'content-type': 'application/octet-stream'}, statusCode: 200});
+  response(statusCode = 200) {
+    const response = Object.assign(new PassThrough({highWaterMark: 64 * 1024}), {headers: {'content-type': 'application/octet-stream'}, statusCode});
     this.incoming = response; this.emit('response', response); return response;
   }
 }
@@ -29,6 +29,11 @@ test('manual redirect exposes location and aborts original request without hidde
   assert.equal(response.status, 302); assert.equal(response.headers.get('location'), 'https://release-assets.githubusercontent.com/public'); assert.equal(response.url, 'https://github.com/public');
   assert.equal(fake.request.aborted, true); assert.deepEqual(fake.options(), {url: 'https://github.com/public', method: 'GET', redirect: 'manual', credentials: 'omit', useSessionCookies: false});
   assert.deepEqual(fake.request.headers, {accept: 'image/png'});
+});
+
+test('bodyless and malformed response statuses do not throw outside the transfer promise', async () => {
+  for (const status of [204, 205, 304]) {const fake = fakeNetwork(request => request.response(status)); const response = await fake.fetch('https://example.com'); assert.equal(response.status, status); assert.equal(response.body, null); assert.equal(fake.request.aborted, true);}
+  const fake = fakeNetwork(request => request.response(0)); await assert.rejects(fake.fetch('https://example.com')); assert.equal(fake.request.aborted, true);
 });
 
 test('response streams before completion, preserves bounded backpressure and aborts on reader cancellation', async () => {
@@ -55,7 +60,18 @@ test('request errors propagate and credential headers or implicit-follow transfe
   await assert.rejects(broken.fetch('https://example.com'), /network unavailable/);
   for (const name of ['Authorization', 'Cookie', 'Proxy-Authorization']) {
     const fake = fakeNetwork(() => assert.fail('request should not start'));
-    await assert.rejects(fake.fetch('https://example.com', {headers: {[name]: 'forbidden'}}), /credential headers/); assert.equal(fake.request.aborted, true);
+    await assert.rejects(fake.fetch('https://example.com', {headers: {[name]: 'forbidden'}}), /credential headers/); assert.equal(fake.options(), undefined);
   }
   for (const init of [{method: 'POST'}, {redirect: 'follow'}, {body: 'data'}] as RequestInit[]) await assert.rejects(createElectronFetch({request: () => assert.fail('request should not start')} as unknown as Net)('https://example.com', init), /manual redirects/);
+});
+
+test('explicit authorization requires a trusted URL predicate and is never forwarded to redirected hosts', async () => {
+  const request = new Request(); request.start = () => request.emit('redirect', 302, 'GET', 'https://release-assets.githubusercontent.com/public');
+  const network = {request: () => request} as unknown as Pick<Net, 'request'>;
+  const fetch = createElectronFetch(network, {authorizeHeader: url => url.origin === 'https://api.example.com' && url.pathname.startsWith('/repos/')});
+  const response = await fetch(new URL('https://api.example.com/repos/owner/project/releases/assets/1'), {headers: {Authorization: 'Bearer explicit-test-value'}});
+  assert.equal(response.status, 302); assert.equal(request.aborted, true); assert.equal(request.headers.authorization, 'Bearer explicit-test-value');
+  await assert.rejects(fetch(response.headers.get('location')!, {headers: {Authorization: 'Bearer explicit-test-value'}}), /not approved/);
+  await assert.rejects(fetch('https://api.example.com/user', {headers: {Authorization: 'Bearer explicit-test-value'}}), /not approved/);
+  for (const name of ['Cookie', 'Proxy-Authorization']) await assert.rejects(fetch('https://api.example.com/repos/owner/project', {headers: {[name]: 'forbidden'}}), /not approved/);
 });

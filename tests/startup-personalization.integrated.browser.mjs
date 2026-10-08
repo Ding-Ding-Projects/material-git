@@ -20,7 +20,7 @@ async function launch(interact = false) {
   const proxy = environment.HTTPS_PROXY || environment.HTTP_PROXY;
   activeApp = await electron.launch({executablePath: require('electron'), args: ['--no-sandbox', '--ozone-platform=headless', ...(proxy ? [`--proxy-server=${proxy}`] : []), '.'], cwd: root, env: environment});
   const page = await activeApp.firstWindow(); page.on('pageerror', error => errors.push(error.message));
-  if (interact) await page.keyboard.press('Escape');
+  if (interact) {await page.waitForFunction(() => typeof document.querySelector('mg-app')?.startupInteraction === 'function'); await page.keyboard.press('Escape');}
   await page.waitForFunction(() => document.querySelector('mg-app')?.startupReady, {timeout: 20000});
   await page.waitForFunction(() => {const card = document.querySelector('mg-startup-personalization'); return card && (card.context.firstRun || card.context.busy || card.context.error || card.context.updating || card.context.schoolMode || card.context.quiet || !!card.dish || card.attempted);});
   return page;

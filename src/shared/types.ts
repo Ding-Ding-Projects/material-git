@@ -56,6 +56,8 @@ export interface AuthState {
   hostname?: string; deviceCode?: string; verificationUrl?: string; message?: string; error?: string; tokenCopyAvailable?: boolean; hostRegistrationAvailable?: boolean;
 }
 export interface MaterialBridge extends StartupBridge {
+  downloads(request:import('./downloads').DownloadRequest):Promise<import('./downloads').DownloadPage>;
+  onDownload(callback:(job:import('./downloads').DownloadJob)=>void):()=>void;
   git(action:import('./git').GitAction,payload?:import('./git').GitPayload):Promise<import('./git').GitResponse>;
   github(action:import('./github').GitHubAction,payload?:import('./github').GitHubPayload):Promise<import('./github').GitHubResponse>;
   workspace(action:import('./workspace').WorkspaceAction,payload?:unknown):Promise<import('./workspace').WorkspaceResponse>;
