@@ -1,3 +1,4 @@
+import type {StartupBridge} from './startup-personalization';
 export type ControlKind = 'text' | 'multiline' | 'boolean' | 'number' | 'choice' | 'multi-choice' | 'file' | 'directory' | 'entity' | 'secret';
 export interface CommandOption {
   name: string; description: string; type: ControlKind; required?: boolean;
@@ -36,6 +37,7 @@ export interface AppSettings {
   fontWeight:number; fontStyle:'normal'|'italic'; letterSpacing:number; lineHeight:number; borderRadius:number;
 }
 export interface Bootstrap {
+  startupFirstRun?:boolean;
   persistedSettingsKeys?:string[]; preferencesAdvanced?:import('./preferences-advanced').PreferenceStatus;
   catalog: Catalog; settings: AppSettings; version: string; builtAt: string | null;
   platform: string; ghVersion: string | null; authenticated: boolean;
@@ -53,7 +55,7 @@ export interface AuthState {
   accounts: AuthAccount[]; allowedHosts: string[]; allowedScopes: string[];
   hostname?: string; deviceCode?: string; verificationUrl?: string; message?: string; error?: string; tokenCopyAvailable?: boolean; hostRegistrationAvailable?: boolean;
 }
-export interface MaterialBridge {
+export interface MaterialBridge extends StartupBridge {
   git(action:import('./git').GitAction,payload?:import('./git').GitPayload):Promise<import('./git').GitResponse>;
   github(action:import('./github').GitHubAction,payload?:import('./github').GitHubPayload):Promise<import('./github').GitHubResponse>;
   workspace(action:import('./workspace').WorkspaceAction,payload?:unknown):Promise<import('./workspace').WorkspaceResponse>;
