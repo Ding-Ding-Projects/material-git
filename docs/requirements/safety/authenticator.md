@@ -12,6 +12,10 @@ Native RFC TOTP validation and encrypted records have tests. QR image/camera and
 
 This is a scoped implementation assessment, not a claim that the whole requirement is finished. Surface states: **app: partial; site: unknown; repository: not-applicable**. See [implementation reference](../../security.md) and the [complete inventory](../../coverage/features.json). Controls belong in the destination that owns the data; the primary UI must remain a productive task workspace.
 
+## Controls, defaults and limits
+
+Native TOTP defaults are `SHA1`, `6` digits and a `30`-second period. Algorithms `SHA1`/`SHA256`/`SHA512`, digits `6`/`7`/`8` and periods `1`–`86400` seconds are accepted. Storage permits `100` entries. Codes use the system clock; `clockVerified: false` means no trusted external clock verification has occurred.
+
 ## Failures and remaining work
 
 Verify RFC vectors, algorithms/digits/period, countdown/skew, all registration paths and confirmed sensitive exports.
@@ -24,6 +28,6 @@ Personal vocabulary mappings, credentials, authentication headers, private keys 
 
 ## Checks
 
-Inventory integrity is tested independently from feature behavior. Close this row only after feature-specific source/validation review, persistence and negative-regression checks, final built GUI interaction and genuine capture at the same revision. Linux evidence does not prove Windows installation or credential-storage behavior. Cantonese draft articles below do not certify complete app/site localization.
+Inventory integrity is tested independently from feature behavior. Close this row only after feature-specific source/validation review, persistence and negative-regression checks, final built GUI interaction and genuine capture at the same revision. Linux evidence does not prove Windows installation or credential-storage behavior. Article translation is separate from complete app/site localization and live interface verification.
 
-Suggested articles: [requirements index](../README.md) · [GitHub actions audit](../../coverage/github-actions-audit.md) · [Git actions audit](../../coverage/git-actions-audit.md) · [Cantonese draft](authenticator.yue.md).
+Suggested articles: [requirements index](../README.md) · [GitHub actions audit](../../coverage/github-actions-audit.md) · [Git actions audit](../../coverage/git-actions-audit.md) · [Cantonese article](authenticator.yue.md).
