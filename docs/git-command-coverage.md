@@ -1,12 +1,12 @@
 # Reachable Git command coverage
 
-This map compares implementation checkpoint `3981574 + integrated comparison workflows` with all 173 names in the source-derived Git 2.56 inventory. It counts command names, not reviewed task identifiers. The supplemental contrib/subtree helper is recorded separately.
+This map compares implementation checkpoint `6343e93 + advertised remote workflows` with all 173 names in the source-derived Git 2.56 inventory. It counts command names, not reviewed task identifiers. The supplemental contrib/subtree helper is recorded separately.
 
 | Fully covered | Partial reachable forms | Missing command contracts |
 | --- | --- | --- |
-| 0 | 83 | 90 |
+| 0 | 84 | 89 |
 
-Of the partial forms, 81 directly invoke the named command, one delegates GC through `maintenance --task=gc`, and one shows current-branch state derived from `symbolic-ref`. Six missing command contracts have equivalent natural workflows using another native command. Internal helper execution, help text, executable presence and proposed destinations are not direct coverage.
+Of the partial forms, 82 directly invoke the named command, one delegates GC through `maintenance --task=gc`, and one shows current-branch state derived from `symbolic-ref`. Six missing command contracts have equivalent natural workflows using another native command. Internal helper execution, help text, executable presence and proposed destinations are not direct coverage.
 
 No command is fully covered: the complete form, option and per-control execution audits remain open. Representative native fixtures and selected browser interactions prove narrower behavior. The [machine-readable map](git-command-coverage.json) preserves every audited option mention, exact native form, reachable route, evidence limit and remaining work. Official option mentions include cross-references and are not an argument grammar.
 
@@ -94,7 +94,7 @@ No command is fully covered: the complete form, option and per-control execution
 | `last-modified` | missing | History > Explore latest changes by tracked path with runtime-aware depth and output controls. |
 | `log` | partial | History > Graph / History filters / File history |
 | `ls-files` | partial | Maintenance > Tracked files; Inspect repository > Index |
-| `ls-remote` | missing | Remotes > Read and choose advertised remote refs before fetching or publishing. |
+| `ls-remote` | partial | Remotes > Advertised references > selected-branch reviewed fetch |
 | `ls-tree` | partial | Maintenance > Inspect repository > Tracked tree |
 | `mailinfo` | missing | Patches > Inspect an approved mailbox message and extract reviewed message/patch outputs. |
 | `mailsplit` | missing | Patches > Split an approved mailbox into a fresh reviewed output directory. |
@@ -190,7 +190,7 @@ No command is fully covered: the complete form, option and per-control execution
 
 ## Immediate implementation priorities
 
-1. Advertised remote ref chooser (ls-remote), then explicit multi-ref/delete/lease policies.
+1. Explicit multi-ref/delete/lease remote policies after the advertised reference chooser.
 2. Interactive rebase todo controls with owned native editors and recovery.
 3. Recorded conflict resolution (rerere), trailer editing and patch identity.
 4. Pack inspection/import/verification and symbolic/ref transaction tools.
@@ -199,4 +199,4 @@ No command is fully covered: the complete form, option and per-control execution
 
 ## Cantonese coverage note
 
-呢個表逐個比較 173 個已審核 Git 指令名稱。83 個指令有部分可到達嘅原生操作，90 個仲未有獨立介面契約，冇任何指令已驗證全部形式同選項。工作流程數目、程式存在或者內部程序執行，唔等於完整指令覆蓋。
+呢個表逐個比較 173 個已審核 Git 指令名稱。84 個指令有部分可到達嘅原生操作，89 個仲未有獨立介面契約，冇任何指令已驗證全部形式同選項。工作流程數目、程式存在或者內部程序執行，唔等於完整指令覆蓋。
