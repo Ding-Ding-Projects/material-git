@@ -9,3 +9,5 @@ mg-site-layout,mg-site-surface{min-width:0;max-width:100%}
 .brand{flex:1}.brand>span{min-width:0;overflow-wrap:anywhere}.header-actions{flex:none}
 
 .docs-index>md-outlined-select+md-outlined-select{margin-top:16px}
+
+.attention-time{display:flex;flex-wrap:wrap;gap:8px 24px;padding:12px 0;font-size:.8rem;font-variant-numeric:tabular-nums}.attention-time span{overflow-wrap:anywhere;max-width:100%}.momentum-bar p{margin:0}.momentum-bar .actions{margin:0;max-width:100%}
