@@ -38,6 +38,7 @@ function item(row:Record<string,unknown>):GitHubItem {const result=redacted(row)
 export interface GitHubDependencies {authorize?:(action:GitHubAction,payload:GitHubPayload)=>Promise<void>;completed?:(action:GitHubAction,payload:GitHubPayload)=>Promise<void>;resolveHost?:(hostname?:string)=>string;cli?:(argv:string[])=>Promise<Operation>;request?:(method:string,endpoint:string,body?:Record<string,unknown>)=>Promise<{data:unknown;hasNext:boolean}>}
 /** Fixed domain actions, provider-backed entities and validated main-process argument construction. */
 export class GitHubService {
+ invalidateReviews(){this.reviews.clear();}
  private context=new AsyncLocalStorage<string>();
  private reviews=new Map<string,{action:GitHubAction;payload:GitHubPayload;account:string;expiresAt:number;hostname:string;prepared:PreparedTask;targets:string}>();
  private watches=new Map<string,RunWatch>();private watchContext=new AsyncLocalStorage<string>();

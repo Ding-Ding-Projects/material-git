@@ -1,6 +1,6 @@
 import type {Domain} from './github-workspace-model';
 /** Product destinations and contextual actions, independent of command-family navigation. */
-export interface NativeArea {id:string;label:string;yue:string;icon:string;actions:string[];initial?:string;selected?:boolean;selection?:'run'|'workflow'}
+export interface NativeArea {id:string;label:string;yue:string;icon:string;actions:string[];initial?:string;selected?:boolean;selection?:'run'|'workflow';workflows?:{commandId:string;label:string;yue:string}[]}
 export const nativeAreas:Partial<Record<Domain,NativeArea[]>>={
  repositories:[
  {id:'create',label:'Create or fork',yue:'建立或分叉',icon:'repo',actions:['repositories.create-with-options','repositories.fork-with-options'],initial:'repositories.create-with-options'},
@@ -28,7 +28,11 @@ export const nativeAreas:Partial<Record<Domain,NativeArea[]>>={
  ],
  discussions:[{id:'edit',label:'Edit discussion',yue:'編輯討論',icon:'comment',selected:true,actions:['discussions.edit'],initial:'discussions.edit'}],
  gists:[{id:'files',label:'Manage files',yue:'管理檔案',icon:'file',selected:true,actions:['gists.inspect','gists.rename-file'],initial:'gists.inspect'}],
- codespaces:[{id:'manage',label:'Workspace settings',yue:'工作空間設定',icon:'cloud',selected:true,actions:['codespaces.configure','codespaces.logs','codespaces.rebuild'],initial:'codespaces.configure'}],
+ codespaces:[
+ {id:'connection',label:'Connection',yue:'連接',icon:'cloud',selected:true,actions:[],workflows:[{commandId:'codespace ssh',label:'SSH configuration and diagnostics',yue:'SSH 設定同診斷'},{commandId:'codespace code',label:'Open editor',yue:'開啟編輯器'},{commandId:'codespace jupyter',label:'Open JupyterLab',yue:'開啟 JupyterLab'}]},
+ {id:'files',label:'Files',yue:'檔案',icon:'folder',selected:true,actions:[],workflows:[{commandId:'codespace cp',label:'Copy files',yue:'複製檔案'}]},
+ {id:'ports',label:'Ports',yue:'連接埠',icon:'activity',selected:true,actions:[],workflows:[{commandId:'codespace ports forward',label:'Forward ports',yue:'轉送連接埠'},{commandId:'codespace ports visibility',label:'Change access',yue:'更改存取權'}]},
+ {id:'manage',label:'Workspace settings',yue:'工作空間設定',icon:'cloud',selected:true,actions:['codespaces.configure','codespaces.logs','codespaces.rebuild'],initial:'codespaces.configure'}],
  'repository-security':[
  {id:'rulesets',label:'Rulesets',yue:'規則集',icon:'shield',actions:['security.ruleset-list','security.ruleset-view','security.ruleset-check'],initial:'security.ruleset-list'},
  {id:'attestations',label:'Attestations',yue:'證明',icon:'check',actions:['security.attestation-verify','security.attestation-download','security.attestation-trusted-root'],initial:'security.attestation-verify'}
