@@ -31,8 +31,8 @@ export function validateUnlockDuration(input:unknown):UnlockDuration{if(!input||
 /** The native caller chooses the channel and action; renderer-supplied target arrays never select permissions. */
 export function protectedLockIds(channel:string,action?:string,commandId?:string):string[]{
  const lane=channel==='execute'||channel==='choices'?'commands':channel==='auth'?'accounts':channel==='api'?'api':channel==='cliConfig'?'cli-config':channel==='settings'?'settings':channel==='tools'?'tools':channel;
- const ids=[`destination:${lane}`];if(commandId){if(!validLockId(commandId))throw new Error('Invalid command lock identifier');ids.push(`command:${commandId}`,`tab:${commandId}`);}if(action){if(!validLockId(action))throw new Error('Invalid action lock identifier');ids.push(`${channel}:${action}`);}return ids;
+ const ids=[`destination:${lane}`];if(commandId){const key=commandId.replaceAll(' ','.');if(!validLockId(key))throw new Error('Invalid command lock identifier');ids.push(`command:${key}`,`tab:${key}`);}if(action){if(!validLockId(action))throw new Error('Invalid action lock identifier');ids.push(`${channel}:${action}`);}return ids;
 }
 
 export const nativeLockLanes=['commands','accounts','api','cli-config','settings','tools','security','history','notifications','records','integrations','assistant','downloads','updates','docs','about','home'] as const;
-export function nativeLockTargets(commands:Array<{id:string;title:string}>=[]):LockTarget[]{return [...nativeLockLanes.map(lane=>({id:`destination:${lane}`,label:lane})),...commands.flatMap(command=>[{id:`command:${command.id}`,label:command.title,ancestors:['destination:commands']},{id:`tab:${command.id}`,label:command.title,ancestors:['destination:commands']}])];}
+export function nativeLockTargets(commands:Array<{id:string;title:string}>=[]):LockTarget[]{return [...nativeLockLanes.map(lane=>({id:`destination:${lane}`,label:lane})),...commands.flatMap(command=>[{id:`command:${command.id.replaceAll(' ','.')}`,label:command.title,ancestors:['destination:commands']},{id:`tab:${command.id.replaceAll(' ','.')}`,label:command.title,ancestors:['destination:commands']}])];}
