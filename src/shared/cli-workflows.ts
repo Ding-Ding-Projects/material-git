@@ -5,6 +5,7 @@ export interface CliWorkflowPayload {hostname?:string;commandId?:string;fields?:
 export interface WorkflowChoice {value:string;label:string;detail:string;data?:Record<string,string>}
 export interface WorkflowPlan {commandId:string;fields:Record<string,unknown>}
 export interface CliWorkflowReview {kind:'review';reviewId:string;commandId:string;argv:string[];executable:string;warnings:string[];expiresAt:string;description:string;hostname?:string;account?:string;target?:string;destructive?:boolean}
-export interface CliWorkflowInventory {kind:'inventory';commands:CommandDefinition[];copilotInstalled:boolean;copilotHelp?:string;blockers:{id:string;reason:string}[]}
+export interface CopilotCapabilities {checked:boolean;prompt:boolean;message:string}
+export interface CliWorkflowInventory {kind:'inventory';commands:CommandDefinition[];copilotInstalled:boolean;copilotHelp?:string;copilotCapabilities?:CopilotCapabilities;blockers:{id:string;reason:string}[]}
 export type CliWorkflowResponse=CliWorkflowReview|CliWorkflowInventory|{kind:'choices';items:WorkflowChoice[];hasNext:boolean;notice?:string}|{kind:'operation';operation:Operation}|{kind:'file';file:string;preview:string}|{kind:'cancelled'};
 export interface CliWorkflowsBridge {cliWorkflows(action:CliWorkflowAction,payload?:CliWorkflowPayload):Promise<CliWorkflowResponse>}
