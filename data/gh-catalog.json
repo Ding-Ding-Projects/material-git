@@ -8323,8 +8323,8 @@
           "multiple": true
         }
       ],
-      "mutation": false,
-      "destructive": false
+      "mutation": true,
+      "destructive": true
     },
     {
       "id": "cache delete",
