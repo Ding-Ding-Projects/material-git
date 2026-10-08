@@ -1,8 +1,9 @@
 import type {Domain} from './github-workspace-model';
 /** Product destinations and contextual actions, independent of command-family navigation. */
-export interface NativeArea {id:string;label:string;yue:string;icon:string;actions:string[];initial?:string;selected?:boolean;selection?:'run'}
+export interface NativeArea {id:string;label:string;yue:string;icon:string;actions:string[];initial?:string;selected?:boolean;selection?:'run'|'workflow'}
 export const nativeAreas:Partial<Record<Domain,NativeArea[]>>={
  repositories:[
+ {id:'create',label:'Create or fork',yue:'建立或分叉',icon:'repo',actions:['repositories.create-with-options','repositories.fork-with-options'],initial:'repositories.create-with-options'},
  {id:'files',label:'Files',yue:'檔案',icon:'folder',actions:['repositories.read-directory','repositories.read-file','repositories.gitignore-list','repositories.gitignore-view','repositories.license-list','repositories.license-view'],initial:'repositories.read-directory'},
  {id:'labels',label:'Labels',yue:'標籤',icon:'tag',actions:['repositories.label-list','repositories.label-create','repositories.label-edit','repositories.label-clone','repositories.label-delete'],initial:'repositories.label-list'},
  {id:'automation',label:'Agents & skills',yue:'代理同技能',icon:'extension',actions:['repositories.agent-list','repositories.agent-create','repositories.agent-view','repositories.skill-list','repositories.skill-search','repositories.skill-preview','repositories.skill-install','repositories.skill-update','repositories.skill-publish'],initial:'repositories.agent-list'},
@@ -18,7 +19,7 @@ export const nativeAreas:Partial<Record<Domain,NativeArea[]>>={
  {id:'my-work',label:'My work & new requests',yue:'我嘅工作同新增要求',icon:'pull',actions:['pulls.status','pulls.create-with-properties'],initial:'pulls.status'},
  {id:'review-tools',label:'Review tools',yue:'審核工具',icon:'check',selected:true,actions:['pulls.checks','pulls.diff','pulls.ready','pulls.update-branch','pulls.configure','pulls.lock','pulls.unlock','pulls.merge-with-options'],initial:'pulls.checks'}
  ],
- actions:[{id:'monitor',label:'Run progress',yue:'執行進度',icon:'check',selected:true,selection:'run',actions:['actions.watch'],initial:'actions.watch'},{id:'caches',label:'Caches',yue:'快取',icon:'folder',actions:['actions.cache-list','actions.cache-delete'],initial:'actions.cache-list'}],
+ actions:[{id:'dispatch',label:'Workflow inputs',yue:'工作流程輸入',icon:'check',selected:true,selection:'workflow',actions:['actions.dispatch-with-options'],initial:'actions.dispatch-with-options'},{id:'monitor',label:'Run progress',yue:'執行進度',icon:'check',selected:true,selection:'run',actions:['actions.watch'],initial:'actions.watch'},{id:'caches',label:'Caches',yue:'快取',icon:'folder',actions:['actions.cache-list','actions.cache-delete'],initial:'actions.cache-list'}],
  releases:[{id:'prepare',label:'Prepare release',yue:'準備版本',icon:'release',actions:['releases.create-with-options'],initial:'releases.create-with-options'},{id:'verification',label:'Verify release',yue:'驗證版本',icon:'shield',selected:true,actions:['releases.verify','releases.verify-asset','releases.delete-asset'],initial:'releases.verify'}],
  projects:[
  {id:'items',label:'Manage items',yue:'管理項目',icon:'board',selected:true,actions:['projects.item-list','projects.item-add','projects.item-create','projects.item-edit','projects.item-archive','projects.item-delete'],initial:'projects.item-list'},
@@ -38,7 +39,8 @@ export const nativeAreas:Partial<Record<Domain,NativeArea[]>>={
  ]
 };
 export const taskLabels:Record<string,string>={
- 'merge-with-options':'合併策略同自動合併','create-with-options':'版本說明同資產','default-context':'預設儲存庫','account-status':'我嘅 GitHub 工作','license-notices':'應用程式授權聲明','clear-cli-cache':'清除設定快取',watch:'追蹤執行進度',
+ 'dispatch-with-options':'輸入欄位同輸入檔案','fork-with-options':'分叉至帳戶或機構',
+ 'merge-with-options':'合併策略同自動合併','create-with-options':'完整建立選項','default-context':'預設儲存庫','account-status':'我嘅 GitHub 工作','license-notices':'應用程式授權聲明','clear-cli-cache':'清除設定快取',watch:'追蹤執行進度',
  'read-directory':'瀏覽目錄','read-file':'讀取檔案','gitignore-list':'忽略範本','gitignore-view':'查看忽略範本','license-list':'授權範本','license-view':'查看授權範本',
  'label-list':'瀏覽標籤','label-create':'新增標籤','label-edit':'編輯標籤','label-clone':'複製標籤','label-delete':'刪除標籤',
  'agent-list':'代理工作','agent-create':'新增代理工作','agent-view':'查看代理工作','skill-list':'技能','skill-search':'搜尋技能','skill-preview':'預覽技能','skill-install':'安裝技能','skill-update':'更新技能','skill-publish':'發佈技能',
@@ -50,4 +52,4 @@ export const taskLabels:Record<string,string>={
 };
 
 /** Run monitoring is unavailable for workflow-definition selections. */
-export function nativeAreaEligible(area:NativeArea,listMode:string):boolean{return area.selection!=='run'||listMode!=='workflows';}
+export function nativeAreaEligible(area:NativeArea,listMode:string):boolean{return area.selection==='run'?listMode!=='workflows':area.selection==='workflow'?listMode==='workflows':true;}

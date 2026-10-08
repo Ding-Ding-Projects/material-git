@@ -15,3 +15,5 @@ test('every native GitHub task has one localized contextual destination',()=>{
 });
 
 test('run monitoring and release preparation have appropriate live contexts',()=>{const monitor=nativeAreas.actions!.find(area=>area.actions.includes('actions.watch'))!;assert.equal(monitor.selected,true);assert.equal(nativeAreaEligible(monitor,'runs'),true);assert.equal(nativeAreaEligible(monitor,'workflows'),false);assert.equal(nativeAreas.releases!.find(area=>area.actions.includes('releases.create-with-options'))!.selected,undefined);});
+
+test('structured dispatch belongs only to workflow selections and creation is usable before selecting a repository',()=>{const dispatch=nativeAreas.actions!.find(area=>area.actions.includes('actions.dispatch-with-options'))!;assert.equal(nativeAreaEligible(dispatch,'workflows'),true);assert.equal(nativeAreaEligible(dispatch,'runs'),false);const create=nativeAreas.repositories!.find(area=>area.actions.includes('repositories.create-with-options'))!;assert.equal(create.selected,undefined);});
