@@ -1,12 +1,12 @@
 # Reachable Git command coverage
 
-This map compares implementation checkpoint `6343e93 + advertised remote workflows` with all 173 names in the source-derived Git 2.56 inventory. It counts command names, not reviewed task identifiers. The supplemental contrib/subtree helper is recorded separately.
+This map compares implementation checkpoint `1480148 + reference/index inspection workflows` with all 173 names in the source-derived Git 2.56 inventory. It counts command names, not reviewed task identifiers. The supplemental contrib/subtree helper is recorded separately.
 
 | Fully covered | Partial reachable forms | Missing command contracts |
 | --- | --- | --- |
-| 0 | 84 | 89 |
+| 0 | 89 | 84 |
 
-Of the partial forms, 82 directly invoke the named command, one delegates GC through `maintenance --task=gc`, and one shows current-branch state derived from `symbolic-ref`. Six missing command contracts have equivalent natural workflows using another native command. Internal helper execution, help text, executable presence and proposed destinations are not direct coverage.
+Of the partial forms, 87 directly invoke the named command, one delegates GC through `maintenance --task=gc`, and one shows current-branch state derived from `symbolic-ref`. Six missing command contracts have equivalent natural workflows using another native command. Internal helper execution, help text, executable presence and proposed destinations are not direct coverage.
 
 No command is fully covered: the complete form, option and per-control execution audits remain open. Representative native fixtures and selected browser interactions prove narrower behavior. The [machine-readable map](git-command-coverage.json) preserves every audited option mention, exact native form, reachable route, evidence limit and remaining work. Official option mentions include cross-references and are not an argument grammar.
 
@@ -30,7 +30,7 @@ No command is fully covered: the complete form, option and per-control execution
 | `check-attr` | partial | Maintenance > Inspect repository > Attributes |
 | `check-ignore` | partial | Maintenance > Inspect repository > Ignored files |
 | `check-mailmap` | partial | History > Identity mapping |
-| `check-ref-format` | missing | Branches/References > Validate a selected branch or full reference explicitly, beyond internal validation. |
+| `check-ref-format` | partial | Maintenance > Inspect repository > Validate reference name |
 | `checkout` | missing | Equivalent natural workflow uses switch/restore; this command spelling/output/option contract is not exposed or verified directly. |
 | `checkout--worker` | missing | Git-owned internal/helper/protocol command. Its parent workflow does not establish a separately reachable command contract; add explicit inspection/lifecycle or typed transfer controls before claiming coverage. |
 | `checkout-index` | partial | Maintenance > Tracked files > Restore staged contents |
@@ -56,8 +56,8 @@ No command is fully covered: the complete form, option and per-control execution
 | `describe` | partial | Maintenance > Inspect repository > Nearest tag |
 | `diagnose` | missing | Support > Build an explicit reviewed diagnostics archive with destination and privacy preview. |
 | `diff` | partial | Changes > View diff |
-| `diff-files` | missing | Changes > Inspect index versus working files with raw/name/stat result choices. |
-| `diff-index` | missing | Changes/History > Compare selected tree with index or working files. |
+| `diff-files` | partial | Maintenance > Inspect repository > Index versus working files |
+| `diff-index` | partial | Maintenance > Inspect repository > Tree versus index or files |
 | `diff-pairs` | missing | History > Compare paired tree/object IDs using supported runtime capabilities. |
 | `diff-tree` | partial | Maintenance > Inspect repository > Commit file changes |
 | `difftool` | missing | Changes > Launch a native-picked trusted comparison program on reviewed input copies. |
@@ -156,7 +156,7 @@ No command is fully covered: the complete form, option and per-control execution
 | `shell` | missing | Git-owned internal/helper/protocol command. Its parent workflow does not establish a separately reachable command contract; add explicit inspection/lifecycle or typed transfer controls before claiming coverage. |
 | `shortlog` | partial | History > Contributors |
 | `show` | partial | History > Commit details; Conflicts > three-way views |
-| `show-branch` | missing | Branches > Compare selected branch ancestry with structured graph output. |
+| `show-branch` | partial | Maintenance > Inspect repository > Branch ancestry summary |
 | `show-index` | missing | Object storage > Inspect an approved pack index without arbitrary file paths. |
 | `show-ref` | partial | Maintenance > Reference maintenance > References |
 | `sparse-checkout` | partial | Maintenance > Sparse checkout |
@@ -179,7 +179,7 @@ No command is fully covered: the complete form, option and per-control execution
 | `upload-archive--writer` | missing | Git-owned internal/helper/protocol command. Its parent workflow does not establish a separately reachable command contract; add explicit inspection/lifecycle or typed transfer controls before claiming coverage. |
 | `upload-pack` | missing | Git-owned internal/helper/protocol command. Its parent workflow does not establish a separately reachable command contract; add explicit inspection/lifecycle or typed transfer controls before claiming coverage. |
 | `url-parse` | missing | Remotes > Explain a selected URL after detecting Git 2.56 support, with credential redaction. |
-| `var` | missing | Repository settings > Inspect safe selected effective identity/path variables without bulk environment export. |
+| `var` | partial | Maintenance > Inspect repository > Resolved identity and settings |
 | `verify-commit` | partial | History > Verify signature |
 | `verify-pack` | missing | Object storage > Inspect/verify selected approved pack indexes. |
 | `verify-tag` | partial | Tags and stashes > Verify signature |
@@ -199,4 +199,4 @@ No command is fully covered: the complete form, option and per-control execution
 
 ## Cantonese coverage note
 
-呢個表逐個比較 173 個已審核 Git 指令名稱。84 個指令有部分可到達嘅原生操作，89 個仲未有獨立介面契約，冇任何指令已驗證全部形式同選項。工作流程數目、程式存在或者內部程序執行，唔等於完整指令覆蓋。
+呢個表逐個比較 173 個已審核 Git 指令名稱。89 個指令有部分可到達嘅原生操作，84 個仲未有獨立介面契約，冇任何指令已驗證全部形式同選項。工作流程數目、程式存在或者內部程序執行，唔等於完整指令覆蓋。
