@@ -20,7 +20,7 @@ export interface LocalToolsOptions {
     fetcher?: typeof fetch;
     engines?:BundledEngineFacade;
 }
-const schemas: Record<LocalToolsAction, string[]> = { 'converter-catalog': [], 'converter-pick': ['purpose'],'converter-inspect':['grant'], 'converter-start': ['grant', 'grants', 'adapter','options'], 'converter-status': ['page','query','regex','pattern','flags','status','date'],'converter-result':['id','index','operation'],'converter-bulk':['ids','operation','confirmed'], 'converter-cancel': ['id'],'converter-enqueue':['grant','grants','adapter','options'],'converter-queue':[],'converter-pause':[],'converter-resume':[], 'catalog-status': [], 'catalog-refresh': [], 'catalog-page': ['page', 'size', 'query', 'regex', 'pattern', 'flags', 'family', 'capability', 'sort', 'state', 'variant', 'quantization', 'maxBytes', 'fit'], 'hardware': [], 'pull-review': ['tags'], 'pull-start': ['tags', 'confirmed', 'parallel'], 'pull-status': [], 'pull-cancel': ['id'], 'pull-retry': ['id'], 'sessions': ['id'], 'session-create': ['model', 'name'], 'session-rename': ['id', 'name'], 'session-delete': ['id', 'confirmed'], 'session-export': ['id'], 'chat-start': ['session', 'prompt', 'system', 'temperature', 'tokens', 'context', 'regenerate', 'attachments'], 'chat-status': ['id'], 'chat-cancel': ['id'], 'harness-preflight': [], 'harness-launch': ['id', 'confirmed'], 'harness-status': ['id'], 'harness-restore': ['id'] };
+const schemas: Record<LocalToolsAction, string[]> = { 'converter-catalog': [], 'converter-pick': ['purpose'],'converter-inspect':['grant'], 'converter-start': ['grant', 'grants', 'adapter','options'], 'converter-status': ['page','query','regex','pattern','flags','status','date'],'converter-result':['id','index','operation'],'converter-bulk':['ids','operation','confirmed'], 'converter-cancel': ['id'],'converter-enqueue':['grant','grants','adapter','options'],'converter-queue':[],'converter-pause':[],'converter-resume':[], 'catalog-status': [], 'catalog-refresh': [], 'catalog-page': ['page', 'size', 'query', 'regex', 'pattern', 'flags', 'family', 'capability', 'sort', 'state', 'variant', 'quantization', 'maxBytes', 'fit'], 'model-capabilities':['model'],'model-copy':['source','destination','confirmed'],'generation-start':['model','prompt','system','temperature','tokens','context'],'generation-status':['id'],'generation-cancel':['id'],'generation-history':['page'],'hardware': [], 'pull-review': ['tags'], 'pull-start': ['tags', 'confirmed', 'parallel'], 'pull-status': [], 'pull-cancel': ['id'], 'pull-retry': ['id'], 'sessions': ['id'], 'session-create': ['model', 'name'], 'session-rename': ['id', 'name'], 'session-delete': ['id', 'confirmed'], 'session-export': ['id'], 'chat-start': ['session', 'prompt', 'system', 'temperature', 'tokens', 'context', 'regenerate', 'attachments'], 'chat-status': ['id'], 'chat-cancel': ['id'], 'harness-preflight': [], 'harness-launch': ['id', 'confirmed'], 'harness-status': ['id'], 'harness-restore': ['id'] };
 interface PrivateGrant extends FileGrant {
     path: string;
     mtime: number;
@@ -68,6 +68,12 @@ export class LocalToolsService {
             case 'catalog-status': return this.models.status();
             case 'catalog-refresh': return this.models.refreshCatalog();
             case 'catalog-page': return this.models.catalogPage(payload);
+            case 'model-capabilities':return this.models.modelCapabilities(payload);
+            case 'model-copy':return this.models.copyModel(payload);
+            case 'generation-start':return this.models.startGeneration(payload);
+            case 'generation-status':return this.models.generationStatus(payload);
+            case 'generation-cancel':return this.models.cancelGeneration(payload);
+            case 'generation-history':return this.models.generationHistory(payload);
             case 'hardware': return this.models.hardware();
             case 'pull-review': return this.models.pullReview(payload);
             case 'pull-start': return this.models.startPulls(payload);
