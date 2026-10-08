@@ -13,3 +13,6 @@ await fetchGh();
 
 const { fetchGit } = await import('./fetch-git.mjs');
 await fetchGit();
+
+const {fetchConverterEngines}=await import('./fetch-converter-engines.mjs');
+await fetchConverterEngines();
