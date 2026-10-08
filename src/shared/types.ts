@@ -59,6 +59,7 @@ export interface AuthState {
   sshKeyUploading?:boolean;sshKeyAvailable?:boolean;sshKeyReview?:AuthSshKeyReview;pendingSshKey?:{hostname:string;login:string}; hostname?: string; deviceCode?: string; verificationUrl?: string; message?: string; error?: string; tokenCopyAvailable?: boolean; hostRegistrationAvailable?: boolean;
 }
 export interface MaterialBridge extends StartupBridge {
+  exportAppearance?(payload:{document:unknown;format:'svg'|'png';png?:string}):Promise<{saved:boolean;name?:string}>;
   downloads(request:import('./downloads').DownloadRequest):Promise<import('./downloads').DownloadPage>;
   onDownload(callback:(job:import('./downloads').DownloadJob)=>void):()=>void;
   git(action:import('./git').GitAction,payload?:import('./git').GitPayload):Promise<import('./git').GitResponse>;
