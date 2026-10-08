@@ -14,6 +14,27 @@ function controllerMethod(file:string,name:string,bindings:Record<string,unknown
  // Named parameters in the body are supplied through bindings for event/ID methods.
  return new Function(...Object.keys(bindings),`const exports={};${output};return exports.default;`)(...Object.values(bindings)) as (this:unknown,...args:unknown[])=>unknown;
 }
+function modelBinding(name:string,bindings:Record<string,unknown>={}) {
+ const file='src/renderer/github-workspace-model.ts',text=source(file),tree=ts.createSourceFile(file,text,ts.ScriptTarget.Latest,true);let expression:string|undefined;
+ const visit=(node:ts.Node)=>{if(ts.isVariableDeclaration(node)&&node.name.getText(tree)===name&&node.initializer)expression=node.initializer.getText(tree);ts.forEachChild(node,visit);};visit(tree);assert.ok(expression,`${file}:${name}`);
+ const output=ts.transpileModule(`export default ${expression};`,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS}}).outputText;
+ return new Function(...Object.keys(bindings),`const exports={};${output};return exports.default;`)(...Object.values(bindings));
+}
+test('actual export controller snapshots selected visible provider rows and omits absent optional JSON fields',()=>{
+ const str=modelBinding('str'),first=modelBinding('first'),idOf=modelBinding('idOf',{str,first});
+ const exportRows=controllerMethod('src/renderer/github-workspace.ts','exportRows',{idOf});
+ const selected={number:11,title:'Visible selected',optional:undefined,nested:{value:'before',missing:undefined},labels:[{name:'original'}]};
+ const other={number:12,title:'Visible unselected'},hidden={number:13,title:'Filtered out'};
+ const context={rows:[selected,other],page:{items:[selected,other,hidden]},checked:new Set(['11','13']),exportRecords:[] as unknown[]};
+ exportRows.call(context);
+ assert.deepEqual(context.exportRecords,[{number:11,title:'Visible selected',nested:{value:'before'},labels:[{name:'original'}]}]);
+ assert.equal(Object.hasOwn(context.exportRecords[0] as object,'optional'),false);
+ assert.equal(Object.hasOwn(selected,'optional'),true,'normalization must not mutate provider rows');
+ selected.nested.value='after';selected.labels[0].name='changed';context.rows.push(hidden);context.checked.clear();
+ assert.deepEqual(context.exportRecords,[{number:11,title:'Visible selected',nested:{value:'before'},labels:[{name:'original'}]}]);
+ context.rows=[selected,other];exportRows.call(context);
+ assert.deepEqual(context.exportRecords.map(row=>(row as {number:number}).number),[11,12],'empty selection exports the visible rows, not the full provider page');
+});
 test('functional shell wires domain bridge, operation stream and isolated renderer',()=>{
  const app=source('src/renderer/app.ts');for(const boundary of ['window.material.bootstrap()','window.material.onOperation(','window.material.cancel(','window.material.choices(','mg-github-workspace','mg-api-explorer'])assert.ok(app.includes(boundary),boundary);
  assert.match(source('src/renderer/github-workspace-model.ts'),/bridge\.github\(action,parameters\)/);
