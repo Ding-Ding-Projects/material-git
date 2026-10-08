@@ -1,41 +1,32 @@
 # Handoff
 
-The primary command catalog was replaced by a domain workspace. Root integrates native GitHub tasks, the new Git workspace, security/preferences/tools and the remade site. This lane owns research, public requirement/evidence inventory and repository records; it does not publish or mutate GitHub metadata.
+Material Git is a productive Git/GitHub desktop with contextual records and tasks, a separate documentation site, and Windows and Linux runtime support. It is still incomplete. Keep every valid task contribution merged into main, preserve unfinished work in access-appropriate checkpoints, push frequently, and verify exact remote tips. Recovery checkpoints do not certify releases.
 
-## Completed in this lane
+## Current integrated behavior
 
-- Reusable workspace persistence, tabs/groups/pins/reordering, record imports/exports, bounded notifications and offline articles were committed as `b274ff5`/`72acb25`, integrated as `ecb41b5`/`5eb5cab`.
-- Inactive mounted tabs are excluded from palette controls across nested shadow roots (`b2ef620`).
-- Independent read-only Git/GitHub audits and action maps (`bb9d6a7`) separate native/UI gaps, platform/permission limits and unverified behavior; checker declarations are in `28d5688`.
-- All 104 canonical obligations have public-neutral IDs, independent app/site/repository scope, evidence states and categorized articles. All 104 Cantonese companions now translate their own requirement, current support and remaining work; known controls/defaults/limits are source-checked. This does not prove full runtime localization. Inventory tests reject omitted rows/evidence/articles and false complete claims; strict functional completeness remains red.
-- Public repository/agent/community records are refreshed. The neutral AGENTS discipline block is exact. Canonical-helper-exported instruction summary is explicitly partial; full-source export currently fails its own public guard.
+- Native approved GitHub host selection persists and controls repository/account context. Host or account changes invalidate GitHub, API and CLI reviews; active work prevents switching. Exact contextual locks cover native and generic execution routes, while cancellation remains available for owned processes.
+- Codespaces has contextual connection, file and port controls. Selected workflow runs have bound destructive deletion reviews. Copilot Tools uses installed-help capability checks, reviewed literal Explain/Suggest requests, executable receipts and scoped cancellation. Its own sign-in and entitlement still apply.
+- Source Control includes typed tree creation, conflict-safe merge previews, seven comparison tools, advertised remote references, reviewed tracking fetch, reference validation and independent index/worktree inspections. The pinned 173-command map has 89 partial and 84 missing direct contracts, with no claim of complete command parity.
+- Release asset downloads use native approved-host credentials, bounded streaming, integrity checks, owned cancellation and recoverable shutdown. The real Linux capture verified a 247-byte public SHA256SUMS asset against its provider digest. Its isolated profile had session-only recovery because protected OS storage was unavailable.
+- Ten structured export formats have actual GUI save evidence. Converters use bounded native workers, exact source-backed media executables, complete corresponding sources/licenses and archive byte verification after reopening. Ollama has full-inventory filtering before pagination, opaque image grants checked against actual vision capability and durable streamed history. Real Ollama inference remains unverified.
+- All 104 feature-specific Cantonese articles are maintained. Article translation does not establish complete runtime localization or a complete export of private canonical instructions.
 
-## Checks and evidence limits
+## Verification and publication
 
-Research negative checks reject missing CLI leaves/flags/config/environment, REST/GraphQL rows, evidence, Git plumbing/options and missing inventory limits. Palette fixtures cover inactive tabs, nested shadows and accessibility-hidden parents. Requirement checks distinguish a complete inventory from incomplete functionality. Article integrity checks reject missing or generic Cantonese sections, duplicated requirements, altered technical literals and lost numeric facts. They support editorial review rather than certify translation semantics.
+The integrated TypeScript check, production build and full 388-test suite passed with no failures or skips at source `8ba0410710f8b66a0c7f94867147ce31af8727d0`, built on Linux at `2026-10-08T14:57:32.612Z`. Later audit and handoff changes contain documentation only. Git/GitHub inventories validate, but functionality is not certified: 104 obligation rows retain 161 unresolved surface obligations.
 
-Earlier reusable components were driven in isolated Electron profiles through native IPC, including restart, tabs, offline navigation and notifications. Those captures prove only that earlier reusable-component scope. They do not prove the remade final app or every record restorer. Root retains the ledger; new source-tagged domain captures replace obsolete images, while untested surfaces remain open.
+All nine old core screenshots were replaced. The 21 reviewed captures in [the image ledger](docs/images/README.md) bind actual timestamps, PNG hashes/dimensions and artifact hashes to source `e464ff70f195dbd9584614b92a9547074e49200d`. They show real public records, truthful empty/error states, Accounts, source control, exports, native downloads, converters and presentation variants. They do not certify later changes, every workflow, native Windows installation or the entire interaction matrix.
 
-This older docs worktree references preferences/tools modules before their source integration and does not establish a whole-app typecheck. Root must run type/build checks on the integrated checkout. Linux Git is 2.52.0; Windows MinGit is 2.56.0.windows.2. No installed Windows vault/update proof or remote mutation is claimed by these audits.
+The documentation site at https://material-git.earlyray.chatgpt.site deployed successfully on `2026-10-08T14:54:40.785857Z`, retaining owner-private access, with 264 articles and 21 captures. Its exact upstream source is `2b211861d0545fc7fb7152299eb5423d4e17ef41`; the hosted source is `80bdd1612fa7ee32b4c1e70050199c93d9880685`. Thirteen site checks and the real Chromium flow passed. Later desktop documentation must be published separately.
 
-## Integrated evidence update
+The recorded Windows installer remains [build-16-1](https://github.com/Ding-Ding-Projects/material-git/releases/tag/build-16-1), version 0.16.1, source `85070852a673696c1881041b4bdc90112523dd9a`, published `2026-10-08T13:45:56Z`. It predates the current integration. The current workflow builds exact media sources on Linux, binds the artifact to its run/attempt/commit and verifies it on Windows before the supported build/package entrypoints. Branches retain build artifacts; only main publishes releases. Native Windows packaging and installed behavior require their own result.
 
-The Linux integrated suite recorded 241 passing tests before later CLI/Git/converter changes, then 275 passing tests with zero failures and zero skips after native converter payloads were available. The latter run preceded subsequent startup and final renderer regression changes; check the current integrated tree again. A separate actual Electron receipt identifies source `ba2330e68c0f404f64f35bb9beaac4d7e28b48b0`, built at `2026-10-08T13:13:40.872Z`, with real read-only domain lists, Accounts navigation, native Git selection and zero renderer errors. Read-only UI receipts do not prove remote writes, every contextual task or Windows installation.
+## Remaining work
 
-The documentation site deployment succeeded on 2026-10-08 at `13:04:34.624998 UTC`, retaining the owner-private audience and exact URL. Its deployment inventory recorded 255 articles and nine genuine images. This predates later article checkpoints; the deployment alone does not prove that every subsequent article edit is live. See [local verification](docs/local-verification.md).
+Read [the GitHub gap audit](docs/github-functional-gap-audit.md), [the Git command map](docs/git-command-coverage.md), [the roadmap](ROADMAP.md) and [the feature inventory](docs/requirements/README.md). Metadata inventories, representative fixtures and partial workflows never stand in for complete graphical semantics.
 
-## Remaining scope
+Open work includes remaining CLI/options/API semantics, interactive SSH/PTY behavior, real enterprise and Copilot permissions, Windows installation/vault/update behavior, decoder containment, real model inference, richer local tool formats, all-record restoration, every-element/menu/search coverage, complete localization/appearance and final recording/platform matrices. Keep permission and runtime limitations visible beside the relevant task.
 
-The action maps retain every built-in GitHub CLI leaf/flag, REST operation and GraphQL root field, plus Git builtin/distributed commands, documented option references, configuration/environment schemas and optional LFS references. Inventory does not establish graphical semantics. Close action-specific gaps with rich controls, native validation, exact preflight/recovery, runtime checks and final interactions.
+The repository About homepage update remains blocked by the connected credential's HTTP403 result. Do not claim it changed. Publication ownership covers approved main/task pushes, exact ref proofs, the site and release artifacts. No unrelated external messages or provider mutations are implied by this handoff.
 
-Git priorities include independent index/worktree state, rename/mode/symlink/submodule handling, operation continuation/abort, worktree occupancy, stale receipts, force-with-lease/refspec scope, untracked-data loss, configuration-defined hooks and optional helpers. Arbitrary extensions/aliases/programs cannot be certified from name discovery.
-
-The [roadmap](ROADMAP.md) retains universal localization, typography/image-layer depth, every-search/menu coverage, all-record async restore UI/hooks, export/archive fidelity, scoped bulk actions, converter/PDF/media adapters, Ollama catalogue/hardware/harness work, Status Hub registration/surface, provenance/capture/recording/design matrix and independent site equivalents. Do not delete difficult scope.
-
-## External state and next owner
-
-Known release remains [build-15-1](https://github.com/Ding-Ding-Projects/material-git/releases/tag/build-15-1) until root verifies a newer installer. Site URL is https://material-git.earlyray.chatgpt.site; audience stays owner-private. About homepage PATCH returned HTTP403 with the connected credential; permission resolution is separate from source work.
-
-Root owns authorized pushes, remote-ref proof, main/release publication, wiki/site deployment, Discussions/Project records, installer/social-preview evidence and release timings/counts/photos. This lane performed none of those remote actions. A local commit is not publication proof; no Project item should be Done merely because the inventory exists.
-
-Run integrated checks and the actual GUI harness, update evidence at one source/artifact revision, then publish under existing authorization and report real remote outcomes. See [CLOSEOUT_PROMPT.md](CLOSEOUT_PROMPT.md).
+Next: publish this exact reviewed main checkpoint, observe its Windows build to a terminal result, preserve evidence and fixes, then continue the explicitly documented functional gaps. See [CLOSEOUT_PROMPT.md](CLOSEOUT_PROMPT.md).

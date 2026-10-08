@@ -12,7 +12,7 @@ Check a feature only after actual behavior, meaningful verification and a curren
 
 - [ ] Finish natural Git/GitHub workflows and action-specific backend/UI gaps.
 - [ ] Verify final built interactions, draft protection, inline recovery and permission errors.
-- [ ] Replace obsolete captures/recording and complete language/theme/scale matrix.
+- [ ] Complete the remaining recording and interaction/language/theme/scale matrix. All nine obsolete core images have been replaced by 21 reviewed captures bound to source `e464ff70`; the full per-feature matrix remains open.
 - [ ] Verify independent site equivalents and preserve owner-private audience.
 - [ ] Prove fresh Windows install/offline dependencies, vault/update behavior and release artifacts.
 - [ ] Resolve authorized About homepage HTTP403 and external wiki/Discussion/Project/publication evidence.
