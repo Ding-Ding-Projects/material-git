@@ -1,8 +1,10 @@
 import type {Domain} from './github-workspace-model';
+import type {GitHubLocalSourceAction} from '../shared/github';
 /** Product destinations and contextual actions, independent of command-family navigation. */
-export interface NativeArea {id:string;label:string;yue:string;icon:string;actions:string[];initial?:string;selected?:boolean;selection?:'run'|'workflow';workflows?:{commandId:string;label:string;yue:string}[]}
+export interface NativeArea {id:string;label:string;yue:string;icon:string;actions:string[];initial?:string;selected?:boolean;selection?:'run'|'workflow';handoffs?:{action:GitHubLocalSourceAction;label:string;yue:string}[];workflows?:{commandId:string;label:string;yue:string}[]}
 export const nativeAreas:Partial<Record<Domain,NativeArea[]>>={
  repositories:[
+ {id:'local-git',label:'Local Git',yue:'本地 Git',icon:'repo',selected:true,actions:[],handoffs:[{action:'repositories.clone-source',label:'Clone selected repository',yue:'複製所選儲存庫'}]},
  {id:'create',label:'Create or fork',yue:'建立或分叉',icon:'repo',actions:['repositories.create-with-options','repositories.fork-with-options'],initial:'repositories.create-with-options'},
  {id:'files',label:'Files',yue:'檔案',icon:'folder',actions:['repositories.read-directory','repositories.read-file','repositories.gitignore-list','repositories.gitignore-view','repositories.license-list','repositories.license-view'],initial:'repositories.read-directory'},
  {id:'labels',label:'Labels',yue:'標籤',icon:'tag',actions:['repositories.label-list','repositories.label-create','repositories.label-edit','repositories.label-clone','repositories.label-delete'],initial:'repositories.label-list'},
@@ -16,6 +18,7 @@ export const nativeAreas:Partial<Record<Domain,NativeArea[]>>={
  {id:'manage',label:'Manage issue',yue:'管理議題',icon:'settings',selected:true,actions:['issues.configure','issues.lock','issues.unlock','issues.pin','issues.unpin','issues.transfer','issues.delete'],initial:'issues.configure'}
  ],
  'pull-requests':[
+ {id:'local-git',label:'Local checkout',yue:'本地檢出',icon:'repo',selected:true,actions:[],handoffs:[{action:'pulls.checkout-source',label:'Check out selected pull request',yue:'檢出所選拉取要求'}]},
  {id:'my-work',label:'My work & new requests',yue:'我嘅工作同新增要求',icon:'pull',actions:['pulls.status','pulls.create-with-properties'],initial:'pulls.status'},
  {id:'review-tools',label:'Review tools',yue:'審核工具',icon:'check',selected:true,actions:['pulls.checks','pulls.diff','pulls.ready','pulls.update-branch','pulls.configure','pulls.lock','pulls.unlock','pulls.merge-with-options'],initial:'pulls.checks'}
  ],
@@ -27,7 +30,7 @@ export const nativeAreas:Partial<Record<Domain,NativeArea[]>>={
  {id:'settings',label:'Project settings',yue:'專案設定',icon:'settings',selected:true,actions:['projects.link','projects.unlink','projects.copy','projects.mark-template','projects.close'],initial:'projects.link'}
  ],
  discussions:[{id:'edit',label:'Edit discussion',yue:'編輯討論',icon:'comment',selected:true,actions:['discussions.edit'],initial:'discussions.edit'}],
- gists:[{id:'files',label:'Manage files',yue:'管理檔案',icon:'file',selected:true,actions:['gists.inspect','gists.rename-file'],initial:'gists.inspect'}],
+ gists:[{id:'local-git',label:'Local copy',yue:'本地複本',icon:'repo',selected:true,actions:[],handoffs:[{action:'gists.clone-source',label:'Clone selected gist',yue:'複製所選程式碼片段'}]},{id:'files',label:'Manage files',yue:'管理檔案',icon:'file',selected:true,actions:['gists.inspect','gists.rename-file'],initial:'gists.inspect'}],
  codespaces:[
  {id:'connection',label:'Connection',yue:'連接',icon:'cloud',selected:true,actions:[],workflows:[{commandId:'codespace ssh',label:'SSH configuration and diagnostics',yue:'SSH 設定同診斷'},{commandId:'codespace code',label:'Open editor',yue:'開啟編輯器'},{commandId:'codespace jupyter',label:'Open JupyterLab',yue:'開啟 JupyterLab'}]},
  {id:'files',label:'Files',yue:'檔案',icon:'folder',selected:true,actions:[],workflows:[{commandId:'codespace cp',label:'Copy files',yue:'複製檔案'}]},

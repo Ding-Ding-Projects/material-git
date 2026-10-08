@@ -7,3 +7,4 @@
 /scripts/ffmpeg-source-build.mjs text eol=lf
 /LICENSE text eol=lf
 /data/licenses/nodable-val-parsers-MIT.txt text eol=lf
+/scripts/verified-download.mjs text eol=lf
