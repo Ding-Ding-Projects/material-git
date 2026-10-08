@@ -129,15 +129,41 @@ const proofFields=['documentation','localization','persistence','focusedGate','n
 const kinds=new Set(['scope','source-review','unverified','interaction','screenshot','gate','persistence','localization','external-state']);
 const nonempty=value=>typeof value==='string'&&value.trim().length>0;
 function localFile(root,relative){if(!nonempty(relative)||path.isAbsolute(relative)||relative.includes('://'))throw new Error('Evidence must reference a repository-relative public file');const file=path.resolve(root,relative);if(!file.startsWith(path.resolve(root)+path.sep))throw new Error('Evidence path escapes repository');return file;}
+// Structural and literal integrity checks support editorial review; they cannot
+// certify the meaning of a translation or the runtime's localization coverage.
+export function validateFeatureArticlePair(id,en,yue) {
+ const section=(article,heading)=>article.match(new RegExp('^## '+heading+'\\n\\n([\\s\\S]*?)(?=\\n## |$)','m'))?.[1]?.trim();
+ const requirements=section(yue,'要求嘅行為');
+ for(const heading of ['要求嘅行為','目前支援同設定','失敗情況同剩餘工作','私隱','驗證']) {
+  const body=section(yue,heading);
+  if(!body||!/[\u3400-\u9fff]/u.test(body))throw new Error(`${id}: missing feature-specific Cantonese ${heading}`);
+ }
+ if(/粵語說明草稿|完整功能細節同設定限制請睇/u.test(yue))throw new Error(`${id}: generic Cantonese template`);
+ if(!requirements||requirements.length<40)throw new Error(`${id}: incomplete Cantonese requirement`);
+ if(en.includes('## Controls, defaults and limits')&&!section(yue,'控制項、預設值同限制'))throw new Error(`${id}: missing translated controls`);
+ const literalTokens=new Set(en.match(/`[^`]+`/gu)||[]);
+ const translatedTokens=new Set(yue.match(/`[^`]+`/gu)||[]);
+ for(const literal of literalTokens)if(!translatedTokens.has(literal))throw new Error(`${id}: changed translated technical literal ${literal}`);
+ // Strip URLs before comparing stated numeric bounds; prose remains checked.
+ const prose=article=>article.replace(/\]\([^)]+\)/gu,']').replace(/(?<=\d),(?=\d)/gu,'');
+ const bounds=new Set(prose(en).match(/(?<![\p{L}\d])\d+(?:\.\d+)*(?![\p{L}\d])/gu)||[]);
+ const translatedBounds=new Set(prose(yue).match(/(?<![\p{L}\d])\d+(?:\.\d+)*(?![\p{L}\d])/gu)||[]);
+ for(const bound of bounds)if(!translatedBounds.has(bound))throw new Error(`${id}: missing translated numeric fact ${bound}`);
+ return {requirement:requirements,literalCount:literalTokens.size};
+}
 export async function validateFeatureInventory(inventory,root,{requireComplete=false}={}) {
  if(inventory.version!==1||inventory.features.length!==104||requiredFeatureIds.length!==104)throw new Error('Required feature inventory must contain all 104 rows');
  const ids=inventory.features.map(x=>x.id);
  if(new Set(ids).size!==104)throw new Error('Duplicate feature identifier');
  for(const id of requiredFeatureIds)if(!ids.includes(id))throw new Error(`Missing required feature ${id}`);
  const unresolved=[];
+ const translatedRequirements=new Set();
  for(const row of inventory.features){
   if(!requiredFeatureIds.includes(row.id)||!nonempty(row.title)||!nonempty(row.category)||!nonempty(row.requirement)||!nonempty(row.implementationNotes)||!nonempty(row.remaining))throw new Error(`${row.id}: missing requirement or assessment`);
   for(const locale of ['en','yue']){const file=localFile(root,row.documentation?.[locale]);const article=await readFile(file,'utf8').catch(()=>{throw new Error(`${row.id}: missing ${locale} article`);});if(article.length<700||!article.includes('## ')||!article.includes(row.id))throw new Error(`${row.id}: incomplete ${locale} article`);}
+  const pair=validateFeatureArticlePair(row.id,await readFile(localFile(root,row.documentation.en),'utf8'),await readFile(localFile(root,row.documentation.yue),'utf8'));
+  if(translatedRequirements.has(pair.requirement))throw new Error(`${row.id}: duplicated generic Cantonese requirement`);
+  translatedRequirements.add(pair.requirement);
   for(const surface of ['app','site','repository']){
    const state=row.surfaces?.[surface];
    if(!state||typeof state.applicable!=='boolean'||!statuses.has(state.status))throw new Error(`${row.id}/${surface}: missing applicability/status`);
