@@ -47,13 +47,24 @@ test('tab close controller uses actual work-state mapping for dirty and active d
   context.workStates[stateKey]={dirty:false,busy:false};review.call(context,[id]);assert.equal(closed,1);
  }
 });
-test('actual tab discard waits for its native record and preserves tabs on failure',async()=>{
- const key=controllerMethod('src/renderer/app.ts','workStateKey');let release!:()=>void;const gate=new Promise<void>(resolve=>release=resolve);const calls:unknown[]=[];
+test('actual tab discard waits for its native record before clearing matching nested drafts and preserves them on failure',async()=>{
+ const key=controllerMethod('src/renderer/app.ts','workStateKey');let release!:()=>void;const gate=new Promise<void>(resolve=>release=resolve);const calls:unknown[]=[];const cacheDiscards:string[]=[];
  const close=controllerMethod('src/renderer/app.ts','closeTabNow',{window:{material:{workspace:async(...args:unknown[])=>{calls.push(args);await gate;}}}});
- const context={workStateKey:(id:string)=>key.call({},id),workStates:{issues:{dirty:true,busy:false}},workspace:{tabs:[{id:'repositories'},{id:'issues'}]},closeTabs:['issues'],lane:'repositories',notify:()=>{},copy:(en:string)=>en,persist:()=>{},navigate:()=>{}};
- const pending=close.call(context,['issues']);assert.equal(context.workspace.tabs.length,2);assert.deepEqual(calls,[['discard',{ids:['issues']}]]);release();await pending;assert.deepEqual(context.workspace.tabs,[{id:'repositories'}]);
+ const views=['issues','pull-requests'].map(domain=>({domain,discardDrafts:()=>cacheDiscards.push(domain)}));
+ const context={workStateKey:(id:string)=>key.call({},id),workStates:{issues:{dirty:true,busy:false}},workspace:{tabs:[{id:'repositories'},{id:'issues'}]},closeTabs:['issues'],lane:'repositories',notify:()=>{},copy:(en:string)=>en,persist:()=>{},navigate:()=>{},querySelectorAll:(selector:string)=>{assert.equal(selector,'mg-github-workspace');return views;}};
+ const pending=close.call(context,['issues']);assert.equal(context.workspace.tabs.length,2);assert.deepEqual(cacheDiscards,[]);assert.deepEqual(calls,[['discard',{ids:['issues']}]]);
+ release();await pending;assert.deepEqual(context.workspace.tabs,[{id:'repositories'}]);assert.deepEqual(cacheDiscards,['issues']);
  const failed=controllerMethod('src/renderer/app.ts','closeTabNow',{window:{material:{workspace:async()=>{throw new Error('disk unavailable');}}}});
- const unchanged={...context,workStates:{issues:{dirty:true,busy:false}},workspace:{tabs:[{id:'repositories'},{id:'issues'}]},closeTabs:['issues']};await failed.call(unchanged,['issues']);assert.equal(unchanged.workspace.tabs.length,2);assert.deepEqual(unchanged.closeTabs,['issues']);
+ const failureDiscards:string[]=[];
+ const unchanged={...context,workStates:{issues:{dirty:true,busy:false}},workspace:{tabs:[{id:'repositories'},{id:'issues'}]},closeTabs:['issues'],querySelectorAll:()=>[{domain:'issues',discardDrafts:()=>failureDiscards.push('issues')}]};
+ await failed.call(unchanged,['issues']);assert.equal(unchanged.workspace.tabs.length,2);assert.deepEqual(unchanged.closeTabs,['issues']);assert.deepEqual(failureDiscards,[]);
+});
+test('tab discard preserves nested drafts when an operation becomes busy during native recording',async()=>{
+ const key=controllerMethod('src/renderer/app.ts','workStateKey');let release!:()=>void;const gate=new Promise<void>(resolve=>release=resolve);let discarded=0;
+ const close=controllerMethod('src/renderer/app.ts','closeTabNow',{window:{material:{workspace:async()=>{await gate;}}}});
+ const context={workStateKey:(id:string)=>key.call({},id),workStates:{issues:{dirty:true,busy:false}},workspace:{tabs:[{id:'repositories'},{id:'issues'}]},closeTabs:['issues'],lane:'repositories',notify:()=>{},copy:(en:string)=>en,persist:()=>{},navigate:()=>{},querySelectorAll:()=>[{domain:'issues',discardDrafts:()=>discarded++}]};
+ const pending=close.call(context,['issues']);context.workStates.issues.busy=true;release();await pending;
+ assert.equal(discarded,0);assert.equal(context.workspace.tabs.length,2);assert.deepEqual(context.closeTabs,['issues']);
 });
 test('reduced motion and build-bound provenance remain honest',()=>{
  assert.match(source('src/renderer/styles.css'),/prefers-reduced-motion:reduce/);
