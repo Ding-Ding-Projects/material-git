@@ -1,4 +1,5 @@
 import { spawnSync } from 'node:child_process';
+import { homedir } from 'node:os';
 import { writeFile } from 'node:fs/promises';
 const gh = process.env.GH_CATALOG_BINARY || 'vendor/gh_2.102.0_linux_amd64/bin/gh';
 const env = {...process.env, GH_PROMPT_DISABLED:'1', GH_CONFIG_DIR:'/tmp/material-gh-catalog-empty', NO_COLOR:'1', GH_PAGER:'cat'};
@@ -16,7 +17,7 @@ function usageArguments(text){
  }return groups;
 }
 function walk(path) {
- const h=help(path); const children=[];
+ const h=help(path).replaceAll(homedir(),'~'); const children=[];
  for(const match of h.matchAll(/^  ([a-z][a-z0-9-]*):\s+(.+)$/gm)) {
  const before=h.slice(0,match.index); const heading=before.match(/(?:^|\n)([A-Z][A-Z ]+)\n/g)?.at(-1)?.trim();
  if(heading?.includes('COMMANDS') && heading!=='ALIAS COMMANDS') children.push(match[1]);
@@ -57,6 +58,12 @@ function walk(path) {
  if(id==='gist create'){args.splice(0,args.length,{name:'filename-pattern',description:'One or more local filenames or glob patterns. Standard input is unavailable in this runner.',position:0,type:'file',multiple:true,required:true});}
  if(id==='release create'){const assets=argument('filename-pattern');if(assets){assets.type='file';delete assets.choices;assets.multiple=true;assets.description='Local release asset filenames or glob patterns; append #display label when needed.';}if(argument('tag'))argument('tag').required=true;}
  if(id==='alias delete'){args.splice(0,args.length,{name:'alias',description:'Alias name; omit only when --all is selected',position:0,type:'text',required:false});}
+ if(id==='extension create'){enumOption('precompiled',['go','other']);if(argument('name'))argument('name').required=true;}
+ if(id==='extension exec'&&argument('args'))argument('args').multiple=true;
+ if(id==='copilot'&&argument('args'))argument('args').multiple=true;
+ if(id==='preview prompter'&&argument('prompt-type')){argument('prompt-type').type='choice';argument('prompt-type').choices=[...h.matchAll(/^- ([a-z-]+)$/gm)].map(match=>match[1]);}
+ if(id==='codespace ssh'&&option('server-port'))option('server-port').maximum=65535;
+ if(id==='alias import'&&argument('filename'))argument('filename').required=true;
  if(id==='extension upgrade'){args.splice(0,args.length,{name:'name',description:'Extension name; omit only when --all is selected',position:0,type:'text',required:false});}
  if(['attestation download','attestation verify'].includes(id)&&args[0])args[0].required=true;
  if(id==='attestation verify')for(const name of ['bundle','custom-trusted-root'])if(option(name))option(name).type='file';
@@ -87,10 +94,10 @@ function walk(path) {
  if(id==='config get'||id==='config set'){
   const key=argument('key');if(key){key.type='choice';key.choices=['git_protocol','prompt','prefer_editor_prompt','clipboard','color_labels','accessible_colors','accessible_prompter','spinner','telemetry','editor','pager','browser','api_host','http_unix_socket'];}
  }
- for(const o of options){if(o.type==='number'){o.minimum=['limit','interval','port','max-items','num-attempts','git-depth'].includes(o.name)?1:0;o.maximum=o.name==='port'?65535:2147483647;}if((['api','workflow run'].includes(id)&&['field','raw-field','header'].includes(o.name))||o.name==='repos'){o.multiple=true;o.description+=' Repeat this structured value for each item.';}if(['body-file','notes-file','from-file','input','attach'].includes(o.name))o.type='file';}
+ for(const o of options){if(o.type==='number'){o.minimum=['limit','interval','port','max-items','num-attempts','git-depth'].includes(o.name)?1:0;o.maximum=['port','server-port'].includes(o.name)?65535:2147483647;}if((['api','workflow run'].includes(id)&&['field','raw-field','header'].includes(o.name))||o.name==='repos'){o.multiple=true;o.description+=' Repeat this structured value for each item.';}if(['body-file','notes-file','from-file','input','attach'].includes(o.name))o.type='file';}
  const blocked=/^auth (login|refresh|token|setup-git)|^codespace (ssh|code|jupyter)|^copilot$|^preview prompter$|^extension (exec|install|upgrade|create|browse)$|^alias import$/.test(id);
- const availability=blocked?(id.startsWith('auth ')?'Use the dedicated GitHub accounts panel; authentication output is excluded from command history.':'Requires a dedicated native terminal or external-code adapter; unavailable in the guided runner.'):undefined;
- const mutation=/\b(create|edit|delete|close|reopen|merge|upload|download|add|remove|set|import|fork|clone|rename|transfer|archive|unarchive|enable|disable|cancel|rerun|start|stop|restore|rebuild|publish|lock|unlock|comment|review|ready|develop|checkout|sync|install|uninstall|upgrade|refresh|login|logout|setup-git|mark-template|unmark-template|copy|pin|unpin|revert|update-branch|switch|run|link|unlink|clear-cache)\b/.test(path.at(-1))||id==='api';
+ const availability=blocked?(id.startsWith('auth ')?'Use the dedicated GitHub accounts panel; authentication output is excluded from command history.':id==='preview prompter'?'Native preview requires an interactive terminal; the CLI workflows panel provides clearly labelled Material previews.':id==='copilot'?'Use CLI workflows to review an installed Copilot executable; implicit executable downloads are unavailable.':'Use the dedicated CLI workflows panel for structured inputs and explicit external-program review.'):undefined;
+ const mutation=/\b(create|edit|delete|close|reopen|merge|upload|download|add|remove|set|import|fork|clone|rename|transfer|archive|unarchive|enable|disable|cancel|rerun|start|stop|restore|rebuild|publish|lock|unlock|comment|review|ready|develop|checkout|sync|install|uninstall|upgrade|refresh|login|logout|setup-git|mark-template|unmark-template|copy|pin|unpin|revert|update-branch|switch|run|link|unlink|clear-cache)\b/.test(path.at(-1))||id==='api'||['codespace cp','codespace ports forward','codespace ports visibility','codespace ssh','codespace code','codespace jupyter','extension exec','copilot'].includes(id);
  commands.push({id,path,title:id,summary:h.split('\n')[0],description:h.split('\nUSAGE\n')[0].trim(),usage,group:path[0],options,arguments:args,mutation,destructive:mutation, ...(blocked?{interactive:true,availability}:{}),...(section(h,'JSON FIELDS')?{jsonFields:section(h,'JSON FIELDS').split(/[\s,]+/).filter(Boolean)}:{})});
 }
 walk([]);
