@@ -89,6 +89,7 @@ export class ApiExplorer extends LitElement {
   private copy(en:string,yue:string){return apiCopy(en,yue,this.language);}
   connectedCallback(){super.connectedCallback();explorerInstances.add(this);this.graphqlSelection=structuredClone(this.graphqlDrafts[this.graphqlOperation]);this.addEventListener('keydown',this.keydown);void this.loadCatalog();void this.transport('hosts').then(value=>{if(this.isConnected&&Array.isArray(value))this.hosts=value;}).catch(()=>{});}
   disconnectedCallback(){super.disconnectedCallback();explorerInstances.delete(this);this.cancelReview();this.removeEventListener('keydown',this.keydown);this.generation++;this.selectedGeneration++;}
+  invalidateAccountContext(){this.cancelReview();this.result=undefined;this.resultRequest=undefined;this.graphqlDocument='';this.responseField='';for(const draft of this.drafts.values())delete draft.bodyFile;this.draft={...this.draft,bodyFile:undefined};this.emitWorkState();}
   protected updated(){this.emitWorkState();}
   private emitWorkState(){const event=new CustomEvent('api-work-state',{detail:{busy:this.busy,dirty:dirtyOperations.size>0},bubbles:true,composed:true});if(this.isConnected)this.dispatchEvent(event);else window.dispatchEvent(event);}
   private keydown=(e:KeyboardEvent)=>{if(e.key==='Escape'&&(this.review||this.draftReview)){e.preventDefault();this.draftReview='';this.cancelReview();}};

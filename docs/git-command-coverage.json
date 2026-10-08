@@ -1,7 +1,7 @@
 {
   "version": 1,
   "checkedAt": "2026-10-08",
-  "implementationCheckpoint": "7d69215 + reviewed tree workflows",
+  "implementationCheckpoint": "1480148 + reference/index inspection workflows",
   "auditSource": "coverage/git-action-map.json",
   "auditOfficialCommit": "a018953688f1b10bddf91bff8747068f5f4746a4",
   "auditSourceDigest": "daa7a7fa2fb22ab5d48639a6ba8036db8707db8faaeaec21960aab3ea595a436",
@@ -13,9 +13,9 @@
   "counts": {
     "audited": 173,
     "covered": 0,
-    "partial": 76,
-    "missing": 97,
-    "directPartial": 74,
+    "partial": 89,
+    "missing": 84,
+    "directPartial": 87,
     "delegatedPartial": 1,
     "derivedPartial": 1,
     "equivalentOnlyMissing": 6
@@ -81,7 +81,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Whole-file staging; intent-to-add, renormalization, ignored/sparse inclusion and native interactive variants remain open."
     },
     {
@@ -162,7 +162,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Mailbox import exists; message-ID, three-way, encoding/signing and mailbox conflict fixtures remain open."
     },
     {
@@ -266,7 +266,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Hunk/index and patch apply exist; three-way, reject/output-directory and binary/path variants need separate controls."
     },
     {
@@ -332,7 +332,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "ZIP/TAR revision export exists; remote archive, attributes, compression and partial path selection remain open."
     },
     {
@@ -401,7 +401,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Manual classification, strict replay and scoped starts exist; trusted automated test execution and additional replay formats remain open."
     },
     {
@@ -468,7 +468,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Bounded source attribution exists; reverse blame, ignored revisions, date ranges and alternate diff algorithms remain open."
     },
     {
@@ -549,7 +549,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Core local branch tasks exist; copy, sorting/filtering, force deletion and newer fork/delete-merged modes remain open."
     },
     {
@@ -613,7 +613,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Bundle export/import exists; verify/list-heads, incremental bases and filters/version forms remain open."
     },
     {
@@ -661,7 +661,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Individual object inspection exists; batch/check filters, streaming and raw binary export remain open."
     },
     {
@@ -693,7 +693,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Single selected path/all-attribute read exists; index/alternate-source and batch NUL workflows remain open."
     },
     {
@@ -729,12 +729,12 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Single path provenance exists; explicit ignored inventory and batch/nonmatching/index variants remain open."
     },
     {
       "command": "check-mailmap",
-      "status": "missing",
+      "status": "partial",
       "officialReference": "git-check-mailmap.adoc",
       "auditedOptionMentions": [
         "--mailmap-blob",
@@ -743,15 +743,30 @@
       ],
       "optionAudit": "open; references are not an executable grammar",
       "proposedDestination": "local-repositories/settings",
-      "guiRoute": null,
-      "nativeForm": null,
-      "reachability": "none",
-      "verification": "not implemented or not independently reachable",
-      "remaining": "Repository settings > Resolve displayed contributor identities against the selected mailmap."
+      "guiRoute": "History > Identity mapping",
+      "nativeForm": "check-mailmap --stdin (bounded structured identities)",
+      "reachability": "direct-task-or-inspector",
+      "nativeSources": [
+        "src/main/git.ts",
+        "src/main/git-comparison.ts"
+      ],
+      "guiSources": [
+        "src/renderer/git-workspace.ts",
+        "src/renderer/git-workspace-forms.ts",
+        "src/renderer/git-comparison.ts"
+      ],
+      "verification": "representative isolated native fixtures; complete form/option audit remains open",
+      "evidence": [
+        "tests/git-native.test.ts",
+        "tests/git-advanced.test.ts",
+        "tests/git-comparison.test.ts"
+      ],
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
+      "remaining": "Selected identities resolve through the current repository mailmap; explicit alternate mailmap sources and all output forms remain open."
     },
     {
       "command": "check-ref-format",
-      "status": "missing",
+      "status": "partial",
       "officialReference": "git-check-ref-format.adoc",
       "auditedOptionMentions": [
         "--allow-onelevel",
@@ -763,11 +778,25 @@
       ],
       "optionAudit": "open; references are not an executable grammar",
       "proposedDestination": "local-repositories/settings",
-      "guiRoute": null,
-      "nativeForm": null,
-      "reachability": "internal-only",
-      "verification": "not implemented or not independently reachable",
-      "remaining": "Branches/References > Validate a selected branch or full reference explicitly, beyond internal validation."
+      "guiRoute": "Maintenance > Inspect repository > Validate reference name",
+      "nativeForm": "check-ref-format [--branch|--normalize] <bounded candidate>",
+      "reachability": "direct-task-or-inspector",
+      "nativeSources": [
+        "src/main/git.ts",
+        "src/main/git-reference-inspect.ts"
+      ],
+      "guiSources": [
+        "src/renderer/git-workspace.ts",
+        "src/renderer/git-workspace-forms.ts",
+        "src/renderer/git-reference-controls.ts"
+      ],
+      "verification": "representative isolated native fixtures; complete form/option audit remains open",
+      "evidence": [
+        "tests/git-native.test.ts",
+        "tests/git-advanced.test.ts"
+      ],
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
+      "remaining": "Full-reference or branch validation and normalized full names exist; one-level refs, legacy shorthand interpretation and every valid-byte edge remain open."
     },
     {
       "command": "checkout",
@@ -883,12 +912,12 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "One staged regular-file checkout exists; all/stages/temp/prefix/streaming forms remain open."
     },
     {
       "command": "cherry",
-      "status": "missing",
+      "status": "partial",
       "officialReference": "git-cherry.adoc",
       "auditedOptionMentions": [
         "--boundary",
@@ -900,11 +929,26 @@
       ],
       "optionAudit": "open; references are not an executable grammar",
       "proposedDestination": "local-repositories/history",
-      "guiRoute": null,
-      "nativeForm": null,
-      "reachability": "none",
-      "verification": "not implemented or not independently reachable",
-      "remaining": "History > Compare local patch equivalence against a selected upstream."
+      "guiRoute": "History > Patch equivalence",
+      "nativeForm": "cherry -v <upstream> <head> [<limit>]",
+      "reachability": "direct-task-or-inspector",
+      "nativeSources": [
+        "src/main/git.ts",
+        "src/main/git-comparison.ts"
+      ],
+      "guiSources": [
+        "src/renderer/git-workspace.ts",
+        "src/renderer/git-workspace-forms.ts",
+        "src/renderer/git-comparison.ts"
+      ],
+      "verification": "representative isolated native fixtures; complete form/option audit remains open",
+      "evidence": [
+        "tests/git-native.test.ts",
+        "tests/git-advanced.test.ts",
+        "tests/git-comparison.test.ts"
+      ],
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
+      "remaining": "Typed patch equivalence against an upstream exists; alternate output and complete revision expressions remain open."
     },
     {
       "command": "cherry-pick",
@@ -960,7 +1004,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Single commit replay and recovery exists; ranges, mainline, no-commit, strategy and empty-commit policy remain open."
     },
     {
@@ -1012,7 +1056,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Selected untracked deletion exists; ignored inventory, dry-run previews and interactive/native all-path variants remain open."
     },
     {
@@ -1097,7 +1141,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "New-folder URL clone exists; local approved source, bare/mirror/reference/template/submodule and authenticated transport proofs remain open."
     },
     {
@@ -1213,7 +1257,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Index commit/amend/author/signing exists; path-only, fixup/squash/trailers, identity/date overrides and all policy options remain open."
     },
     {
@@ -1257,7 +1301,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Reachable graph writing exists; verify/split/layer/expire and selected object input variants remain open."
     },
     {
@@ -1291,7 +1335,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Typed unsigned tree/parents/message creation exists; signed objects and author/date overrides remain open."
     },
     {
@@ -1589,7 +1633,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Stored keys and reviewed scopes exist; repeated values, includes editing, typed parsers, system/file/command scopes and secret editor remain open."
     },
     {
@@ -1619,7 +1663,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Verbose storage read exists; human-readable units and structured pack breakdown remain open."
     },
     {
@@ -1855,7 +1899,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Nearest-tag fallback exists; match/exclude/candidates/contains/dirty and abbreviation policies remain open."
     },
     {
@@ -2037,12 +2081,12 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Index/worktree file and hunk review exists; two-revision/range, algorithms, word/move/binary and output selection remain open."
     },
     {
       "command": "diff-files",
-      "status": "missing",
+      "status": "partial",
       "officialReference": "git-diff-files.adoc",
       "auditedOptionMentions": [
         "--abbrev",
@@ -2181,15 +2225,29 @@
       ],
       "optionAudit": "open; references are not an executable grammar",
       "proposedDestination": "local-repositories/changes",
-      "guiRoute": null,
-      "nativeForm": null,
-      "reachability": "none",
-      "verification": "not implemented or not independently reachable",
-      "remaining": "Changes > Inspect index versus working files with raw/name/stat result choices."
+      "guiRoute": "Maintenance > Inspect repository > Index versus working files",
+      "nativeForm": "diff-files --no-ext-diff --no-textconv --stat|--name-status|--raw|--patch [-w] -- [<approved path>]",
+      "reachability": "direct-task-or-inspector",
+      "nativeSources": [
+        "src/main/git.ts",
+        "src/main/git-reference-inspect.ts"
+      ],
+      "guiSources": [
+        "src/renderer/git-workspace.ts",
+        "src/renderer/git-workspace-forms.ts",
+        "src/renderer/git-reference-controls.ts"
+      ],
+      "verification": "representative isolated native fixtures; complete form/option audit remains open",
+      "evidence": [
+        "tests/git-native.test.ts",
+        "tests/git-advanced.test.ts"
+      ],
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
+      "remaining": "Independent index/worktree comparison exists; unmerged stage selection, diff algorithms, submodule/binary and all output policies remain open."
     },
     {
       "command": "diff-index",
-      "status": "missing",
+      "status": "partial",
       "officialReference": "git-diff-index.adoc",
       "auditedOptionMentions": [
         "--abbrev",
@@ -2322,11 +2380,25 @@
       ],
       "optionAudit": "open; references are not an executable grammar",
       "proposedDestination": "local-repositories/changes",
-      "guiRoute": null,
-      "nativeForm": null,
-      "reachability": "none",
-      "verification": "not implemented or not independently reachable",
-      "remaining": "Changes/History > Compare selected tree with index or working files."
+      "guiRoute": "Maintenance > Inspect repository > Tree versus index or files",
+      "nativeForm": "diff-index --no-ext-diff --no-textconv --stat|--name-status|--raw|--patch [-w] [--cached] <selected tree> -- [<approved path>]",
+      "reachability": "direct-task-or-inspector",
+      "nativeSources": [
+        "src/main/git.ts",
+        "src/main/git-reference-inspect.ts"
+      ],
+      "guiSources": [
+        "src/renderer/git-workspace.ts",
+        "src/renderer/git-workspace-forms.ts",
+        "src/renderer/git-reference-controls.ts"
+      ],
+      "verification": "representative isolated native fixtures; complete form/option audit remains open",
+      "evidence": [
+        "tests/git-native.test.ts",
+        "tests/git-advanced.test.ts"
+      ],
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
+      "remaining": "Selected tree/index or tree/worktree comparison exists; merge-base, algorithms, submodule/binary and all path/output policies remain open."
     },
     {
       "command": "diff-pairs",
@@ -2648,7 +2720,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "One-commit stat read exists; root/parent/merge variants, structured raw/name output and options remain open."
     },
     {
@@ -2854,12 +2926,12 @@
         "src/renderer/git-workspace.ts",
         "src/renderer/git-workspace-forms.ts"
       ],
-      "verification": "source route; exact successful form still needs execution evidence",
+      "verification": "representative isolated native fixtures; complete form/option audit remains open",
       "evidence": [
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Selected fetch/deepen/import exists; atomic/multi-remote/negotiation/unshallow/backfill and authentication proofs remain open."
     },
     {
@@ -3012,7 +3084,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Visible local branch/tag enumeration exists; arbitrary namespace filters, sorting, points-at/contains and structured ref inspection remain open."
     },
     {
@@ -3240,7 +3312,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Bounded selected series export exists; ranges/cover letters/threading/signature/trailers and full mailbox metadata controls remain open."
     },
     {
@@ -3311,7 +3383,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Integrity inspection exists; connectivity/full/strict/name/object/cache/recovery variants remain open."
     },
     {
@@ -3385,7 +3457,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Retention-controlled maintenance delegates to GC; direct aggressive/cruft/prune/keep-largest options and scheduling remain open."
     },
     {
@@ -3500,7 +3572,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Working/index/revision text search exists; boolean/multiple patterns, untracked/recurse/submodule/function and binary policies remain open."
     },
     {
@@ -3551,7 +3623,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Exact binary blob storage exists; stdin batches, other object types, path/filter and literal-object forms remain open."
     },
     {
@@ -3596,7 +3668,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Fixed native usage is reachable; full manual/config/guides/all/topics and safe shipped-script help remain open."
     },
     {
@@ -3805,7 +3877,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Fresh non-bare initialization exists; bare/template/separate-directory/object/ref-format/shared initialization remain open."
     },
     {
@@ -4213,7 +4285,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Native filtered ancestry browsing exists; line-history, pickaxe, advanced revision algebra, patch/stat/merge and newer formatting options remain open."
     },
     {
@@ -4281,12 +4353,12 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Paged index paths/stages and debug reads exist; ignored/deleted/unmerged/resolve-undo/eol/full-directory and byte-path variants remain open."
     },
     {
       "command": "ls-remote",
-      "status": "missing",
+      "status": "partial",
       "officialReference": "git-ls-remote.adoc",
       "auditedOptionMentions": [
         "--branches",
@@ -4308,11 +4380,25 @@
       ],
       "optionAudit": "open; references are not an executable grammar",
       "proposedDestination": "local-repositories/remotes",
-      "guiRoute": null,
-      "nativeForm": null,
-      "reachability": "none",
-      "verification": "not implemented or not independently reachable",
-      "remaining": "Remotes > Read and choose advertised remote refs before fetching or publishing."
+      "guiRoute": "Remotes > Advertised references > selected-branch reviewed fetch",
+      "nativeForm": "ls-remote --symref [--heads|--tags] -- <configured remote> [<validated prefix>*]",
+      "reachability": "direct-task-or-inspector",
+      "nativeSources": [
+        "src/main/git.ts",
+        "src/main/git-remotes.ts"
+      ],
+      "guiSources": [
+        "src/renderer/git-workspace.ts",
+        "src/renderer/git-workspace-forms.ts",
+        "src/renderer/git-remote-refs.ts"
+      ],
+      "verification": "representative isolated native fixtures; complete form/option audit remains open",
+      "evidence": [
+        "tests/git-native.test.ts",
+        "tests/git-advanced.test.ts"
+      ],
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
+      "remaining": "Configured remote branch/tag/all listing, symbolic HEAD, bounded output and visible pages exist; peeled tags, exit-code expectations, alternate upload-pack/sorting and typed object-format selection remain open."
     },
     {
       "command": "ls-tree",
@@ -4352,7 +4438,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Recursive tree listing exists; path selection, NUL/format/name/object and directory-only variants remain open."
     },
     {
@@ -4437,7 +4523,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Selected run tasks exist; register/unregister/start/stop/scheduling/configuration tasks remain open."
     },
     {
@@ -4529,7 +4615,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "One revision/fast-forward policy and conflict continuation exists; octopus/strategies/options/signatures/messages/autostash remain open."
     },
     {
@@ -4567,7 +4653,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Two-revision ancestor read exists; all/octopus/independent/is-ancestor/fork-point remain open."
     },
     {
@@ -4733,7 +4819,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Two-commit clean/conflicted object preview preserves references, index and visible files; batched input, historical trivial mode, conflict formatting and additional strategy controls remain open."
     },
     {
@@ -4793,7 +4879,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Unsigned structured tag object exists; signing and raw strictness variants remain open."
     },
     {
@@ -4823,7 +4909,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Structured regular/executable/symlink/tree/gitlink entries and empty trees exist; batch mode, missing-object policies and unsupported byte names remain open."
     },
     {
@@ -4861,7 +4947,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Index writing exists; verify/expire/repack/chains/layers and alternate object-directory forms remain open."
     },
     {
@@ -4895,12 +4981,12 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "One tracked rename exists; multi-source, directory, force/skip/sparse and submodule movement forms remain open."
     },
     {
       "command": "name-rev",
-      "status": "missing",
+      "status": "partial",
       "officialReference": "git-name-rev.adoc",
       "auditedOptionMentions": [
         "--all",
@@ -4917,11 +5003,26 @@
       ],
       "optionAudit": "open; references are not an executable grammar",
       "proposedDestination": "local-repositories/history",
-      "guiRoute": null,
-      "nativeForm": null,
-      "reachability": "none",
-      "verification": "not implemented or not independently reachable",
-      "remaining": "History > Resolve selected commit IDs to explanatory reference names."
+      "guiRoute": "History > Reference names",
+      "nativeForm": "name-rev --always [--tags|--refs=refs/heads/*] -- <selected commits>",
+      "reachability": "direct-task-or-inspector",
+      "nativeSources": [
+        "src/main/git.ts",
+        "src/main/git-comparison.ts"
+      ],
+      "guiSources": [
+        "src/renderer/git-workspace.ts",
+        "src/renderer/git-workspace-forms.ts",
+        "src/renderer/git-comparison.ts"
+      ],
+      "verification": "representative isolated native fixtures; complete form/option audit remains open",
+      "evidence": [
+        "tests/git-native.test.ts",
+        "tests/git-advanced.test.ts",
+        "tests/git-comparison.test.ts"
+      ],
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
+      "remaining": "Selected commit names by all/tag/branch scope exist; stdin parsing, exclusions, undefined handling and additional filters remain open."
     },
     {
       "command": "notes",
@@ -4981,7 +5082,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Core notes editing/merge recovery exists; arbitrary notes namespace selection, list/show/rewrite/force/stdin/ref policies remain open."
     },
     {
@@ -5151,12 +5252,12 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "All-ref packing exists; include/exclude/auto/prune/reftable forms remain open."
     },
     {
       "command": "patch-id",
-      "status": "missing",
+      "status": "partial",
       "officialReference": "git-patch-id.adoc",
       "auditedOptionMentions": [
         "--format",
@@ -5173,11 +5274,26 @@
       ],
       "optionAudit": "open; references are not an executable grammar",
       "proposedDestination": "local-repositories/patches",
-      "guiRoute": null,
-      "nativeForm": null,
-      "reachability": "none",
-      "verification": "not implemented or not independently reachable",
-      "remaining": "Patches > Compare stable patch identities from approved patch bytes."
+      "guiRoute": "History > Identify patch",
+      "nativeForm": "patch-id --stable|--verbatim (bounded Git patch stdin)",
+      "reachability": "direct-task-or-inspector",
+      "nativeSources": [
+        "src/main/git.ts",
+        "src/main/git-comparison.ts"
+      ],
+      "guiSources": [
+        "src/renderer/git-workspace.ts",
+        "src/renderer/git-workspace-forms.ts",
+        "src/renderer/git-comparison.ts"
+      ],
+      "verification": "representative isolated native fixtures; complete form/option audit remains open",
+      "evidence": [
+        "tests/git-native.test.ts",
+        "tests/git-advanced.test.ts",
+        "tests/git-comparison.test.ts"
+      ],
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
+      "remaining": "Bounded patch identity exists; unstable strategy, batch file inputs and structured patch import remain open."
     },
     {
       "command": "pickaxe",
@@ -5223,7 +5339,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Explicit age-retained loose-object pruning exists; dry-run/progress/selected-heads and storage preservation variants remain open."
     },
     {
@@ -5384,7 +5500,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Selected branch/integration mode exists; full fetch flags, autostash/submodules/strategies and authenticated remote fixtures remain open."
     },
     {
@@ -5459,7 +5575,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "One explicit non-force ref push exists; expected-lease force, delete/prune/mirror/atomic/push-options and authentication proofs remain open."
     },
     {
@@ -5485,7 +5601,7 @@
     },
     {
       "command": "range-diff",
-      "status": "missing",
+      "status": "partial",
       "officialReference": "git-range-diff.adoc",
       "auditedOptionMentions": [
         "--color",
@@ -5505,11 +5621,26 @@
       ],
       "optionAudit": "open; references are not an executable grammar",
       "proposedDestination": "local-repositories/history",
-      "guiRoute": null,
-      "nativeForm": null,
-      "reachability": "none",
-      "verification": "not implemented or not independently reachable",
-      "remaining": "History > Compare two typed base/tip patch series with correspondence output."
+      "guiRoute": "History > Compare patch series",
+      "nativeForm": "range-diff --no-color --no-dual-color --no-ext-diff --no-textconv [--creation-factor=N] <old-base>..<old-tip> <new-base>..<new-tip> --",
+      "reachability": "direct-task-or-inspector",
+      "nativeSources": [
+        "src/main/git.ts",
+        "src/main/git-comparison.ts"
+      ],
+      "guiSources": [
+        "src/renderer/git-workspace.ts",
+        "src/renderer/git-workspace-forms.ts",
+        "src/renderer/git-comparison.ts"
+      ],
+      "verification": "representative isolated native fixtures; complete form/option audit remains open",
+      "evidence": [
+        "tests/git-native.test.ts",
+        "tests/git-advanced.test.ts",
+        "tests/git-comparison.test.ts"
+      ],
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
+      "remaining": "Typed two-series patch comparison exists; diff algorithms, merge/notes/stat/output variants and additional range forms remain open."
     },
     {
       "command": "read-tree",
@@ -5557,7 +5688,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Index-only load/merge/empty exists; working update, prefix/index-output/alternate/sparse options remain open."
     },
     {
@@ -5674,7 +5805,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Basic upstream replay and recovery exists; interactive todo, onto/root/merge/rebase-merges/autosquash/empty/options remain open."
     },
     {
@@ -5734,7 +5865,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Paged searchable recovery, age expiration and exact deletion exist; exists/write/list/drop/prune/rewrites and transactional scope remain open."
     },
     {
@@ -5831,7 +5962,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Core names/URLs/local tracking pruning exist; show/update/set-head/branches/multi-URL/push-URL/mirror/group policies remain open."
     },
     {
@@ -5931,7 +6062,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Incremental/all/all-delete-old modes exist; geometric/cruft/filter/delta/bitmap/size/object-directory policies remain open."
     },
     {
@@ -5970,7 +6101,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Create/remove local replacements exist; list/edit/graft/convert/type/force policies remain open."
     },
     {
@@ -6230,7 +6361,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Explicit branch/index/worktree reset exists; path/hunk/intent-to-add/submodule and multi-path policies remain open."
     },
     {
@@ -6288,7 +6419,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Selected independent index/worktree restoration exists; source tree/path batches, overlay/conflict/sparse/submodule and interactive native variants remain open."
     },
     {
@@ -6456,7 +6587,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Bounded ancestor read exists; revision algebra/filtering/object enumeration/bisect/missing/bitmap variants remain open."
     },
     {
@@ -6546,7 +6677,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Safe selected revision resolution exists; path/prefix/formats/revision argument modes and alternate directory options remain open."
     },
     {
@@ -6598,7 +6729,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "One commit reversal and recovery exists; mainline/no-commit/ranges/strategy/empty policies remain open."
     },
     {
@@ -6645,7 +6776,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "One tracked removal or stop-tracking exists; recursive/multi-path/force/sparse/ignore-unmatch variants remain open."
     },
     {
@@ -6814,7 +6945,7 @@
     },
     {
       "command": "shortlog",
-      "status": "missing",
+      "status": "partial",
       "officialReference": "git-shortlog.adoc",
       "auditedOptionMentions": [
         "--abbrev",
@@ -6958,11 +7089,26 @@
       ],
       "optionAudit": "open; references are not an executable grammar",
       "proposedDestination": "local-repositories/history",
-      "guiRoute": null,
-      "nativeForm": null,
-      "reachability": "none",
-      "verification": "not implemented or not independently reachable",
-      "remaining": "History > Contributor summary over selected revisions and grouping fields."
+      "guiRoute": "History > Contributors",
+      "nativeForm": "shortlog --summary --numbered --group=author|committer [--email] --max-count=N --skip=N <selected refs> --",
+      "reachability": "direct-task-or-inspector",
+      "nativeSources": [
+        "src/main/git.ts",
+        "src/main/git-comparison.ts"
+      ],
+      "guiSources": [
+        "src/renderer/git-workspace.ts",
+        "src/renderer/git-workspace-forms.ts",
+        "src/renderer/git-comparison.ts"
+      ],
+      "verification": "representative isolated native fixtures; complete form/option audit remains open",
+      "evidence": [
+        "tests/git-native.test.ts",
+        "tests/git-advanced.test.ts",
+        "tests/git-comparison.test.ts"
+      ],
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
+      "remaining": "Contributor counts within a selected commit window exist; total contributor paging, trailer groups and full revision filters remain open."
     },
     {
       "command": "show",
@@ -7137,12 +7283,12 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Commit patch and index conflict stages exist; multi-object/raw-tree/blob/export/merge/diff-format policies remain open."
     },
     {
       "command": "show-branch",
-      "status": "missing",
+      "status": "partial",
       "officialReference": "git-show-branch.adoc",
       "auditedOptionMentions": [
         "--all",
@@ -7168,11 +7314,25 @@
       ],
       "optionAudit": "open; references are not an executable grammar",
       "proposedDestination": "local-repositories/branches",
-      "guiRoute": null,
-      "nativeForm": null,
-      "reachability": "none",
-      "verification": "not implemented or not independently reachable",
-      "remaining": "Branches > Compare selected branch ancestry with structured graph output."
+      "guiRoute": "Maintenance > Inspect repository > Branch ancestry summary",
+      "nativeForm": "show-branch --no-color --list|--more=N -- <one to ten refs>",
+      "reachability": "direct-task-or-inspector",
+      "nativeSources": [
+        "src/main/git.ts",
+        "src/main/git-reference-inspect.ts"
+      ],
+      "guiSources": [
+        "src/renderer/git-workspace.ts",
+        "src/renderer/git-workspace-forms.ts",
+        "src/renderer/git-reference-controls.ts"
+      ],
+      "verification": "representative isolated native fixtures; complete form/option audit remains open",
+      "evidence": [
+        "tests/git-native.test.ts",
+        "tests/git-advanced.test.ts"
+      ],
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
+      "remaining": "Selected branch tip or bounded ancestry comparison exists; merge-base/independent/reflog/topics/current and alternate sorting forms remain open."
     },
     {
       "command": "show-index",
@@ -7226,7 +7386,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Reference+HEAD read exists; verify/exists/exclude/dereference/hash/tag/branch modes remain open."
     },
     {
@@ -7267,7 +7427,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Cone directory and sparse-index controls exist; non-cone pattern editing/check-rules/list/skip-checks/version policies remain open."
     },
     {
@@ -7342,7 +7502,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Core saved work/recovery exists; inspect patches, staged/ignored/path-scoped/keep-index/clear/create/store/import/export forms remain open."
     },
     {
@@ -7396,12 +7556,12 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Native index/worktree/untracked grouping exists; ignored inventory, porcelain-v2/submodule metadata and output/pathspec options remain open."
     },
     {
       "command": "stripspace",
-      "status": "missing",
+      "status": "partial",
       "officialReference": "git-stripspace.adoc",
       "auditedOptionMentions": [
         "--comment-lines",
@@ -7412,11 +7572,26 @@
       ],
       "optionAudit": "open; references are not an executable grammar",
       "proposedDestination": "local-repositories/advanced",
-      "guiRoute": null,
-      "nativeForm": null,
-      "reachability": "none",
-      "verification": "not implemented or not independently reachable",
-      "remaining": "Patches/Commit editor > Preview whitespace/comment cleanup before replacing the draft."
+      "guiRoute": "History > Normalize draft",
+      "nativeForm": "stripspace [--strip-comments|--comment-lines] (bounded draft stdin; fixed comment character)",
+      "reachability": "direct-task-or-inspector",
+      "nativeSources": [
+        "src/main/git.ts",
+        "src/main/git-comparison.ts"
+      ],
+      "guiSources": [
+        "src/renderer/git-workspace.ts",
+        "src/renderer/git-workspace-forms.ts",
+        "src/renderer/git-comparison.ts"
+      ],
+      "verification": "representative isolated native fixtures; complete form/option audit remains open",
+      "evidence": [
+        "tests/git-native.test.ts",
+        "tests/git-advanced.test.ts",
+        "tests/git-comparison.test.ts"
+      ],
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
+      "remaining": "Draft normalization and fixed comment handling exist; repository-dependent comment policy and file import/export remain open."
     },
     {
       "command": "submodule",
@@ -7477,7 +7652,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Core selected nested tasks exist; summary/init/foreach and broad recursive/path/update variants need dedicated trust and state controls."
     },
     {
@@ -7633,7 +7808,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Branch/detached/create switching exists; orphan/force/merge/conflict/tracking and newer hard modes remain open."
     },
     {
@@ -7667,7 +7842,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Only visible current-branch inspection exists; arbitrary symbolic ref query/create/delete/no-recurse/reason remain open."
     },
     {
@@ -7733,7 +7908,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Lightweight/annotated/signed creation and deletion exist; advanced list/sort/contains/points/signature policies remain open."
     },
     {
@@ -7845,7 +8020,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Regular-file flags/blob entry exist; refresh/remove/staged unmerged/batch/alternate/split/fsmonitor/resolve-undo variants remain open."
     },
     {
@@ -7878,7 +8053,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "One compare-and-swap direct update exists; creation/deletion, symbolic targets, batches/transactions/reflog/reason remain open."
     },
     {
@@ -7967,7 +8142,7 @@
     },
     {
       "command": "var",
-      "status": "missing",
+      "status": "partial",
       "officialReference": "git-var.adoc",
       "auditedOptionMentions": [
         "--nofork",
@@ -7976,11 +8151,25 @@
       ],
       "optionAudit": "open; references are not an executable grammar",
       "proposedDestination": "local-repositories/settings",
-      "guiRoute": null,
-      "nativeForm": null,
-      "reachability": "none",
-      "verification": "not implemented or not independently reachable",
-      "remaining": "Repository settings > Inspect safe selected effective identity/path variables without bulk environment export."
+      "guiRoute": "Maintenance > Inspect repository > Resolved identity and settings",
+      "nativeForm": "var <one whitelisted identity/default/editor/pager/attribute/config variable>",
+      "reachability": "direct-task-or-inspector",
+      "nativeSources": [
+        "src/main/git.ts",
+        "src/main/git-reference-inspect.ts"
+      ],
+      "guiSources": [
+        "src/renderer/git-workspace.ts",
+        "src/renderer/git-workspace-forms.ts",
+        "src/renderer/git-reference-controls.ts"
+      ],
+      "verification": "representative isolated native fixtures; complete form/option audit remains open",
+      "evidence": [
+        "tests/git-native.test.ts",
+        "tests/git-advanced.test.ts"
+      ],
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
+      "remaining": "Explicit resolved values are displayed without launching programs; full variable inventory, custom override policies and version-specific variables remain open."
     },
     {
       "command": "verify-commit",
@@ -8010,7 +8199,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Explicit trusted signing-program verification exists; multi-commit/revision/signature-format and trust presentation remain open."
     },
     {
@@ -8059,7 +8248,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Explicit trusted signing-program verification exists; multi-tag/format and structured trust presentation remain open."
     },
     {
@@ -8087,7 +8276,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Actual core version appears beside separate helper version; build-options and runtime feature discovery remain open."
     },
     {
@@ -8162,7 +8351,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Native-picked linked worktree core tasks exist; missing registration rows, force/bare/orphan/multiple repair/expiry variants remain open."
     },
     {
@@ -8191,7 +8380,7 @@
         "tests/git-native.test.ts",
         "tests/git-advanced.test.ts"
       ],
-      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation and seeded clone guard only; other individual interactions remain open",
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
       "remaining": "Whole index tree creation exists; prefix/missing-object variants remain open."
     }
   ],
@@ -8213,8 +8402,7 @@
     }
   ],
   "nextPriorities": [
-    "Contributor summaries and patch-series comparisons (shortlog/cherry/range-diff/name-rev).",
-    "Advertised remote ref chooser (ls-remote), then explicit multi-ref/delete/lease policies.",
+    "Explicit multi-ref/delete/lease remote policies after the advertised reference chooser.",
     "Interactive rebase todo controls with owned native editors and recovery.",
     "Recorded conflict resolution (rerere), trailer editing and patch identity.",
     "Pack inspection/import/verification and symbolic/ref transaction tools.",
