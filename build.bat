@@ -11,7 +11,7 @@ if /I "%~1"=="/s" set "BOOT_SILENT=-Silent"
 if /I "%~1"=="--silent" set "BOOT_SILENT=-Silent"
 if /I "%~1"=="/run" set "BOOT_RUN=-Run"
 if /I "%~1"=="--run" set "BOOT_RUN=-Run"
-shift
+shift /1
 goto parse
 :execute
 powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\bootstrap.ps1" -Action build %BOOT_SILENT% %BOOT_RUN%
