@@ -18,6 +18,7 @@ export const nativeAreas:Partial<Record<Domain,NativeArea[]>>={
  {id:'manage',label:'Manage issue',yue:'管理議題',icon:'settings',selected:true,actions:['issues.configure','issues.lock','issues.unlock','issues.pin','issues.unpin','issues.transfer','issues.delete'],initial:'issues.configure'}
  ],
  'pull-requests':[
+ {id:'local-git',label:'Local checkout',yue:'本地檢出',icon:'repo',selected:true,actions:[],handoffs:[{action:'pulls.checkout-source',label:'Check out selected pull request',yue:'檢出所選拉取要求'}]},
  {id:'my-work',label:'My work & new requests',yue:'我嘅工作同新增要求',icon:'pull',actions:['pulls.status','pulls.create-with-properties'],initial:'pulls.status'},
  {id:'review-tools',label:'Review tools',yue:'審核工具',icon:'check',selected:true,actions:['pulls.checks','pulls.diff','pulls.ready','pulls.update-branch','pulls.configure','pulls.lock','pulls.unlock','pulls.merge-with-options'],initial:'pulls.checks'}
  ],
