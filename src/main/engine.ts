@@ -27,12 +27,14 @@ class OutputRedactor {
 export class Engine {
  private operations = new Map<string, Operation>();
  private children = new Map<string, ChildProcess>();
+ private killTimers=new Map<string,ReturnType<typeof setTimeout>>();
  private listeners = new Set<(operation: Operation) => void>();
  constructor(private catalog: Catalog, private cwd: string, private ghPath: string) {}
  subscribe(callback: (operation: Operation) => void): () => void {this.listeners.add(callback); return () => {this.listeners.delete(callback);};}
  operation(id: string): Operation {const op=this.operations.get(id); if(!op) throw new Error('Unknown operation'); return structuredClone(op);}
  private emit(op: Operation) {for(const callback of this.listeners) {try {callback(structuredClone(op));} catch { /* Subscriber failures must not interrupt process cleanup. */ }}}
- cancel(id: string): void {const child=this.children.get(id); const op=this.operations.get(id); if(child && op?.status==='running') {op.status='cancelled'; child.kill(); const timer=setTimeout(()=>child.kill('SIGKILL'),2000); timer.unref(); this.emit(op);}}
+ private terminate(child:ChildProcess,force=false){if(!child.pid)return;if(process.platform==='win32'){const killer=spawn('taskkill',['/PID',String(child.pid),'/T',...(force?['/F']:[])],{shell:false,windowsHide:true,stdio:'ignore'});killer.on('error',()=>{child.kill(force?'SIGKILL':'SIGTERM');});}else{try{process.kill(-child.pid,force?'SIGKILL':'SIGTERM');}catch{child.kill(force?'SIGKILL':'SIGTERM');}}}
+ cancel(id: string): void {const child=this.children.get(id);const op=this.operations.get(id);if(child&&op?.status==='running'){op.status='cancelled';this.terminate(child);const timer=setTimeout(()=>{this.killTimers.delete(id);this.terminate(child,true);},2000);timer.unref();this.killTimers.set(id,timer);this.emit(op);}}
  execute(request: ExecutionRequest): Operation {
  if(!request || typeof request!=='object')throw new Error('Invalid request');
  const command=this.catalog.commands.find(c=>c.id===request.commandId); if(!command)throw new Error('Unknown command');
@@ -74,6 +76,8 @@ export class Engine {
  for(const key of ['web','editor','external','show-token'])if(values[key])throw new Error('Browser and editor actions require a dedicated workflow');
  if(command.id==='config set' && ['editor','browser','pager','api_host','http_unix_socket'].includes(String(args.key)))throw new Error('External helper configuration requires a dedicated workflow');
  if(['secret set','variable set'].includes(command.id)&& !values.body && !values['env-file'])throw new Error('Provide an explicit value or dotenv file instead of standard input');
+ if(command.id==='codespace ports forward')for(const mapping of (Array.isArray(args['port-mappings'])?args['port-mappings']:[args['port-mappings']])){if(typeof mapping!=='string'||!/^\d{1,5}:\d{1,5}$/.test(mapping)||mapping.split(':').some(port=>Number(port)<1||Number(port)>65535))throw new Error('Each mapping requires remote and local ports from 1 to 65535');}
+ if(command.id==='codespace ports visibility')for(const mapping of (Array.isArray(args['port-visibility'])?args['port-visibility']:[args['port-visibility']])){if(typeof mapping!=='string'||!/^\d{1,5}:(public|private|org)$/.test(mapping)||Number(mapping.split(':')[0])<1||Number(mapping.split(':')[0])>65535)throw new Error('Each visibility requires a port from 1 to 65535 and public, private, or org');}
  if(command.id==='codespace cp'&&values.expand)throw new Error('Remote shell expansion requires a dedicated reviewed workflow');
  if(command.id==='alias set'&&(values.shell||String(args.expansion||'').trimStart().startsWith('!')))throw new Error('Shell aliases require a dedicated external-code workflow');
  if(command.id==='agent-task create'&&!args['task-description']&&!values['from-file'])throw new Error('Provide a task description or file to avoid opening an editor');
@@ -90,18 +94,26 @@ export class Engine {
  if(headers.some(h=>h!==undefined&&(typeof h!=='string'||! /^[A-Za-z0-9-]+:\s*[^\r\n]*$/.test(h))))throw new Error('API headers must use a structured name: value pair');
  if(headers.some(h=>typeof h==='string'&& /^(authorization|host|proxy-authorization)\s*:/i.test(h)))throw new Error('Authentication and host headers are managed by GitHub CLI');
  }
- const op:Operation={id:randomUUID(),status:'running',commandId:command.id,startedAt:new Date().toISOString(),stdout:'',stderr:''};
+ return this.executeAdapter(command.id,argv,{secrets,cwd});
+ }
+ /** Main-process adapters alone may call this method; never expose argv directly over IPC. */
+ executeAdapter(commandId:string,argv:string[],options:{secrets?:string[];cwd?:string;executable?:string;timeoutMs?:number}={}):Operation {
+ if(typeof commandId!=='string'||!Array.isArray(argv)||argv.length>200||argv.some(value=>typeof value!=='string'||value.includes('\0')||value.length>65536))throw new Error('Invalid adapter arguments');
+ const cwd=realpathSync(options.cwd||this.cwd),root=realpathSync(this.cwd);
+ if(cwd!==root&&!cwd.startsWith(root+path.sep))throw new Error('Working directory must remain within the workspace');
+ const secrets=[...(options.secrets||[]),...Object.entries(process.env).filter(([key,value])=>/TOKEN|PASSWORD|SECRET/.test(key)&&value).map(([,value])=>value!)];
+ const op:Operation={id:randomUUID(),status:'running',commandId,startedAt:new Date().toISOString(),stdout:'',stderr:''};
  this.operations.set(op.id,op);
  const env={...process.env,GH_PROMPT_DISABLED:'1',GH_PAGER:'cat',PAGER:'cat',GH_EDITOR:'',GIT_TERMINAL_PROMPT:'0',NO_COLOR:'1',GH_FORCE_TTY:'',GH_BROWSER:''};
- const child=spawn(this.ghPath,argv,{cwd,env,shell:false,windowsHide:true,stdio:['ignore','pipe','pipe']}); this.children.set(op.id,child);
+ const child=spawn(options.executable||this.ghPath,argv,{cwd,env,shell:false,windowsHide:true,detached:process.platform!=='win32',stdio:['ignore','pipe','pipe']}); this.children.set(op.id,child);
  const redact=(value:string)=>new OutputRedactor(secrets).write(value,true);
  const buffers={stdout:'',stderr:''};const byteCounts={stdout:0,stderr:0};const capped={stdout:false,stderr:false};
  const streams={stdout:{decoder:new StringDecoder('utf8'),redactor:new OutputRedactor(secrets)},stderr:{decoder:new StringDecoder('utf8'),redactor:new OutputRedactor(secrets)}};
  const retain=(key:'stdout'|'stderr',value:string)=>{if(capped[key])return;const bytes=Buffer.from(value,'utf8');const available=Math.max(0,LIMIT-byteCounts[key]);if(bytes.length>available){op.truncated=true;capped[key]=true;value=new StringDecoder('utf8').write(bytes.subarray(0,available));}buffers[key]+=value;byteCounts[key]+=Buffer.byteLength(value,'utf8');op[key]=buffers[key];};
  const append=(key:'stdout'|'stderr',chunk:Buffer)=>{retain(key,streams[key].redactor.write(streams[key].decoder.write(chunk)));this.emit(op);};
  child.stdout?.on('data',chunk=>append('stdout',chunk));child.stderr?.on('data',chunk=>append('stderr',chunk));
- const timeout=setTimeout(()=>{if(op.status==='running'){retain('stderr','\nCommand exceeded the five minute time limit.');this.cancel(op.id);}},300000);timeout.unref();
- const finish=(code:number|null,error?:Error)=>{clearTimeout(timeout);this.children.delete(op.id);if(op.endedAt)return;for(const key of ['stdout','stderr'] as const)retain(key,streams[key].redactor.write(streams[key].decoder.end(),true));if(op.status!=='cancelled')op.status=code===0&&!error?'succeeded':'failed';op.exitCode=code??undefined;op.endedAt=new Date().toISOString();if(error)retain('stderr',redact(error.message));if(op.status==='succeeded'){try{op.data=JSON.parse(op.stdout);}catch{/* Text output is valid. */}}this.emit(op);};
+ const timeout=setTimeout(()=>{if(op.status==='running'){retain('stderr','\nCommand exceeded the operation time limit.');this.cancel(op.id);}},Math.min(Math.max(options.timeoutMs||300000,1000),3600000));timeout.unref();
+ const finish=(code:number|null,error?:Error)=>{clearTimeout(timeout);const killTimer=this.killTimers.get(op.id);if(killTimer)clearTimeout(killTimer);this.killTimers.delete(op.id);this.children.delete(op.id);if(op.endedAt)return;for(const key of ['stdout','stderr'] as const)retain(key,streams[key].redactor.write(streams[key].decoder.end(),true));if(op.status!=='cancelled')op.status=code===0&&!error?'succeeded':'failed';op.exitCode=code??undefined;op.endedAt=new Date().toISOString();if(error)retain('stderr',redact(error.message));if(op.status==='succeeded'){try{op.data=JSON.parse(op.stdout);}catch{/* Text output is valid. */}}this.emit(op);};
  child.on('error',error=>finish(null,error));child.on('close',code=>finish(code));this.emit(op);return structuredClone(op);
  }
 }

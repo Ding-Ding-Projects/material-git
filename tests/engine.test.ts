@@ -92,3 +92,46 @@ test('real filenames and Go template expressions are accepted as structured valu
  const engine=new Engine(metadata,process.cwd(),process.execPath);assert.throws(()=>engine.execute({commandId:'codespace cp',values:{expand:true},args:{sources:['remote:*.md'],dest:'.'},confirmed:true}),/Remote shell expansion/);
  }finally{await rm(dir,{recursive:true,force:true});}
 });
+test('guided Codespaces mappings reject malformed ports and unreviewed copies before process launch',()=>{
+ const {commands,...metadata}=JSON.parse(readFileSync('data/gh-catalog.json','utf8')) as Catalog;const engine=new Engine({...metadata,commands},process.cwd(),process.execPath);
+ for(const mapping of ['0:8080','8080:65536','8080:8080 --exec=bad','localhost:8080'])assert.throws(()=>engine.execute({commandId:'codespace ports forward',confirmed:true,values:{},args:{'port-mappings':[mapping]}}),/ports/);
+ for(const mapping of ['0:private','8080:everyone','65536:public'])assert.throws(()=>engine.execute({commandId:'codespace ports visibility',confirmed:true,values:{},args:{'port-visibility':[mapping]}}),/visibility/);
+ assert.throws(()=>engine.execute({commandId:'codespace cp',values:{},args:{sources:['file'],dest:'remote:/file'}}),/confirm/);
+});
+import {CliWorkflowsService} from '../src/main/cli-workflows';
+import {loadCatalog} from '../src/main/catalog';
+const workflowService=(deps:ConstructorParameters<typeof CliWorkflowsService>[4]={})=>new CliWorkflowsService(loadCatalog(),new Engine(loadCatalog(),process.cwd(),process.execPath),process.cwd(),process.execPath,{copilotPath:null,...deps});
+test('workflow inventory distinguishes all catalog leaves from actual installed/native blockers',async()=>{
+ const response=await workflowService().handle('inventory');assert.equal(response.kind,'inventory');if(response.kind!=='inventory')return;assert.equal(response.commands.length,196);assert.equal(response.copilotInstalled,false);assert.ok(response.blockers.some(row=>row.id==='preview prompter'));
+ await assert.rejects(workflowService().handle('review',{commandId:'copilot',fields:{mode:'help'}}),/not installed/);
+ await assert.rejects(workflowService().handle('review',{commandId:'preview prompter',fields:{promptType:'select'}}),/PTY/);
+});
+test('server-side workflow reviews reject arbitrary fields, injection, ports and unsigned plans',async()=>{
+ const service=workflowService();
+ for(const fields of [{codespace:'valid',mappings:[{remote:0,local:8080}]},{codespace:'valid',mappings:[{remote:8080,local:65536}]},{codespace:'valid',mappings:[{remote:8080,local:8080},{remote:9090,local:8080}]},{codespace:'valid',mappings:[{remote:8080,local:8080}],shell:'bad'}])await assert.rejects(service.handle('review',{commandId:'codespace ports forward',fields}),/Ports|distinct|Unknown/);
+ await assert.rejects(service.handle('review',{commandId:'extension install',fields:{repository:'https://evil.example/owner/repo'}}),/OWNER/);
+ await assert.rejects(service.handle('review',{commandId:'codespace ssh',fields:{codespace:'valid',mode:'diagnostic',profile:'uname; rm -rf'}}),/profile/);
+ await assert.rejects(service.handle('apply',{reviewId:'invented',confirmed:true}),/expired/);
+ const plan=await service.handle('review',{commandId:'codespace ports forward',fields:{codespace:'valid',mappings:[{remote:8080,local:9000}]}});assert.equal(plan.kind,'review');if(plan.kind==='review'){assert.deepEqual(plan.argv,['codespace','ports','forward','--codespace=valid','--','8080:9000']);await assert.rejects(service.handle('apply',{reviewId:plan.reviewId}),/Confirm/);await assert.rejects(service.handle('apply',{reviewId:plan.reviewId,confirmed:true}),/expired/);}
+});
+test('dynamic extension execution requires a real installed choice and exact separate argv',async()=>{
+ const service=workflowService({read:argv=>{assert.deepEqual(argv,['extension','list']);return 'gh sample\towner/gh-sample\tv1\n';}});
+ await assert.rejects(service.handle('review',{commandId:'extension exec',fields:{name:'missing',arguments:[]}}),/currently installed/);
+ const plan=await service.handle('review',{commandId:'extension exec',fields:{name:'sample',arguments:['--name=literal value','$(touch nope)']}});assert.equal(plan.kind,'review');if(plan.kind==='review'){assert.deepEqual(plan.argv,['extension','exec','--','sample','--name=literal value','$(touch nope)']);assert.ok(plan.warnings.some(value=>value.includes('account, files')));}
+});
+test('alias import grants file only via picker and rejects changed reviewed content',async()=>{
+ const {mkdtemp,writeFile,rm}=await import('node:fs/promises');const {tmpdir}=await import('node:os');const path=await import('node:path');const dir=await mkdtemp(path.join(tmpdir(),'workflow-file-'));const file=path.join(dir,'aliases.yml');try{await writeFile(file,'bugs: issue list --label=bug\n');const service=workflowService({chooseFile:async()=>file});await assert.rejects(service.handle('review',{commandId:'alias import',fields:{file}}),/native/);const chosen=await service.handle('import-file');assert.equal(chosen.kind,'file');const plan=await service.handle('review',{commandId:'alias import',fields:{file,clobber:true}});assert.equal(plan.kind,'review');await writeFile(file,'bugs: issue list --label=changed\n');if(plan.kind==='review')await assert.rejects(service.handle('apply',{reviewId:plan.reviewId,confirmed:true}),/changed/);}finally{await rm(dir,{recursive:true,force:true});}
+});
+test('extension searches use actual remote pages and Copilot cannot implicitly download',async()=>{
+ const calls:string[][]=[];const service=workflowService({read:argv=>{calls.push(argv);return JSON.stringify({total_count:42,items:[{full_name:'owner/gh-example',description:'Example'}]});}});
+ const response=await service.handle('choices',{kind:'extension-search',query:'topic phrase',page:1});assert.equal(response.kind,'choices');if(response.kind==='choices'){assert.equal(response.hasNext,true);assert.equal(response.items[0].value,'owner/gh-example');}assert.match(calls[0][1],/page=2/);assert.match(calls[0][1],/topic%3Agh-extension/);
+});
+test('reviewed harmless native alias list reports actual CLI exit and rejects review replay',async()=>{
+ const path=await import('node:path');const binary=path.resolve('vendor/gh_2.102.0_linux_amd64/bin/gh');const engine=new Engine(loadCatalog(),process.cwd(),binary);const service=new CliWorkflowsService(loadCatalog(),engine,process.cwd(),binary,{copilotPath:null});const plan=await service.handle('review',{commandId:'alias list',fields:{}});assert.equal(plan.kind,'review');if(plan.kind!=='review')return;const done=new Promise<OperationResult>(resolve=>engine.subscribe(op=>{if(op.endedAt)resolve(op);}));const result=await service.handle('apply',{reviewId:plan.reviewId,confirmed:true});assert.equal(result.kind,'operation');assert.equal((await done).status,'succeeded');await assert.rejects(service.handle('apply',{reviewId:plan.reviewId,confirmed:true}),/expired/);
+});
+test('cancellation stops a spawned descendant in the owned process tree',async()=>{
+ const {mkdtemp,writeFile,readFile,rm}=await import('node:fs/promises');const {tmpdir}=await import('node:os');const path=await import('node:path');const dir=await mkdtemp(path.join(tmpdir(),'material-descendant-'));const script=path.join(dir,'parent.cjs'),counter=path.join(dir,'counter');
+ try{await writeFile(script,`const {spawn}=require('node:child_process');const child=spawn(process.execPath,['-e',${JSON.stringify(`const fs=require('node:fs');let count=0;setInterval(()=>fs.writeFileSync(${JSON.stringify(counter)},String(++count)),20);`)}],{stdio:'inherit'});setInterval(()=>{},1000);`);
+ const definition={...catalog.commands[0],id:'descendant',path:[script],options:[],arguments:[]};const engine=new Engine({...catalog,commands:[definition]},process.cwd(),process.execPath);const done=new Promise<OperationResult>(resolve=>engine.subscribe(op=>{if(op.endedAt)resolve(op);}));const operation=engine.execute({commandId:'descendant',values:{},args:{}});let started=false;for(let attempt=0;attempt<100;attempt++){try{await readFile(counter);started=true;break;}catch{await new Promise(resolve=>setTimeout(resolve,10));}}assert.equal(started,true);engine.cancel(operation.id);assert.equal((await done).status,'cancelled');const before=await readFile(counter,'utf8');await new Promise(resolve=>setTimeout(resolve,100));assert.equal(await readFile(counter,'utf8'),before);
+ }finally{await rm(dir,{recursive:true,force:true});}
+});

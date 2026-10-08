@@ -33,3 +33,18 @@ test('native placeholders, option alternatives, templates and defaults retain th
  for(const command of commands)for(const o of command.options){if(o.default===undefined)continue;if(o.type==='boolean')assert.equal(typeof o.default,'boolean',`${command.id} --${o.name}`);if(o.type==='number')assert.ok(typeof o.default==='number'&&Number.isFinite(o.default));if(typeof o.default==='string')assert.ok(!o.default.startsWith('['));}
  assert.equal(option('gist create','public').default,undefined);assert.equal(option('release create','latest').default,undefined);assert.equal(option('ruleset list','parents').default,true);assert.equal(option('api','method').default,undefined);assert.notEqual(option('project item-edit','field').multiple,true);assert.equal(get('project item-edit').arguments[0].required,false);assert.equal(get('run view').arguments[0].required,false);
 });
+test('external adapter metadata preserves real enums, varargs, bounds and mutation review',()=>{
+ const commands=loadCatalog().commands;const get=(id:string)=>commands.find(c=>c.id===id)!;
+ assert.deepEqual(get('extension create').options.find(o=>o.name==='precompiled')?.choices,['go','other']);
+ assert.equal(get('extension exec').arguments.find(o=>o.name==='args')?.multiple,true);
+ assert.equal(get('copilot').arguments[0].multiple,true);
+ assert.equal(get('preview prompter').arguments[0].choices?.length,10);
+ assert.equal(get('codespace ssh').options.find(o=>o.name==='server-port')?.maximum,65535);
+ for(const id of ['codespace cp','codespace ports forward','codespace ports visibility','extension exec','copilot'])assert.equal(get(id).mutation,true,id);
+ assert.ok(!get('copilot').description.includes('/home/'));
+});
+test('every catalog leaf still has help in the actual pinned CLI',async()=>{
+ const {spawnSync}=await import('node:child_process');const path=await import('node:path');
+ const binary=path.resolve('vendor/gh_2.102.0_linux_amd64/bin/gh');
+ for(const command of loadCatalog().commands){const result=spawnSync(binary,['help',...command.path],{encoding:'utf8',timeout:10000,maxBuffer:1024*1024,env:{...process.env,GH_PROMPT_DISABLED:'1',NO_COLOR:'1'}});assert.equal(result.status,0,`${command.id}: ${result.stderr}`);assert.ok(result.stdout.includes(command.usage),command.id);}
+});
