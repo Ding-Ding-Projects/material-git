@@ -1,0 +1,72 @@
+import { spawnSync } from 'node:child_process';
+import { writeFile } from 'node:fs/promises';
+const gh = process.env.GH_CATALOG_BINARY || 'vendor/gh_2.102.0_linux_amd64/bin/gh';
+const env = {...process.env, GH_PROMPT_DISABLED:'1', GH_CONFIG_DIR:'/tmp/material-gh-catalog-empty', NO_COLOR:'1', GH_PAGER:'cat'};
+const help = path => {const r = spawnSync(gh,['help',...path],{encoding:'utf8',env,timeout:10000}); if(r.status!==0) throw new Error(`Help failed: ${path.join(' ')}`); return r.stdout;};
+const version = spawnSync(gh,['--version'],{encoding:'utf8'}).stdout;
+if (!version.startsWith('gh version 2.102.0 ')) throw new Error('Catalog requires gh 2.102.0');
+const section=(s,name)=>s.match(new RegExp(`(?:^|\\n)${name}\\n([\\s\\S]*?)(?=\\n[A-Z][A-Z ]+\\n|$)`))?.[1]?.trim() || '';
+const commands=[];
+function usageArguments(text){
+ const groups=[];const pairs={'[':']','{':'}','<':'>'};
+ for(let i=0;i<text.length;i++){if(!pairs[text[i]])continue;const start=i;const stack=[pairs[text[i]]];
+  while(stack.length&&++i<text.length){if(pairs[text[i]])stack.push(pairs[text[i]]);else if(text[i]===stack.at(-1))stack.pop();}
+  if(stack.length)throw new Error(`Unbalanced command usage: ${text}`);
+  const repeat=text.slice(i+1,i+4)==='...';groups.push([text.slice(start,i+1),repeat]);if(repeat)i+=3;
+ }return groups;
+}
+function walk(path) {
+ const h=help(path); const children=[];
+ for(const match of h.matchAll(/^  ([a-z][a-z0-9-]*):\s+(.+)$/gm)) {
+ const before=h.slice(0,match.index); const heading=before.match(/(?:^|\n)([A-Z][A-Z ]+)\n/g)?.at(-1)?.trim();
+ if(heading?.includes('COMMANDS') && heading!=='ALIAS COMMANDS') children.push(match[1]);
+ }
+ if(children.length) {for(const c of children) walk([...path,c]); return;}
+ if(!path.length) return;
+ const usage=section(h,'USAGE').split('\n')[0];
+ const options=[];
+ for(const line of (section(h,'FLAGS')+'\n'+section(h,'INHERITED FLAGS')).split('\n')) {
+ const m=line.match(/^\s*(?:-\w,\s*)?--([\w-]+)(?:\s+(\S+))?\s{2,}(.+)$/); if(!m || m[1]==='help')continue;
+ const [,name,kind,description]=m; const choices=description.match(/\{([^}]+)\}/)?.[1]?.split('|');
+ let type=kind ? 'text':'boolean'; if(kind==='int')type='number'; if(choices)type='choice';
+ if(['body','notes','description'].includes(name))type='multiline'; if(/(?:file|filename|path)$/.test(name)||name==='attach')type='file'; if(/(?:dir|directory)$/.test(name))type='directory'; if(/(?:token|password|secret)$/.test(name))type='secret';
+ const entity=({repo:'repository',assignee:'user',author:'user',reviewer:'user',label:'label',milestone:'milestone',project:'project',branch:'branch',base:'branch',head:'branch',workflow:'workflow',owner:'owner',organization:'organization',environment:'environment',team:'team',discussion:'discussion',org:'organization',env:'environment',repos:'repository'})[name]; if(entity && !choices)type='entity';
+ const def=description.match(/\(default (?:(?:"([^"]*)")|([^)]*))\)/);
+ options.push({name,description,type,...(choices?{choices}:{}),...(entity?{entity}:{}),...(['strings','stringArray','stringSlice'].includes(kind)?{multiple:true}:{}),...(def?{default:type==='number'?Number(def[1]??def[2]):def[1]??def[2]}:{}),...(type==='number'?{minimum:0}: {})});
+ }
+ const args=[]; const tail=usage.replace(/^gh\s+/,'').slice(path.join(' ').length).replace(/\[flags\]/g,'');
+ for(const [raw,repeat] of usageArguments(tail)) { const contents=raw.slice(1,-1).replace(/[<>]/g,'').trim();
+ const name=contents.replace(/\s*\|\s*/g,'-').replace(/\[@version\]/g,'').replace(/[^a-zA-Z0-9-]+/g,'-').replace(/-+/g,'-').replace(/^-+|-+$/g,'').toLowerCase(); if(name==='flags')continue;
+ const choices=contents.split('|').map(x=>x.trim());
+ const entity=name==='repository'?'repository':name==='owner'?'owner':name==='workflow-id'?'workflow':name==='run-id'?'run':name==='gist'?'gist':/number/.test(name)?(path[0]==='pr'?'pull-request':path[0]==='issue'?'issue':path[0]==='project'?'project':undefined):undefined;
+ const literalChoices=choices.length>1&&!/number|url|branch|id|path|sha/i.test(contents);
+ args.push({name,description:raw,position:args.length,type:literalChoices?'choice':entity?'entity':/directory/.test(name)?'directory':/file|path/.test(name)?'file':'text',required:raw.startsWith('<')||raw.startsWith('{'),...(literalChoices?{choices}:{}),...(entity?{entity}:{}),...(repeat||contents.includes('...')?{multiple:true}:{})});
+ }
+ const jsonFields=section(h,'JSON FIELDS').split(/[\s,]+/).filter(Boolean); const json=options.find(o=>o.name==='json'); if(json&&jsonFields.length){json.type='multi-choice';json.choices=jsonFields;json.multiple=true;}
+ const id=path.join(' ');
+ const option=name=>options.find(o=>o.name===name);
+ const argument=name=>args.find(o=>o.name===name);
+ const enumOption=(name,choices)=>{const item=option(name);if(item){item.type=item.multiple?'multi-choice':'choice';item.choices=choices;}};
+ if(id==='secret set'&&option('body'))option('body').type='secret';
+ if(id==='skill install'){const agentValues=[...h.matchAll(/^  - .+ \(([a-z0-9.-]+)\)$/gm)].map(m=>m[1]);if(agentValues.length)enumOption('agent',agentValues);}
+ if(id==='completion'&&argument('shell')){argument('shell').type='choice';argument('shell').choices=['bash','zsh','fish','powershell'];}
+ if(id==='config set'&&argument('value')){argument('value').type='choice';argument('value').choices=['enabled','disabled','log','https','ssh'];}
+ if(id==='api'){enumOption('method',['GET','POST','PUT','PATCH','DELETE','HEAD','OPTIONS']);enumOption('hostname',['github.com']);}
+ if(['issue create','pr create','pr revert'].includes(id)){for(const name of ['title','body'])if(option(name))option(name).required=true;}
+ if(id==='browse'){args.splice(0,args.length,{name:'location',description:'Optional issue/PR number, repository path, or commit SHA',position:0,type:'text'});if(option('no-browser'))option('no-browser').default=true;}
+ if(id==='repo clone'){
+  const passthrough=args.find(a=>a.name.startsWith('gitflags')||a.name.includes('gitflags'));if(passthrough)passthrough.description='Raw git flag forwarding is unavailable; use the guided git controls.';
+  options.push({name:'git-depth',description:'Limit clone history to this many commits',type:'number',minimum:1,maximum:2147483647},{name:'git-branch',description:'Clone this branch or tag',type:'entity',entity:'branch'},{name:'git-single-branch',description:'Clone only one branch',type:'boolean'});
+ }
+ if(id==='config get'||id==='config set'){
+  const key=argument('key');if(key){key.type='choice';key.choices=['git_protocol','prompt','prefer_editor_prompt','clipboard','color_labels','accessible_colors','accessible_prompter','spinner','telemetry','editor','pager','browser','api_host','http_unix_socket'];}
+ }
+ for(const o of options){if(o.type==='number'){o.minimum=['limit','interval','port','max-items','num-attempts','git-depth'].includes(o.name)?1:0;o.maximum=o.name==='port'?65535:2147483647;}if(['field','raw-field','header','repos'].includes(o.name)){o.multiple=true;o.description+=' Repeat this structured value for each item.';}if(['file','body-file','notes-file','from-file','input','attach','template'].includes(o.name)&& !(o.name==='template'&&jsonFields.length))o.type='file';}
+ const blocked=/^auth (login|refresh|token|setup-git)|^codespace (ssh|code|jupyter)|^copilot$|^preview prompter$|^extension (exec|install|upgrade|create|browse)$|^alias import$/.test(id);
+ const availability=blocked?(id.startsWith('auth ')?'Use the dedicated GitHub accounts panel; authentication output is excluded from command history.':'Requires a dedicated native terminal or external-code adapter; unavailable in the guided runner.'):undefined;
+ const mutation=/\b(create|edit|delete|close|reopen|merge|upload|download|add|remove|set|import|fork|clone|rename|transfer|archive|unarchive|enable|disable|cancel|rerun|start|stop|restore|rebuild|publish|lock|unlock|comment|review|ready|develop|checkout|sync|install|uninstall|upgrade|refresh|login|logout|setup-git|mark-template|unmark-template|copy|pin|unpin|revert|update-branch|switch|run|link|unlink|clear-cache)\b/.test(path.at(-1))||id==='api';
+ commands.push({id,path,title:id,summary:h.split('\n')[0],description:h.split('\nUSAGE\n')[0].trim(),usage,group:path[0],options,arguments:args,mutation,destructive:mutation, ...(blocked?{interactive:true,availability}:{}),...(section(h,'JSON FIELDS')?{jsonFields:section(h,'JSON FIELDS').split(/[\s,]+/).filter(Boolean)}:{})});
+}
+walk([]);
+await writeFile('data/gh-catalog.json',JSON.stringify({version:'2.102.0',generatedAt:'2026-10-08T00:00:00.000Z',source:'https://github.com/cli/cli/releases/tag/v2.102.0 (checksum-verified official binary help)',commands},null,2)+'\n');
+console.log(`Generated ${commands.length} command definitions`);

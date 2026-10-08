@@ -1,0 +1,92 @@
+name: Windows release
+on:
+  push:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  release:
+    # Runner inventory access was unavailable (HTTP 403); use the pinned hosted fallback.
+    runs-on: windows-2022
+    env:
+      MATERIAL_GIT_BUILD_VERSION: 0.${{ github.run_number }}.${{ github.run_attempt }}
+      GH_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.ORG_TOKEN || secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Record start
+        shell: pwsh
+        run: |
+          "WORKFLOW_STARTED=$((Get-Date).ToUniversalTime().ToString('o'))" >> $env:GITHUB_ENV
+      - uses: actions/checkout@v4
+      - name: Build through supported entrypoint
+        shell: cmd
+        run: build.bat /s
+      - name: Package unsigned Squirrel installer
+        shell: cmd
+        run: build-installer.bat /s
+      - name: Publish unique release
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $gh = (Get-ChildItem vendor -Filter gh.exe -Recurse -File | Select-Object -First 1).FullName
+          if (-not $gh) { throw 'Bundled GitHub CLI is missing' }
+          $jobs = (& $gh api "repos/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID/jobs" | ConvertFrom-Json)
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot verify first-job start time' }
+          $env:WORKFLOW_STARTED = ($jobs.jobs | Sort-Object started_at | Select-Object -First 1).started_at
+          if (-not $env:WORKFLOW_STARTED) { throw 'First-job start time is missing' }
+          $tag = "build-$env:GITHUB_RUN_NUMBER-$env:GITHUB_RUN_ATTEMPT"
+          $prior = (& $gh api "repos/$env:GITHUB_REPOSITORY/releases?per_page=100" | ConvertFrom-Json)
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot inspect existing release versions' }
+          $currentVersion = [version]$env:MATERIAL_GIT_BUILD_VERSION
+          $markLatest = '--latest=true'
+          foreach ($release in $prior) {
+            if ($release.tag_name -match '^build-(\d+)-(\d+)$') {
+              $existingVersion = [version]("0.$($Matches[1]).$($Matches[2])")
+              if ($existingVersion -gt $currentVersion) { $markLatest = '--latest=false' }
+            }
+          }
+          $assets = Get-ChildItem out/installer -File | Where-Object { $_.Name -eq 'Setup.exe' -or $_.Name -eq 'RELEASES' -or $_.Extension -eq '.nupkg' -or $_.Name -eq 'SHA256SUMS' }
+          if (-not ($assets.Name -contains 'Setup.exe') -or -not ($assets.Name -contains 'RELEASES') -or -not ($assets.Name -match '-full.nupkg$')) { throw 'Incomplete Squirrel assets' }
+          $notes = @"
+          Material Git ${env:MATERIAL_GIT_BUILD_VERSION}: unsigned Windows Squirrel installer built from $env:GITHUB_SHA.
+
+          Download Setup.exe to install. Windows may display an unknown-publisher warning.
+          RELEASES and full NuGet packages form the automatic-update feed. SHA256SUMS records installer asset hashes.
+
+          Build entrypoints: build.bat /s and build-installer.bat /s.
+          This workflow does not run tests, lint, or type checking. Local verification is reported separately.
+          "@
+          $notes | Set-Content out/release-notes.md
+          & $gh release create $tag @($assets.FullName) --repo $env:GITHUB_REPOSITORY --target $env:GITHUB_SHA $markLatest --title "Material Git $env:MATERIAL_GIT_BUILD_VERSION" --notes-file out/release-notes.md
+          if ($LASTEXITCODE -ne 0) { throw "Release publication exited $LASTEXITCODE" }
+          $completed = (Get-Date).ToUniversalTime()
+          $started = [datetimeoffset]::Parse($env:WORKFLOW_STARTED)
+          $span = $completed - $started.UtcDateTime
+          $duration = '{0:00}:{1:00}:{2:00}' -f [math]::Floor($span.TotalHours), $span.Minutes, $span.Seconds
+          @"
+
+          Workflow started: $env:WORKFLOW_STARTED
+          Workflow completed: $($completed.ToString('o'))
+          Workflow duration: $duration
+          "@ | Add-Content out/release-notes.md
+          & $gh release edit $tag --repo $env:GITHUB_REPOSITORY --notes-file out/release-notes.md
+          if ($LASTEXITCODE -ne 0) { throw 'Release timing update failed' }
+      - name: Collect safe outputs
+        if: ${{ always() }}
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force out/evidence | Out-Null
+          [ordered]@{ runId=$env:GITHUB_RUN_ID; commit=$env:GITHUB_SHA; status='${{ job.status }}'; runnerOS=$env:RUNNER_OS; runnerArchitecture=$env:RUNNER_ARCH; started=$env:WORKFLOW_STARTED } | ConvertTo-Json | Set-Content out/evidence/run.json
+          if (Test-Path dist/main/provenance.json) { Copy-Item dist/main/provenance.json out/evidence/ }
+          if (Test-Path out/installer) {
+            New-Item -ItemType Directory -Force out/evidence/installer | Out-Null
+            Get-ChildItem out/installer -File | Where-Object { $_.Name -eq 'Setup.exe' -or $_.Name -eq 'RELEASES' -or $_.Extension -eq '.nupkg' -or $_.Name -eq 'SHA256SUMS' } | Copy-Item -Destination out/evidence/installer
+          }
+      - uses: actions/upload-artifact@v4
+        if: ${{ always() }}
+        continue-on-error: true
+        with:
+          name: windows-delivery-${{ github.run_id }}-${{ github.run_attempt }}
+          path: out/evidence
+          if-no-files-found: warn
+          retention-days: 14

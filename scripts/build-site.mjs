@@ -1,0 +1,13 @@
+import { build } from 'esbuild';
+import { mkdir, copyFile, readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
+const root = fileURLToPath(new URL('../', import.meta.url));
+const pkg = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
+const out = path.join(root, 'site/dist');
+await mkdir(out, { recursive: true });
+await build({ entryPoints: [path.join(root, 'site/app.ts')], outfile: path.join(out, 'app.js'), bundle: true, format: 'esm', target: 'es2022', minify: true, define: { __SITE_VERSION__: JSON.stringify(pkg.version), __SITE_BUILT_AT__: JSON.stringify(new Date().toISOString()) } });
+await build({entryPoints:[path.join(root,'site/regex-worker.ts')],outfile:path.join(out,'regex-worker.js'),bundle:true,format:'esm',target:'es2022',minify:true});
+await Promise.all(['index.html', 'style.css'].map(file => copyFile(path.join(root, 'site', file), path.join(out, file))));
+await copyFile(path.join(root,'assets/icon.svg'),path.join(out,'icon.svg'));
+console.log(`Built Material Git documentation ${pkg.version} in ${out}`);

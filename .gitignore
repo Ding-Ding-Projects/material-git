@@ -1,0 +1,10 @@
+node_modules/
+dist/
+out/
+vendor/
+.cache/
+*.log
+coverage/
+test-results/
+.env
+.DS_Store
