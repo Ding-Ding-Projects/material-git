@@ -3,6 +3,8 @@ import { mkdir, readFile, writeFile, rename, rm, stat, chmod } from 'node:fs/pro
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
+import { prepareGitPayload, assertGitPayloadPolicy } from './git-payload-policy.mjs';
 
 // Digest published by the official git-for-windows/git GitHub release asset API.
 export const gitRuntime = Object.freeze({
@@ -10,6 +12,8 @@ export const gitRuntime = Object.freeze({
  archive: 'PortableGit-2.56.0.2-64-bit.7z.exe',
  sha256: '075e158ef8e1f0ab80b347e245405d3eca735c2dc88fd8e032e137d0ca61f61b',
  source: 'https://github.com/git-for-windows/git/releases/download/v2.56.0.windows.2/PortableGit-2.56.0.2-64-bit.7z.exe',
+ postInstallSource: 'https://github.com/git-for-windows/build-extra/blob/75e6f0e19c23c701dc1d56905a32e5efc28c8a8d/post-install.bat',
+ postInstallSha256: 'fbadaec06d213c42fc7b9f7729c2b94b75610f07108da792ad7a5032e0459038',
 });
 /** Honor configured proxies and CA trust through supported Node runtime flags. */
 async function downloadPinnedSource(source, limit) {
@@ -45,14 +49,27 @@ export async function fetchGit(platform = process.platform) {
  const stage = path.join(root, `vendor/.git-stage-${randomUUID()}`);
  const destination = path.join(root, 'vendor/git');
  const backup = path.join(root, `vendor/.git-backup-${randomUUID()}`);
+ // Extract data without executing the SFX's automatic post-install program. The
+ // existing installer dependency supplies this extractor, pinned by package-lock.
+ // Recursive exclusion prevents the optional extension from entering the stage.
+ const require = createRequire(import.meta.url);
+ const extractor = path.join(path.dirname(require.resolve('electron-winstaller/package.json')), 'vendor/7z-x64.exe');
  await mkdir(stage, { recursive: true });
- // The official SFX executes its own hidden post-install.bat step. Manual 7z extraction
- // is insufficient according to the bundled README.portable. These switches suppress
- // prompts and bind extraction to this fresh owned stage without a registry install.
- const extract = spawnSync(archive, ['-y', '-gm2', `-InstallPath=${stage}`], { encoding: 'utf8', shell: false, windowsHide: true, timeout: 180000, maxBuffer: 2 * 1024 * 1024, cwd: cache });
+ const extract = spawnSync(extractor, ['x', '-y', `-o${stage}`, '-xr!git-lfs*', archive], { encoding: 'utf8', shell: false, windowsHide: true, timeout: 180000, maxBuffer: 2 * 1024 * 1024, cwd: cache });
  if (extract.error || extract.status !== 0) { await rm(stage, { recursive: true, force: true }); throw new Error(`PortableGit archive extraction failed: ${extract.error?.message ?? extract.stderr}`); }
  let backedUp = false;
  try {
+   await prepareGitPayload(stage);
+   // The pinned official README requires post-install after manual extraction.
+   // Inspect scripts first, then run the official launcher in this owned stage.
+   // The official batch script deletes itself when successful.
+   const postFile=path.join(stage,'post-install.bat'), postDetails=await stat(postFile);
+   if (!postDetails.isFile() || postDetails.size>128*1024 || digest((await readFile(postFile,'utf8')).replace(/\r\n/g,'\n'))!==gitRuntime.postInstallSha256) throw new Error('PortableGit post-install program does not match its pinned official source');
+   const postEnvironment={...process.env,GIT_CONFIG_GLOBAL:path.join(stage,'.verification-empty-global'),GIT_CONFIG_COUNT:'0',GIT_TERMINAL_PROMPT:'0'};
+   for(const key of Object.keys(postEnvironment))if(/^(?:GIT_EXEC_PATH$|GIT_DIR$|GIT_WORK_TREE$|GIT_CONFIG_PARAMETERS$|GIT_CONFIG_KEY_|GIT_CONFIG_VALUE_)/.test(key))delete postEnvironment[key];
+   const postInstall = spawnSync(path.join(stage, 'git-bash.exe'), ['--needs-console', '--hide', '--no-cd', '--command=post-install.bat'], {encoding:'utf8',shell:false,windowsHide:true,cwd:stage,timeout:180000,maxBuffer:2*1024*1024,env:postEnvironment});
+   if (postInstall.error || postInstall.status !== 0) throw new Error(`PortableGit post-install failed: ${postInstall.error?.message ?? postInstall.stderr}`);
+   try {await stat(path.join(stage,'post-install.bat'));throw new Error('PortableGit post-install did not complete its cleanup');} catch(error) {if(error.code!=='ENOENT')throw error;}
    const check = await verifyGitPayload(stage);
    try { await rename(destination, backup); backedUp = true; } catch (error) { if (error.code !== 'ENOENT') throw error; }
    await rename(stage, destination);
@@ -69,7 +86,8 @@ export async function fetchGit(platform = process.platform) {
 /** Verify the unpacked full Windows payload before activation and after packaging. */
 export async function verifyGitPayload(directory) {
  if (process.platform !== 'win32') throw new Error('Native PortableGit verification requires Windows. Linux archive inspection cannot prove Windows execution.');
- const expected = ['cmd/git.exe', 'usr/bin/bash.exe', 'usr/bin/gpg.exe', 'usr/bin/perl.exe', 'usr/bin/ssh.exe', 'ucrt64/libexec/git-core/git-subtree', 'post-install.bat', 'LICENSE.txt', 'README.portable'];
+ await assertGitPayloadPolicy(directory);
+ const expected = ['cmd/git.exe', 'usr/bin/bash.exe', 'usr/bin/gpg.exe', 'usr/bin/perl.exe', 'usr/bin/ssh.exe', 'ucrt64/libexec/git-core/git-subtree', 'LICENSE.txt', 'README.portable'];
  for (const relative of expected) if (!(await stat(path.join(directory, relative))).isFile() || !(await stat(path.join(directory, relative))).size) throw new Error(`PortableGit required payload missing: ${relative}`);
  const env = { ...process.env, GIT_CONFIG_GLOBAL: path.join(directory, '.verification-empty-global'), GIT_CONFIG_NOSYSTEM: '1', GIT_TERMINAL_PROMPT: '0', GIT_PAGER: 'cat' };
  for (const key of Object.keys(env)) if (/^(?:GIT_EXEC_PATH$|GIT_DIR$|GIT_WORK_TREE$|GIT_CONFIG_PARAMETERS$|GIT_CONFIG_KEY_|GIT_CONFIG_VALUE_)/.test(key)) delete env[key];
