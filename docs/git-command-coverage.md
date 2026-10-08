@@ -1,12 +1,12 @@
 # Reachable Git command coverage
 
-This map compares implementation checkpoint `7d69215 + reviewed tree workflows` with all 173 names in the source-derived Git 2.56 inventory. It counts command names, not reviewed task identifiers. The supplemental contrib/subtree helper is recorded separately.
+This map compares implementation checkpoint `3981574 + integrated comparison workflows` with all 173 names in the source-derived Git 2.56 inventory. It counts command names, not reviewed task identifiers. The supplemental contrib/subtree helper is recorded separately.
 
 | Fully covered | Partial reachable forms | Missing command contracts |
 | --- | --- | --- |
-| 0 | 76 | 97 |
+| 0 | 83 | 90 |
 
-Of the partial forms, 74 directly invoke the named command, one delegates GC through `maintenance --task=gc`, and one shows current-branch state derived from `symbolic-ref`. Six missing command contracts have equivalent natural workflows using another native command. Internal helper execution, help text, executable presence and proposed destinations are not direct coverage.
+Of the partial forms, 81 directly invoke the named command, one delegates GC through `maintenance --task=gc`, and one shows current-branch state derived from `symbolic-ref`. Six missing command contracts have equivalent natural workflows using another native command. Internal helper execution, help text, executable presence and proposed destinations are not direct coverage.
 
 No command is fully covered: the complete form, option and per-control execution audits remain open. Representative native fixtures and selected browser interactions prove narrower behavior. The [machine-readable map](git-command-coverage.json) preserves every audited option mention, exact native form, reachable route, evidence limit and remaining work. Official option mentions include cross-references and are not an argument grammar.
 
@@ -29,12 +29,12 @@ No command is fully covered: the complete form, option and per-control execution
 | `cat-file` | partial | Maintenance > Inspect repository > Object type/size/contents |
 | `check-attr` | partial | Maintenance > Inspect repository > Attributes |
 | `check-ignore` | partial | Maintenance > Inspect repository > Ignored files |
-| `check-mailmap` | missing | Repository settings > Resolve displayed contributor identities against the selected mailmap. |
+| `check-mailmap` | partial | History > Identity mapping |
 | `check-ref-format` | missing | Branches/References > Validate a selected branch or full reference explicitly, beyond internal validation. |
 | `checkout` | missing | Equivalent natural workflow uses switch/restore; this command spelling/output/option contract is not exposed or verified directly. |
 | `checkout--worker` | missing | Git-owned internal/helper/protocol command. Its parent workflow does not establish a separately reachable command contract; add explicit inspection/lifecycle or typed transfer controls before claiming coverage. |
 | `checkout-index` | partial | Maintenance > Tracked files > Restore staged contents |
-| `cherry` | missing | History > Compare local patch equivalence against a selected upstream. |
+| `cherry` | partial | History > Patch equivalence |
 | `cherry-pick` | partial | History > Apply commit; Conflicts > Continue/Skip/Abort |
 | `citool` | missing | External/integration workflow is not implemented. Needs approved native program/account/file grants, dependency discovery and task-specific reviewed effects. |
 | `clean` | partial | Changes > Delete selected untracked files |
@@ -115,20 +115,20 @@ No command is fully covered: the complete form, option and per-control execution
 | `mktree` | partial | Maintenance > Object storage > Create tree object |
 | `multi-pack-index` | partial | Maintenance > Object storage > Rebuild multi-pack index |
 | `mv` | partial | Maintenance > Tracked files > Move |
-| `name-rev` | missing | History > Resolve selected commit IDs to explanatory reference names. |
+| `name-rev` | partial | History > Reference names |
 | `notes` | partial | History > Add note; Maintenance > Commit notes; Conflicts > note resolution |
 | `p4` | missing | External/integration workflow is not implemented. Needs approved native program/account/file grants, dependency discovery and task-specific reviewed effects. |
 | `pack-objects` | missing | Object storage > Select verified object IDs and review a fresh pack output and compression policy. |
 | `pack-redundant` | missing | Object storage > Inspect redundant packs with an explicit preservation plan. |
 | `pack-refs` | partial | Maintenance > Reference maintenance > Pack references |
-| `patch-id` | missing | Patches > Compare stable patch identities from approved patch bytes. |
+| `patch-id` | partial | History > Identify patch |
 | `pickaxe` | missing | No dedicated reachable native task or inspector exists. Implement the proposed natural destination with typed controls and isolated execution evidence. |
 | `prune` | partial | Maintenance > Object storage > Prune unreachable objects |
 | `prune-packed` | missing | Object storage > Review removal of redundant loose objects already retained in packs. |
 | `pull` | partial | Remotes > Pull |
 | `push` | partial | Remotes > Push |
 | `quiltimport` | missing | Patches > Import an approved quilt series directory with authorship and commit preview. |
-| `range-diff` | missing | History > Compare two typed base/tip patch series with correspondence output. |
+| `range-diff` | partial | History > Compare patch series |
 | `read-tree` | partial | Maintenance > Tracked files > Load index from tree |
 | `rebase` | partial | Branches > Rebase; Conflicts > Continue/Skip/Abort |
 | `receive-pack` | missing | Git-owned internal/helper/protocol command. Its parent workflow does not establish a separately reachable command contract; add explicit inspection/lifecycle or typed transfer controls before claiming coverage. |
@@ -154,7 +154,7 @@ No command is fully covered: the complete form, option and per-control execution
 | `sh-i18n` | missing | Git-owned internal/helper/protocol command. Its parent workflow does not establish a separately reachable command contract; add explicit inspection/lifecycle or typed transfer controls before claiming coverage. |
 | `sh-setup` | missing | Git-owned internal/helper/protocol command. Its parent workflow does not establish a separately reachable command contract; add explicit inspection/lifecycle or typed transfer controls before claiming coverage. |
 | `shell` | missing | Git-owned internal/helper/protocol command. Its parent workflow does not establish a separately reachable command contract; add explicit inspection/lifecycle or typed transfer controls before claiming coverage. |
-| `shortlog` | missing | History > Contributor summary over selected revisions and grouping fields. |
+| `shortlog` | partial | History > Contributors |
 | `show` | partial | History > Commit details; Conflicts > three-way views |
 | `show-branch` | missing | Branches > Compare selected branch ancestry with structured graph output. |
 | `show-index` | missing | Object storage > Inspect an approved pack index without arbitrary file paths. |
@@ -163,7 +163,7 @@ No command is fully covered: the complete form, option and per-control execution
 | `stage` | missing | Equivalent natural workflow uses add; this command spelling/output/option contract is not exposed or verified directly. |
 | `stash` | partial | Changes > Save stash; Tags and stashes > Apply/Pop/Drop/Recover branch |
 | `status` | partial | Source control > Open / Refresh; Changes > grouped file states |
-| `stripspace` | missing | Patches/Commit editor > Preview whitespace/comment cleanup before replacing the draft. |
+| `stripspace` | partial | History > Normalize draft |
 | `submodule` | partial | Working trees > Submodules |
 | `submodule--helper` | missing | Git-owned internal/helper/protocol command. Its parent workflow does not establish a separately reachable command contract; add explicit inspection/lifecycle or typed transfer controls before claiming coverage. |
 | `svn` | missing | External/integration workflow is not implemented. Needs approved native program/account/file grants, dependency discovery and task-specific reviewed effects. |
@@ -190,14 +190,13 @@ No command is fully covered: the complete form, option and per-control execution
 
 ## Immediate implementation priorities
 
-1. Contributor summaries and patch-series comparisons (shortlog/cherry/range-diff/name-rev).
-2. Advertised remote ref chooser (ls-remote), then explicit multi-ref/delete/lease policies.
-3. Interactive rebase todo controls with owned native editors and recovery.
-4. Recorded conflict resolution (rerere), trailer editing and patch identity.
-5. Pack inspection/import/verification and symbolic/ref transaction tools.
-6. Explicit trusted regression test/program orchestration and integration/protocol lifecycles.
-7. Git 2.56-only workflows must remain gated until the actual runtime is proved.
+1. Advertised remote ref chooser (ls-remote), then explicit multi-ref/delete/lease policies.
+2. Interactive rebase todo controls with owned native editors and recovery.
+3. Recorded conflict resolution (rerere), trailer editing and patch identity.
+4. Pack inspection/import/verification and symbolic/ref transaction tools.
+5. Explicit trusted regression test/program orchestration and integration/protocol lifecycles.
+6. Git 2.56-only workflows must remain gated until the actual runtime is proved.
 
 ## Cantonese coverage note
 
-呢個表逐個比較 173 個已審核 Git 指令名稱。76 個指令有部分可到達嘅原生操作，97 個仲未有獨立介面契約，冇任何指令已驗證全部形式同選項。工作流程數目、程式存在或者內部程序執行，唔等於完整指令覆蓋。
+呢個表逐個比較 173 個已審核 Git 指令名稱。83 個指令有部分可到達嘅原生操作，90 個仲未有獨立介面契約，冇任何指令已驗證全部形式同選項。工作流程數目、程式存在或者內部程序執行，唔等於完整指令覆蓋。
