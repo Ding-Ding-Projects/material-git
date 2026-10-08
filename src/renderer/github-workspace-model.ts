@@ -1,8 +1,9 @@
 import type {AppSettings} from '../shared/types';
+import {localizePair} from './localization';
 export type Domain='repositories'|'issues'|'pull-requests'|'actions'|'releases'|'projects'|'discussions'|'search'|'repository-security'|'organizations'|'gists'|'codespaces';
 export type RecordData=Record<string,unknown>;
 export interface DomainPage {items:RecordData[];page:number;hasNext:boolean;total?:number;detail?:RecordData;notice?:string}
-export interface DomainPayload {repository?:string;page?:number;query?:string;state?:string;id?:string;tab?:string;values?:Record<string,unknown>;confirmed?:boolean;owner?:string;action?:string;reviewId?:string;entity?:string}
+export interface DomainPayload {hostname?:string;repository?:string;page?:number;query?:string;state?:string;id?:string;tab?:string;values?:Record<string,unknown>;confirmed?:boolean;owner?:string;action?:string;reviewId?:string;entity?:string}
 export interface DomainDefinition {id:Domain;name:[string,string];icon:string;scoped:boolean;states?:string[];tabs:string[];create?:string}
 export const domains:DomainDefinition[]=[
 {id:'repositories',name:['Repositories','儲存庫'],icon:'repo',scoped:false,tabs:['Overview','Branches','Collaborators'],create:'Create repository'},
@@ -18,7 +19,7 @@ export const domains:DomainDefinition[]=[
 {id:'gists',name:['Gists','程式碼片段'],icon:'code',scoped:false,tabs:['Files','Comments'],create:'New gist'},
 {id:'codespaces',name:['Cloud workspaces','雲端工作空間'],icon:'cloud',scoped:false,tabs:['Overview','Ports'],create:'New cloud workspace'}
 ];
-export const ui=(settings:AppSettings|undefined,en:string,yue:string)=>settings?.language==='yue'?yue:settings?.language==='both'?`${en} · ${yue}`:en;
+export const ui=(settings:AppSettings|undefined,en:string,yue:string)=>localizePair(en,yue,settings);
 export const rec=(value:unknown):RecordData=>value&&typeof value==='object'&&!Array.isArray(value)?value as RecordData:{};
 export const arr=(value:unknown):RecordData[]=>Array.isArray(value)?value.map(rec):[];
 export const str=(value:unknown):string=>typeof value==='string'?value:typeof value==='number'?String(value):'';

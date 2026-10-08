@@ -1,33 +1,34 @@
 # Material Git
 
-A desktop workspace that turns GitHub CLI commands into guided Material Design controls.
+A Windows desktop workspace for Git repositories and GitHub. Navigate real repositories, issues, pull requests, Actions, releases and related records through contextual tasks. Local Git support is being expanded around changes, history, branches and repository operations.
 
-Material Git is an early implementation, **not complete GitHub CLI GUI parity**. The pinned GitHub CLI 2.102.0 catalog contains 196 command definitions: 181 have structured dispatch and 15 need dedicated workflows. These are coverage counts, not a claim that every command has passed live integration testing. See [command coverage](docs/command-coverage.md) and [remaining work](docs/verification-gaps.md).
+Install the unsigned Windows application from [build-16-1](https://github.com/Ding-Ding-Projects/material-git/releases/tag/build-16-1). [Documentation site](https://material-git.earlyray.chatgpt.site) · [Feature status](docs/requirements/README.md) · [Roadmap](ROADMAP.md) · [Handoff](HANDOFF.md).
 
-![Material Git desktop workbench](docs/images/desktop.png)
+**Full Git/GitHub action parity is not verified.** Upstream command and schema inventories do not prove working GUI behavior. The published release may precede changes documented in source. Current screenshots and recording for the domain remake await final build verification.
 
-Captured from the Linux development build, with no account connected.
+<details>
+<summary>Tasks, support and limits</summary>
 
-## Use
+The desktop uses real lists/details, guided choices, typed native actions and mutation review. Advanced API forms, extensions, aliases, cloud workspaces and local Copilot have distinct integration tasks. Local tools include bounded regex evaluation, supported conversion adapters and an Ollama subset.
 
-Download the latest unsigned Windows `Setup.exe` from [Releases](https://github.com/Ding-Ding-Projects/material-git/releases). GitHub CLI and MinGit are bundled. Sign in on the Accounts screen, select a repository, then open a command. Lists offer guided choices and pagination; changes show a review before execution. Windows may show an unknown-publisher prompt.
+The [GitHub audit](docs/coverage/github-actions-audit.md), [Git audit](docs/coverage/git-actions-audit.md) and [104-feature inventory](docs/coverage/features.json) distinguish backend/UI gaps, dependencies, permissions and missing evidence. History restore, export formats, bulk actions, universal localization/appearance and final platform verification remain open.
 
-[Documentation site](https://material-git.earlyray.chatgpt.site) — currently owner-private. Updating the repository About homepage is blocked by the connected credential’s metadata permission (HTTP 403). The desired homepage is the documentation URL above. Site audience is managed separately from this public source repository.
+Credentials and personal vocabulary are excluded from ordinary exports/history. Git hooks, aliases, filters and external helpers require execution trust; argument arrays alone do not neutralize them. Remote actions depend on actual permissions. Linux checks do not establish Windows installation, secure storage or updates.
 
-## Included
+</details>
 
-- Compact desktop workbench with an explorer, task tabs, resizable result inspector, Material scrollbars, dynamic themes, and reduced motion.
-- Command catalog, entity pickers, structured flags, JSON-field chips, live operation output, cancellation, results and exports.
-- Device-flow sign-in, verified account switching, reviewed permission refresh, and Git credential-helper setup without displaying stored tokens.
-- Official API explorer: 1,232 REST operations and 1,829 GraphQL types, with typed forms, a graphical selection tree, request review, pagination, and actual HTTP results. These are schema inventory counts, not full live API verification.
-- GitHub CLI configuration: 14 documented keys, 12 guided settings, global/host scope, environment precedence, and native executable selection.
-- English/Cantonese presentation settings, installed-voice narration, local vocabulary import, access preferences and encrypted local TOTP where supported by the operating system.
-- Isolated regex workbench, local text/colour/time/unit converters, and local Ollama models and chat.
-- Unsigned Windows Squirrel installation and update feed, with restart kept explicit.
+<details>
+<summary>Build and development</summary>
 
-## Develop
+Fresh Windows build-and-run entrypoint:
 
-Use Node.js 22.20 or newer. Linux and macOS source runs need a compatible system Git and Electron desktop libraries. Windows scripts bootstrap a verified local Node runtime without administrator rights.
+```powershell
+.\build.bat --run
+```
+
+Root scripts acquire pinned prerequisites in user scope. `build-installer.bat /s` creates unsigned Squirrel artifacts and checksums. Clean Windows execution remains separately tracked.
+
+Source development requires Node.js 22.20 or newer and desktop runtime libraries; Linux uses system Git.
 
 ```sh
 npm ci
@@ -37,12 +38,30 @@ npm test
 npm run dev
 ```
 
-`npm run build` produces the application bundle. `node scripts/build-site.mjs` builds the documentation. On Windows, `build.bat /s` builds and `build-installer.bat /s` creates `Setup.exe`, `RELEASES`, a full NuGet package and SHA-256 sums. On a network proxy, Electron’s lazy installation may require the Node environment-proxy setting.
+`npm run build` bundles the app and offline articles. `node scripts/build-site.mjs` builds the separate documentation site. `node scripts/check-feature-coverage.mjs` validates inventory integrity and reports open obligations; `--require-complete` fails until proof is complete. See [build details](docs/build.md) and [contributing](CONTRIBUTING.md).
 
-The Windows workflow only builds, packages and publishes. Type checks and behavioral tests run locally. Linux headless interaction checks do not establish Windows installer, update, secure-storage or full command parity.
+Windows CI builds/packages/publishes. It does not run tests or lint; notes must state actual local checks.
 
-## Design and boundaries
+</details>
 
-The renderer has no Node integration. Validated IPC invokes pinned executables using argument arrays with `shell: false`. Operations retain bounded, redacted output. Personal vocabulary remains local and is omitted from history and exports. Reviewed local Git commands can use the hooks and helpers configured in the working folder you choose.
+<details>
+<summary>Documentation, evidence and site state</summary>
 
-See [authentication](docs/authentication.md), [API explorer](docs/api-explorer.md), [API coverage](docs/api-coverage.md), [CLI reference](docs/cli-reference.md), [Material provenance](design/material-provenance.md), [personalization](docs/personalization.md), [converters](docs/converters.md), [local models](docs/ollama.md), and [verification gaps](docs/verification-gaps.md).
+[Documentation index](docs/README.md) · [Authentication](docs/authentication.md) · [Security](docs/security.md) · [Workspace records](docs/workspace.md) · [API workspace](docs/api-explorer.md) · [Design provenance](design/material-provenance.md).
+
+The [reviewed screenshot ledger](docs/images/README.md) records 20 genuine Linux desktop captures from source `e464ff7`, with exact per-image capture times, dimensions and SHA-256 hashes. The gallery covers real domain records, provider empty states, export-format choices, verified native download completion, converter adapter limits and light/dark/Cantonese/bilingual/narrow presentation. These images describe that source artifact, independently of the separately published Windows installer. The settled native account frame is included; its earlier loading frame and the Download Start transition frame remain excluded. Final destination coverage, recording and the full language/scale matrix remain open.
+
+The site is https://material-git.earlyray.chatgpt.site and currently owner-private. Repository About homepage PATCH returned HTTP 403 with the connected credential; permission/deployment verification belong to the publishing owner. Source visibility and site audience are independent.
+
+</details>
+
+<details>
+<summary>Project instructions, counts and community</summary>
+
+Follow the [sanitized project instruction summary](docs/requirements/shared-instructions.md): productive domain tasks, genuine Material controls, guided native operations, bounded execution, privacy, meaningful checks and factual evidence. It was exported through the canonical helper. Full instruction export currently fails the canonical public guard, so a complete mirror remains explicitly open. [AGENTS.md](AGENTS.md) carries the exact neutral discipline block without private terms.
+
+Human effort estimate: **not calculated** until a verified workflow line-count report exists. The eventual estimate must state eligible handwritten lines, exclusions, assumed rate/multiplier and arithmetic. No manual/generated total substitutes for published evidence.
+
+[License](LICENSE) · [Contributing](CONTRIBUTING.md) · [Security reporting](SECURITY.md) · [Code of conduct](CODE_OF_CONDUCT.md) · [Closeout prompt](CLOSEOUT_PROMPT.md).
+
+</details>

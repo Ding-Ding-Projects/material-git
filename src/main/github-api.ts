@@ -37,7 +37,7 @@ function nativeRunner(binary:string,args:string[],cwd:string,input?:string|Buffe
 });}
 function pagination(request:{page?:number;pageSize?:number}){const page=request.page??1,pageSize=request.pageSize??25;if(!Number.isInteger(page)||page<1||page>100000||!Number.isInteger(pageSize)||pageSize<1||pageSize>100)throw new Error('Invalid catalogue page');return {page,pageSize,start:(page-1)*pageSize};}
 function summary({parameters,requestBody,responses,...operation}:ApiOperation){return operation;}
-export function createApiService(options:ApiServiceOptions):GitHubApiBridge {
+export function createApiService(options:ApiServiceOptions):GitHubApiBridge & {invalidateReviews():void} {
  const catalog=options.catalog??JSON.parse(readFileSync(options.catalogPath??path.join(__dirname,'github-api-catalog.json'),'utf8')) as ApiCatalogFile;
  if(catalog.version!==1||!Array.isArray(catalog.operations))throw new Error('Unsupported GitHub API catalogue');
  const operations=new Map(catalog.operations.map(o=>[o.operationId,o]));
@@ -202,5 +202,7 @@ export function createApiService(options:ApiServiceOptions):GitHubApiBridge {
  async function apply(request:ApiMutationApply):Promise<ApiResult>{record(request,'API review confirmation');for(const key of Object.keys(request))if(!['reviewId','confirmed'].includes(key))throw new Error('API confirmation cannot replace reviewed values or host');if(typeof request.reviewId!=='string'||request.confirmed!==true)throw new Error('Confirm the exact reviewed API mutation');purgeReviews();const plan=removeReview(request.reviewId);if(!plan||plan.expiresAt<=now())throw new Error('API review expired or was already used. Review again.');try{const host=hostFor(plan.prepared.host.hostname);if(JSON.stringify(host)!==JSON.stringify(plan.prepared.host))throw new Error('The approved API host changed. Review again.');const current=await account(host);if(current.id!==plan.account.id)throw new Error('The active account changed. Review this API mutation again.');if(plan.expiresAt<=now())throw new Error('API review expired. Review again.');return await send(plan.prepared);}finally{clearPrepared(plan.prepared);}}
  function cancelReview(request:{reviewId:string}):void{record(request,'API review cancellation');if(typeof request.reviewId!=='string'||Object.keys(request).some(key=>key!=='reviewId'))throw new Error('Choose an API review to cancel');const plan=removeReview(request.reviewId);if(plan)clearPrepared(plan.prepared);}
 
- return {catalogue,describe,execute,review,graphqlReview,apply,cancelReview,graphqlCatalogue,graphqlDescribe,graphqlBuild,graphqlExecute};
+ function invalidateReviews():void{for(const id of [...reviews.keys()]){const plan=removeReview(id);if(plan)clearPrepared(plan.prepared);}}
+
+ return {catalogue,describe,execute,review,graphqlReview,apply,cancelReview,invalidateReviews,graphqlCatalogue,graphqlDescribe,graphqlBuild,graphqlExecute};
 }

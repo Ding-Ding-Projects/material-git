@@ -1,3 +1,4 @@
+import {workflowCommandIds} from './cli-workflows.js';
 export type TotpAlgorithm='SHA1'|'SHA256'|'SHA512';
 export interface TotpParameters{secret:string;algorithm:TotpAlgorithm;digits:6|7|8;period:number;issuer:string;account:string}
 export interface SecurityStatus{available:boolean;vaultAvailable:boolean;watching:boolean;error?:string;recoveryDirectory:string;lockRecoveryDirectory?:string;schoolMode:{displayName:string;active:boolean;revision:number;updatedAt:string|null};credentialSet:boolean}
@@ -34,5 +35,9 @@ export function protectedLockIds(channel:string,action?:string,commandId?:string
  const ids=[`destination:${lane}`];if(commandId){const key=commandId.replaceAll(' ','.');if(!validLockId(key))throw new Error('Invalid command lock identifier');ids.push(`command:${key}`,`tab:${key}`);}if(action){if(!validLockId(action))throw new Error('Invalid action lock identifier');ids.push(`${channel}:${action}`);}return ids;
 }
 
-export const nativeLockLanes=['commands','accounts','api','cli-config','settings','tools','security','history','notifications','records','integrations','assistant','downloads','updates','docs','about','home'] as const;
-export function nativeLockTargets(commands:Array<{id:string;title:string}>=[]):LockTarget[]{return [...nativeLockLanes.map(lane=>({id:`destination:${lane}`,label:lane})),...commands.flatMap(command=>[{id:`command:${command.id.replaceAll(' ','.')}`,label:command.title,ancestors:['destination:commands']},{id:`tab:${command.id.replaceAll(' ','.')}`,label:command.title,ancestors:['destination:commands']}])];}
+const cliWorkflowDestinations=new Map<string,readonly string[]>(workflowCommandIds.map(command=>[command,command.startsWith('codespace ')?['codespaces']:command.startsWith('extension ')?['extensions']:command.startsWith('alias ')?['aliases']:command==='copilot'?['tools','copilot']:['tools']]));
+/** Only supported native workflow IDs choose productive destinations; Apply uses the stored command. */
+export function cliWorkflowLockIds(commandId:unknown):string[]{if(typeof commandId!=='string'||!cliWorkflowDestinations.has(commandId))throw new Error('Unknown workflow command');return [...protectedLockIds('execute',undefined,commandId),...cliWorkflowDestinations.get(commandId)!.map(lane=>`destination:${lane}`)];}
+
+export const nativeLockLanes=['commands','codespaces','extensions','aliases','copilot','accounts','api','cli-config','settings','tools','security','history','notifications','records','integrations','assistant','downloads','updates','docs','about','home'] as const;
+export function nativeLockTargets(commands:Array<{id:string;title:string}>=[]):LockTarget[]{return [...nativeLockLanes.map(lane=>({id:`destination:${lane}`,label:lane})),...commands.flatMap(command=>[{id:`command:${command.id.replaceAll(' ','.')}`,label:command.title,ancestors:['destination:commands',...(cliWorkflowDestinations.get(command.id)||[]).map(lane=>`destination:${lane}`)]},{id:`tab:${command.id.replaceAll(' ','.')}`,label:command.title,ancestors:['destination:commands',...(cliWorkflowDestinations.get(command.id)||[]).map(lane=>`destination:${lane}`)]}])];}

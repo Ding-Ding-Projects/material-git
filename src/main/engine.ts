@@ -24,6 +24,7 @@ class OutputRedactor {
   return output;
  }
 }
+export interface PreparedExecution {commandId:string;argv:string[];secrets:string[];cwd:string}
 export class Engine {
  private operations = new Map<string, Operation>();
  private children = new Map<string, ChildProcess>();
@@ -35,7 +36,9 @@ export class Engine {
  private emit(op: Operation) {for(const callback of this.listeners) {try {callback(structuredClone(op));} catch { /* Subscriber failures must not interrupt process cleanup. */ }}}
  private terminate(child:ChildProcess,force=false){if(!child.pid)return;if(process.platform==='win32'){const killer=spawn('taskkill',['/PID',String(child.pid),'/T',...(force?['/F']:[])],{shell:false,windowsHide:true,stdio:'ignore'});killer.on('error',()=>{child.kill(force?'SIGKILL':'SIGTERM');});}else{try{process.kill(-child.pid,force?'SIGKILL':'SIGTERM');}catch{child.kill(force?'SIGKILL':'SIGTERM');}}}
  cancel(id: string): void {const child=this.children.get(id);const op=this.operations.get(id);if(child&&op?.status==='running'){op.status='cancelled';this.terminate(child);const timer=setTimeout(()=>{this.killTimers.delete(id);this.terminate(child,true);},2000);timer.unref();this.killTimers.set(id,timer);this.emit(op);}}
- execute(request: ExecutionRequest): Operation {
+ execute(request:ExecutionRequest):Operation{const prepared=this.prepare(request);return this.executeAdapter(prepared.commandId,prepared.argv,{secrets:prepared.secrets,cwd:prepared.cwd});}
+ /** Validate without spawning; dedicated task reviews bind this exact main-process result. */
+ prepare(request:ExecutionRequest):PreparedExecution {
  if(!request || typeof request!=='object')throw new Error('Invalid request');
  const command=this.catalog.commands.find(c=>c.id===request.commandId); if(!command)throw new Error('Unknown command');
  if(command.interactive)throw new Error(command.availability || 'Command requires a native terminal');
@@ -94,7 +97,7 @@ export class Engine {
  if(headers.some(h=>h!==undefined&&(typeof h!=='string'||! /^[A-Za-z0-9-]+:\s*[^\r\n]*$/.test(h))))throw new Error('API headers must use a structured name: value pair');
  if(headers.some(h=>typeof h==='string'&& /^(authorization|host|proxy-authorization)\s*:/i.test(h)))throw new Error('Authentication and host headers are managed by GitHub CLI');
  }
- return this.executeAdapter(command.id,argv,{secrets,cwd});
+ return {commandId:command.id,argv,secrets,cwd};
  }
  /** Main-process adapters alone may call this method; never expose argv directly over IPC. */
  executeAdapter(commandId:string,argv:string[],options:{secrets?:string[];cwd?:string;executable?:string;timeoutMs?:number;hostname?:string}={}):Operation {
