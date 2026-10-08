@@ -1,0 +1,47 @@
+import {chromium} from 'playwright';
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+const target=process.env.SITE_QA_URL??'http://127.0.0.1:4287';
+const browser=await chromium.launch({headless:true,executablePath:process.env.SITE_QA_CHROMIUM??'/usr/bin/chromium',args:['--no-sandbox']});
+const context=await browser.newContext({viewport:{width:1440,height:1000},reducedMotion:'reduce'});
+const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
+try{
+ await page.goto(target);await page.waitForFunction(()=>customElements.get('material-git-site')&&document.querySelector('h1'));
+ assert.match(await page.locator('h1').innerText(),/next contribution/);
+ assert.equal(await page.locator('.provenance').count(),1);
+ assert.equal(await page.locator('.site-navigation md-primary-tab').count(),6);
+ assert.equal(await page.locator('md-filled-button').filter({hasText:'Get Material Git'}).count(),1);
+ await page.screenshot({path:'/tmp/material-git-site-qa/overview-desktop.png',fullPage:true});
+ await page.locator('md-primary-tab').filter({hasText:'Documentation'}).click();await page.waitForSelector('.docs-index');
+ assert.equal(new URL(page.url()).hash,'#docs');
+ const docInput=page.locator('.docs-section md-outlined-text-field').first();await docInput.locator('input').fill('authentication');await page.waitForTimeout(150);
+ assert.ok(await page.locator('.article-row').count()>0);
+ await page.locator('.article-row md-text-button').first().click();await page.waitForSelector('.markdown h1');
+ assert.ok((await page.locator('.markdown').innerText()).length>100);
+ await page.keyboard.press('Control+Shift+F');await page.waitForSelector('md-dialog');
+ assert.equal(await page.locator('.palette').count(),1);
+ await page.keyboard.press('Escape');await page.waitForTimeout(100);
+ await page.goto(target+'/#settings');await page.waitForSelector('#setting-language');
+ await page.locator('#setting-language md-outlined-select').click();await page.locator('#setting-language md-select-option[value="both"]').click();
+ await page.waitForTimeout(100);assert.match(await page.locator('h1').innerText(),/指南/);
+ const slider=page.locator('#setting-fontScale md-slider');await slider.locator('input').first().focus();await page.keyboard.press('End');await page.waitForTimeout(100);
+ for(const width of [320,375,768]){await page.setViewportSize({width,height:1000});await page.waitForTimeout(150);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),true,`settings overflow at ${width}`)}
+ await page.reload();await page.waitForSelector('#setting-language');assert.match(await page.locator('h1').innerText(),/指南/);
+ await page.locator('#setting-fontScale md-slider input').first().focus();await page.keyboard.press('Home');for(let i=0;i<5;i++)await page.keyboard.press('ArrowRight');
+ await page.goto(target+'/#home');await page.waitForSelector('h1');await page.setViewportSize({width:320,height:900});await page.waitForTimeout(100);
+ assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),true,'overview overflow at 320');
+ await page.screenshot({path:'/tmp/material-git-site-qa/overview-bilingual-320.png',fullPage:true});
+ await page.goto(target+'/#docs');await page.waitForSelector('.docs-index');assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),true,'docs overflow at 320');
+ await page.goto(target+'/#gallery');await page.waitForSelector('h1');const gallery=JSON.parse(await readFile(new URL('./gallery.json',import.meta.url),'utf8'));assert.equal(await page.locator('.capture img').count(),gallery.captures.length,'only reviewed manifest images are published');
+ await page.goto(target+'/#download');await page.waitForSelector('.download-card');await page.waitForTimeout(250);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),true,'download overflow at 320');
+ await page.goto(target+'/#settings');await page.waitForSelector('mg-site-schedules');
+ await page.locator('mg-site-schedules > md-outlined-button').filter({hasText:'Add rule'}).click();await page.waitForSelector('.schedule-rule');
+ const times=page.locator('.schedule-rule input[type=time]');await times.nth(0).fill('00:00');await times.nth(0).press('Tab');await times.nth(1).fill('00:00');await times.nth(1).press('Tab');await page.waitForTimeout(100);
+ assert.equal(await page.evaluate(()=>document.documentElement.dataset.theme),'dark','full-day canonical schedule applies');
+ await page.locator('mg-site-tabs > md-filled-button').click();await page.waitForTimeout(100);assert.ok(await page.locator('.group-navigation md-outlined-button').count()>0);
+ await page.reload();await page.waitForSelector('#setting-tabs');assert.equal(await page.locator('.schedule-rule').count(),1);assert.ok(await page.locator('.group-navigation md-outlined-button').count()>0);
+ await page.locator('#setting-appearance md-outlined-button').click();await page.waitForSelector('mg-site-appearance');
+ await page.locator('mg-site-appearance md-outlined-select').first().click();await page.locator('mg-site-appearance md-select-option[value=hover]').click();assert.ok(await page.locator('mg-site-appearance md-slider').count()>=10);await page.keyboard.press('Escape');
+ const failureContext=await browser.newContext();await failureContext.route('https://api.github.com/**',route=>route.fulfill({status:403,body:'{}'}));const failurePage=await failureContext.newPage();await failurePage.goto(target+'/#download');await failurePage.waitForSelector('.download-card md-filled-button');assert.match(await failurePage.locator('.download-card').innerText(),/unavailable/);await failureContext.close();
+ assert.deepEqual(errors,[]);console.log('PASS: real static website, Material tabs, bundled article/search, palette, bilingual persistence, 320/375/768 px layouts with 200% text, reviewed gallery only, schedule/group persistence, state-specific appearance controls, and API failure recovery.');
+}finally{await context.close();await browser.close()}
