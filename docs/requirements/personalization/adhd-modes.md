@@ -8,7 +8,7 @@ Every user-facing application and GitHub Pages ships independently toggleable, p
 
 ## Current support and configuration
 
-Five independent preference fields exist; complete adaptation of the new domain shell is pending.
+Five independent persisted modes are available. The desktop task strip now shows session, unchanged and per-context active time; momentum offers a dismissible fifteen-minute inactivity prompt and a persisted one-hour deferral. Final full-shell combinations and platform evidence remain open.
 
 This is a scoped implementation assessment, not a claim that the whole requirement is finished. Surface states: **app: partial; site: unknown; repository: not-applicable**. See [implementation reference](../../personalization.md) and the [complete inventory](../../coverage/features.json). Controls belong in the destination that owns the data; the primary UI must remain a productive task workspace.
 

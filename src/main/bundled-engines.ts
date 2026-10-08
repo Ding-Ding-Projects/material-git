@@ -16,7 +16,7 @@ async function sha(path: string) { const hash = createHash('sha256'); for await 
     hash.update(chunk); return hash.digest('hex'); }
 function safeName(name: string) { if (!name || name.length > 200 || /[\x00-\x1f\\/:]/.test(name) || name === '.' || name === '..' || /[. ]$/.test(name) || /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(name) || name.startsWith('output.') || ['__proto__','constructor','prototype'].includes(name))
     throw new Error('Archive sources require distinct safe basenames'); return name; }
-function validateOptions(options: ConverterOptions) { const allowed = ['pages', 'rotation', 'metadata', 'quality', 'compression', 'level', 'dictionaryMiB', 'solid', 'threads', 'volumeMiB', 'encryption', 'password', 'sourceFormat', 'table']; for (const key of Object.keys(options))
+function validateOptions(options: ConverterOptions) { const allowed = ['pages', 'rotation', 'metadata', 'quality', 'compression', 'level', 'dictionaryMiB', 'wordSize', 'solidBlockMiB', 'solid', 'threads', 'volumeMiB', 'encryption', 'password', 'sourceFormat', 'table']; for (const key of Object.keys(options))
     if (!allowed.includes(key))
         throw new Error('Unknown converter option'); if (options.password !== undefined && (typeof options.password !== 'string' || !options.password.length || options.password.length > 200 || /[\r\n\0]/.test(options.password)))
     throw new Error('Archive password must be 1 to 200 characters without line breaks'); if (options.threads !== undefined && (!Number.isInteger(options.threads) || options.threads < 1 || options.threads > 4))
@@ -25,7 +25,7 @@ function validateOptions(options: ConverterOptions) { const allowed = ['pages', 
     throw new Error('Unsupported archive dictionary size'); if (options.solid !== undefined && typeof options.solid !== 'boolean')
     throw new Error('Solid mode must be boolean'); if (options.volumeMiB !== undefined && (![0, 4, 8, 16, 32].includes(options.volumeMiB)))
     throw new Error('Unsupported volume size'); if (options.encryption !== undefined && !['none', 'content', 'content-and-headers'].includes(options.encryption))
-    throw new Error('Unsupported encryption mode'); if (options.compression !== undefined && !['store', 'deflate', 'lzma2'].includes(options.compression))
+    throw new Error('Unsupported encryption mode'); if (options.compression !== undefined && !['store', 'deflate', 'lzma2', 'lzma', 'ppmd', 'bzip2'].includes(options.compression))
     throw new Error('Unsupported compression method'); if (options.sourceFormat !== undefined && !['json', 'jsonl', 'yaml', 'xml', 'csv', 'tsv'].includes(options.sourceFormat))
     throw new Error('Unsupported structured source format'); }
 export class BundledEngines implements BundledEngineFacade {
@@ -35,7 +35,7 @@ export class BundledEngines implements BundledEngineFacade {
         const size = (await stat(this.options.workerPath)).size;
         if (size <= 0 || size > 16 * 1024 * 1024)
             throw new Error('Invalid bundled worker artifact');
-        status.push({ kind: 'worker', available: true, proof: 'Bundled fixed worker source with locked pdf-lib, YAML/XML, ZIP and raster decoders; isolated heap/time/resource bounds', version: 'pdf-lib 1.17.1 / pngjs 7.0.0 / jpeg-js 0.4.4' });
+        status.push({ kind: 'worker', available: true, proof: 'Bundled fixed worker source with locked pdf-lib, YAML/XML, ZIP and raster decoders; isolated memory/time/resource bounds', version: 'pdf-lib 1.17.1 / pngjs 7.0.0 / jpeg-js 0.4.4' });
     }
     catch {
         status.push({ kind: 'worker', available: false, reason: 'The built bundled-engines-worker.cjs artifact is missing. Run the application build with the converter worker entry.' });
@@ -152,18 +152,18 @@ export class BundledEngines implements BundledEngineFacade {
     } if (!['7z-create', '7z-zip'].includes(request.adapter))
         throw new Error('Unsupported native archive operation'); const isZip = request.adapter === '7z-zip'; if (isZip && request.options.encryption === 'content-and-headers')
         throw new Error('ZIP does not support header encryption'); if (isZip && request.options.solid)
-        throw new Error('ZIP does not support solid compression'); const method = request.options.compression ?? (isZip ? 'deflate' : 'lzma2'); if (isZip && !['store', 'deflate'].includes(method) || !isZip && !['store', 'lzma2'].includes(method))
-        throw new Error('Compression method is incompatible with archive format'); const names = new Set<string>(); for (const item of request.inputs) {
+        throw new Error('ZIP does not support solid compression'); const method = request.options.compression ?? (isZip ? 'deflate' : 'lzma2'); if (isZip && !['store', 'deflate'].includes(method) || !isZip && !['store', 'lzma2', 'lzma', 'ppmd', 'bzip2', 'deflate'].includes(method))
+        throw new Error('Compression method is incompatible with archive format'); if (request.options.solidBlockMiB !== undefined && (![1,2,4,8,16,32,64].includes(request.options.solidBlockMiB) || !request.options.solid || isZip)) throw new Error('Solid block size requires solid 7z compression and a 1 to 64 MiB choice'); const word=request.options.wordSize; if(word!==undefined && (!Number.isInteger(word) || !(['lzma','lzma2'].includes(method)?word>=5&&word<=273:method==='ppmd'?word>=2&&word<=32:method==='deflate'?word>=3&&word<=258:false))) throw new Error('Word size is unsupported for this compression method'); const names = new Set<string>(); for (const item of request.inputs) {
         safeName(item.name);
         if (names.has(item.name))
             throw new Error('Archive inputs require distinct basenames');
         names.add(item.name);
         await writeFile(join(directory, item.name), item.bytes, { flag: 'wx' });
-    } const output = join(directory, 'output.' + (isZip ? 'zip' : '7z')), args = ['a','-spd', isZip ? '-tzip' : '-t7z', '-mx=' + String(request.options.level ?? 6), '-mmt=' + String(request.options.threads ?? 1), isZip ? '-mm=' + (method === 'store' ? 'Copy' : 'Deflate') : '-m0=' + (method === 'store' ? 'Copy' : 'LZMA2')]; if (!isZip) {
-        args.push('-ms=' + (request.options.solid ? 'on' : 'off'));
-        if (method === 'lzma2')
-            args.push('-md=' + String(request.options.dictionaryMiB ?? 16) + 'm');
-    } if (request.options.volumeMiB)
+    } const methodNames={store:'Copy',deflate:'Deflate',lzma2:'LZMA2',lzma:'LZMA',ppmd:'PPMd',bzip2:'BZip2'}; const output = join(directory, 'output.' + (isZip ? 'zip' : '7z')), args = ['a','-spd', isZip ? '-tzip' : '-t7z', '-mx=' + String(request.options.level ?? 6), '-mmt=' + String(request.options.threads ?? 1), (isZip ? '-mm=' : '-m0=') + methodNames[method]]; if (!isZip) {
+        args.push('-ms=' + (request.options.solid ? request.options.solidBlockMiB ? request.options.solidBlockMiB+'m' : 'on' : 'off'));
+        if (['lzma2','lzma','ppmd'].includes(method))
+            args.push((method==='ppmd'?'-mmem=':'-md=') + String(request.options.dictionaryMiB ?? 16) + 'm');
+    } if(word!==undefined)args.push((method==='ppmd'?'-mo=':isZip?'-mfb=':'-mfb=')+word); if (request.options.volumeMiB)
         args.push('-v' + request.options.volumeMiB + 'm'); if (encrypted) {
         args.push('-p');
         if (isZip)
@@ -183,7 +183,7 @@ export class BundledEngines implements BundledEngineFacade {
         if (total > MAX_BYTES)
             throw new Error('Archive output exceeds 64 MiB');
         outputs.push({ suffix: file.slice('output'.length), bytes });
-    } return { outputs, disclosures: ['Archive stores source basenames. Compression options are bounded to 64 MiB dictionary and four threads. Passwords enter controlled stdin only, never argument arrays or durable history. ZIP header encryption and solid mode are unavailable.'] }; }); }
+    } return { outputs, details:{compression:method,level:request.options.level??6,dictionaryMiB:['lzma2','lzma','ppmd'].includes(method)?request.options.dictionaryMiB??16:null,wordSize:word??null,solid:request.options.solid??false,solidBlockMiB:request.options.solidBlockMiB??null,threads:request.options.threads??1,encryption:request.options.encryption??'none'}, disclosures: ['Archive stores source basenames. Compression options are bounded to 64 MiB dictionary and four threads. Passwords enter controlled stdin only, never argument arrays or durable history. ZIP header encryption and solid mode are unavailable.'] }; }); }
     private archiveListing(source: string) { const marker = source.indexOf('----------'); if (marker < 0) throw new Error('Archive inventory is incomplete'); const records = source.slice(marker + 10).split(/\r?\n\r?\n/); const files: Array<{
         name: string;
         bytes: number;
