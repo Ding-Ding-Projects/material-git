@@ -1,5 +1,6 @@
 /** Public contract for the dedicated GitHub CLI configuration channel. */
-export type CliConfigScope = 'global' | 'github.com';
+/** 'global' or an exact native-approved hostname; validated in the privileged service. */
+export type CliConfigScope = string;
 export type CliConfigKey = 'api_host' | 'git_protocol' | 'editor' | 'prompt' | 'prefer_editor_prompt' | 'pager' | 'http_unix_socket' | 'browser' | 'clipboard' | 'color_labels' | 'accessible_colors' | 'accessible_prompter' | 'spinner' | 'telemetry';
 export interface CliConfigDefinition {
  key: CliConfigKey; label: string; group: string; description: string;
@@ -10,7 +11,7 @@ export interface CliConfigDefinition {
 }
 export const CLI_CONFIG_DEFINITIONS: CliConfigDefinition[] = [
  {key:'git_protocol',label:'Git transport',group:'Git and connections',description:'Choose HTTPS or SSH for clone and push operations. SSH needs a working SSH key. This applies to every account on the selected host.',kind:'choice',choices:['https','ssh'],defaultValue:'https',environment:[],available:true},
- {key:'api_host',label:'API hostname override',group:'Git and connections',description:'Experimental API routing can send authenticated requests to another hostname. The CLI says this is not a security boundary.',kind:'unavailable',defaultValue:'',environment:[],available:false,unavailableReason:'Custom API routing requires a reviewed connection adapter. Only github.com is approved in this application.'},
+ {key:'api_host',label:'API hostname override',group:'Git and connections',description:'Experimental API routing can send authenticated requests to another hostname. The CLI says this is not a security boundary.',kind:'unavailable',defaultValue:'',environment:[],available:false,unavailableReason:'Custom API routing requires a reviewed connection adapter. Approved host selection does not enable custom API routing.'},
  {key:'http_unix_socket',label:'HTTP Unix socket',group:'Git and connections',description:'Route HTTP requests through a local Unix socket.',kind:'unavailable',defaultValue:'',environment:[],available:false,unavailableReason:'A platform-specific socket and connection adapter is required. No socket path editor is available.'},
  {key:'editor',label:'Text editor',group:'External applications',description:'The program GitHub CLI uses to author text. Select an executable without extra arguments. Existing command strings remain hidden.',kind:'executable',defaultValue:'',environment:['GH_EDITOR','GIT_EDITOR','VISUAL','EDITOR'],available:true,filePicker:{kind:'executable',title:'Choose a text editor executable',argumentsSupported:false}},
  {key:'browser',label:'Web browser',group:'External applications',description:'The browser GitHub CLI uses to open links. Material Git links continue through its own approved link workflow.',kind:'executable',defaultValue:'',environment:['GH_BROWSER','BROWSER'],available:true,filePicker:{kind:'executable',title:'Choose a web browser executable',argumentsSupported:false}},
@@ -38,13 +39,13 @@ export interface CliReference {
  commands:{id:string;summary:string;status:'catalog-guided'|'adapter-required';availability?:string;options:number;arguments:number}[];
 }
 export interface CliConfigSnapshot {
- kind:'snapshot'; version:string; scope:CliConfigScope; definitions:CliConfigDefinition[];
+ kind:'snapshot'; version:string; scope:CliConfigScope; hostname:string; scopes:CliConfigScope[]; definitions:CliConfigDefinition[];
  values:CliConfigValue[]; environment:CliEnvironmentEntry[]; notes:string[];
  reset:{supported:false; reason:string};
 }
 export interface CliConfigChange {key:CliConfigKey;mode:'set'|'default';value?:string;}
 export interface CliConfigReview {
- kind:'review'; reviewId:string; scope:CliConfigScope; expiresAt:string;
+ kind:'review'; reviewId:string; scope:CliConfigScope; hostname:string; expiresAt:string;
  changes:{key:CliConfigKey;label:string;before:string;after:string;environmentSource?:string}[];
  notes:string[];
 }

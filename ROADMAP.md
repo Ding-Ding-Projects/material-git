@@ -1,5 +1,7 @@
 # Roadmap
 
+Current priority: implement missing applicable functionality across the complete feature inventory before the general defect backlog and further Windows release retries. Each feature still passes meaningful checks and is genuinely merged/pushed independently. Current active lanes and precise publication boundaries are recorded in [HANDOFF.md](HANDOFF.md). No unchecked requirement below is removed by a partial implementation.
+
 Check a feature only after actual behavior, meaningful verification and a current capture where visible. All open canonical scope remains below.
 
 ## Verified research checkpoints

@@ -1,5 +1,6 @@
 /** Application-owned Git editor copy. Repository data and native diagnostics remain literal. */
 export const gitEditorYue:Record<string,string>={
+'Export reachable object packs':'匯出可到達物件封裝','Remove redundant loose object copies':'移除重複散存物件副本','New export folder name':'新匯出資料夾名稱','Reachable object scope':'可到達物件範圍','Selected source commit or branch':'所選來源提交或分支','Compression level (0 to 9)':'壓縮級別（0 至 9）','Delta comparison window (0 to 100)':'差異比較視窗（0 至 100）','Maximum delta depth (0 to 4095)':'最大差異深度（0 至 4095）','Import verified object pack':'匯入已驗證物件封裝','Inspect and import object packs':'檢查同匯入物件封裝',
 'Message metadata':'訊息中繼資料','Draft request to pull commits':'草擬拉取提交請求',
 'Record or reuse conflict resolutions':'記錄或重用衝突解決','Forget selected conflict resolution':'忘記所選衝突解決','Clear unresolved conflict reuse records':'清除未解決重用記錄','Remove old conflict resolutions':'移除舊衝突解決','Permanently clean old resolved and unresolved cache variants using explicit retention days. Working files and staged contents stay unchanged.':'按明確保留日數永久清理舊解決同未解決快取，工作檔案同已暫存內容保持不變。','Resolved retention days':'已解決保留日數','Unresolved retention days':'未解決保留日數',
 'Default branch':'預設分支','Filter provider branches':'篩選來源分支','Search branches':'搜尋分支','Previous branches':'上一頁分支','Next branches':'下一頁分支','Branch page':'分支頁面',

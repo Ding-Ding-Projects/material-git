@@ -1,16 +1,22 @@
 import { randomUUID, createHash } from 'node:crypto';
 import { mkdir, open, stat, statfs, unlink, link, readFile, writeFile, readdir, opendir } from 'node:fs/promises';
+import {constants} from 'node:fs';
 import { basename, join, extname, dirname } from 'node:path';
 import type { LocalToolsAction, LocalToolsPayload, FileGrant, ConverterResult } from '../shared/local-tools';
 import { converterRegistry, inspectBytes, FILE_LIMIT, imageDimensions, isolatedCodec } from './local-tools-codecs';
 import { OllamaManager, atomicJson } from './ollama-manager';
 import {CHAT_IMAGE_LIMIT,type PreparedChatImage} from './chat-attachments';
 import {bundledRegistry} from './bundled-engines-registry';
+import {inspectSourceBytes} from './converter-source-inspect';
+import {ConverterDiscovery,verifyFolderSource,type PrivateSourceEntry} from './converter-discovery';
+import {ConverterSourceAdmission} from './converter-source-admission';
 import {ConverterResults,type ResultOperation} from './converter-results';
 import {ConverterQueue,type QueueRecord} from './converter-queue';
 import type {BundledEngineFacade,ConverterOptions,EngineOutput} from '../shared/bundled-engines';
 export interface LocalToolsOptions {
     storageDirectory: string;
+    pickSourceDirectory?:()=>Promise<string|null>;
+    pickOutputDirectory?:()=>Promise<string|null>;
     openResult?: (path:string,operation:Exclude<ResultOperation,'export'>)=>Promise<void>;
     resultActionAvailability?: {open:boolean;reveal:boolean;editor:boolean};
     pickSources: (purpose?:'chat-images') => Promise<string[]>;
@@ -20,11 +26,13 @@ export interface LocalToolsOptions {
     fetcher?: typeof fetch;
     engines?:BundledEngineFacade;
 }
-const schemas: Record<LocalToolsAction, string[]> = { 'converter-catalog': [], 'converter-pick': ['purpose'],'converter-inspect':['grant'], 'converter-start': ['grant', 'grants', 'adapter','options'], 'converter-status': ['page','query','regex','pattern','flags','status','date'],'converter-result':['id','index','operation'],'converter-bulk':['ids','operation','confirmed'], 'converter-cancel': ['id'],'converter-enqueue':['grant','grants','adapter','options'],'converter-queue':[],'converter-pause':[],'converter-resume':[], 'catalog-status': [], 'catalog-refresh': [], 'catalog-page': ['page', 'size', 'query', 'regex', 'pattern', 'flags', 'family', 'capability', 'sort', 'state', 'variant', 'quantization', 'maxBytes', 'fit'], 'model-capabilities':['model'],'model-copy':['source','destination','confirmed'],'generation-start':['model','prompt','system','temperature','tokens','context'],'generation-status':['id'],'generation-cancel':['id'],'generation-history':['page'],'hardware': [], 'pull-review': ['tags'], 'pull-start': ['tags', 'confirmed', 'parallel'], 'pull-status': [], 'pull-cancel': ['id'], 'pull-retry': ['id'], 'sessions': ['id'], 'session-create': ['model', 'name'], 'session-rename': ['id', 'name'], 'session-delete': ['id', 'confirmed'], 'session-export': ['id'], 'chat-start': ['session', 'prompt', 'system', 'temperature', 'tokens', 'context', 'regenerate', 'attachments'], 'chat-status': ['id'], 'chat-cancel': ['id'], 'harness-preflight': [], 'harness-launch': ['id', 'confirmed'], 'harness-status': ['id'], 'harness-restore': ['id'] };
+const schemas: Record<LocalToolsAction, string[]> = { 'converter-discovery-start':[],'converter-discovery-status':['id'],'converter-discovery-pause':['id'],'converter-discovery-resume':['id'],'converter-discovery-cancel':['id'],'converter-discovery-page':['id','version','page','cursor','query','regex','pattern','flags'],'converter-source-inspect':['discovery','version','id'],'converter-source-review-cancel':[],'converter-source-review':['id','version','query','regex','pattern','flags','scope','adapter','options'],'converter-source-admit':['review','confirmed'],'converter-admission-status':['id'],'converter-admission-cancel':['id'], 'converter-catalog': [], 'converter-pick': ['purpose'],'converter-inspect':['grant'], 'converter-start': ['grant', 'grants', 'adapter','options'], 'converter-status': ['page','query','regex','pattern','flags','status','date','from','to'],'converter-result':['id','index','operation'],'converter-bulk':['ids','operation','confirmed'], 'converter-cancel': ['id'],'converter-enqueue':['grant','grants','adapter','options'],'converter-queue':[],'converter-pause':[],'converter-resume':[], 'catalog-status': [], 'catalog-refresh': [], 'catalog-page': ['page', 'size', 'query', 'regex', 'pattern', 'flags', 'family', 'capability', 'sort', 'state', 'variant', 'quantization', 'maxBytes', 'fit'], 'model-capabilities':['model'],'model-copy':['source','destination','confirmed'],'generation-start':['model','prompt','system','temperature','tokens','context'],'generation-status':['id'],'generation-cancel':['id'],'generation-history':['page'],'hardware': [], 'pull-review': ['tags'], 'pull-start': ['tags', 'confirmed', 'parallel'], 'pull-status': [], 'pull-cancel': ['id'], 'pull-retry': ['id'], 'sessions': ['id'], 'session-create': ['model', 'name'], 'session-rename': ['id', 'name'], 'session-delete': ['id', 'confirmed'], 'session-export': ['id'], 'chat-start': ['session', 'prompt', 'system', 'temperature', 'tokens', 'context', 'regenerate', 'attachments'], 'chat-status': ['id'], 'chat-cancel': ['id'], 'harness-preflight': [], 'harness-launch': ['id', 'confirmed'], 'harness-status': ['id'], 'harness-restore': ['id'] };
 interface PrivateGrant extends FileGrant {
     path: string;
     mtime: number;
     digest: string;
+    folderRoot?:string;
+    folderEntry?:PrivateSourceEntry;
 }
 function id(value: unknown) { if (typeof value !== 'string' || !/^[a-f0-9-]{36}$/.test(value))
     throw new Error('Invalid opaque local tool identifier'); return value; }
@@ -35,13 +43,14 @@ export class LocalToolsService {
     private ready: Promise<void>;
     private jobs = new Map<string, AbortController>();private admissions=0;private preparations=new Set<AbortController>();
     private results = new Map<string, ConverterResult>();
-    private models: OllamaManager;private queue:ConverterQueue;private history:ConverterResults;
-    constructor(options: LocalToolsOptions) { this.options = options; this.directory = join(options.storageDirectory, 'local-tools'); this.ready = mkdir(join(this.directory, 'grants'), { recursive: true, mode: 0o700 }).then(() => mkdir(join(this.directory, 'results'), { recursive: true, mode: 0o700 })).then(() => mkdir(join(this.directory,'output-receipts'),{recursive:true,mode:0o700})).then(() => { });this.history=new ConverterResults(join(this.directory,'results'),join(this.directory,'output-receipts'),(path,limit)=>this.readBounded(path,limit),options.pickDestination,options.openResult); this.models = new OllamaManager({ directory: join(this.directory, 'ollama'), fetcher: options.fetcher });this.queue=new ConverterQueue(join(this.directory,'queue'),join(this.directory,'results'),()=>this.jobs.size+this.admissions,async(record)=>{await this.ready;await this.convert({grants:record.grants,adapter:record.adapter,options:record.options},false,record);}); }
-    activeJobs() { return this.jobs.size > 0 || this.admissions > 0 || this.models.activeJobs(); }
+    private models: OllamaManager;private queue:ConverterQueue;private history:ConverterResults;private discovery:ConverterDiscovery;private sourceAdmission:ConverterSourceAdmission;
+    constructor(options: LocalToolsOptions) { this.options = options; this.directory = join(options.storageDirectory, 'local-tools'); this.ready = mkdir(join(this.directory, 'grants'), { recursive: true, mode: 0o700 }).then(() => mkdir(join(this.directory, 'results'), { recursive: true, mode: 0o700 })).then(() => mkdir(join(this.directory,'output-receipts'),{recursive:true,mode:0o700})).then(() => { });this.history=new ConverterResults(join(this.directory,'results'),join(this.directory,'output-receipts'),(path,limit)=>this.readBounded(path,limit),options.pickDestination,options.openResult); this.models = new OllamaManager({ directory: join(this.directory, 'ollama'), fetcher: options.fetcher });this.queue=new ConverterQueue(join(this.directory,'queue'),join(this.directory,'results'),()=>this.jobs.size+this.admissions,async(record)=>{await this.ready;await this.convert({grants:record.grants,adapter:record.adapter,options:record.options},false,record);});this.discovery=new ConverterDiscovery(join(this.directory,'discoveries'),options.pickSourceDirectory??(async()=>{throw new Error('Native folder picker is unavailable in this build');}),[this.directory]);this.sourceAdmission=new ConverterSourceAdmission(join(this.directory,'source-batches'),this.discovery,()=>this.registry(),(discovery,version,item)=>this.inspectDiscoverySource(discovery,version,item.id),options.pickOutputDirectory??(async()=>{throw new Error('Native output-directory picker is unavailable in this build');}),async(grant,adapter,options,destination)=>{const result:ConverterResult={id:randomUUID(),at:new Date().toISOString(),source:grant.name,adapter:adapter.name,status:'queued'};await this.ensureNew(destination);await this.queue.enqueue({id:result.id,grants:[grant.id],adapter:adapter.id,options,destination},result);}); }
+    activeJobs() { return this.jobs.size > 0 || this.admissions > 0 || this.models.activeJobs()||this.discovery.activeJobs()||this.sourceAdmission.activeJobs(); }
     cancelAll() { for (const controller of this.jobs.values())
-        controller.abort();for(const controller of this.preparations)controller.abort();void this.queue.pause().catch(()=>{}); this.models.cancelAll(); }
-    dispose() { this.queue.dispose();this.cancelAll(); this.models.dispose(); }
-    async request(action: LocalToolsAction, payload: LocalToolsPayload = {}): Promise<unknown> {
+        controller.abort();for(const controller of this.preparations)controller.abort();void this.queue.pause().catch(()=>{}); this.models.cancelAll();this.discovery.cancelAll();this.sourceAdmission.cancelAll(); }
+    dispose() { this.queue.dispose();this.discovery.dispose();this.sourceAdmission.dispose();this.cancelAll(); this.models.dispose(); }
+    async request(action:LocalToolsAction,payload:LocalToolsPayload={}):Promise<unknown>{try{return await this.dispatch(action,payload);}catch(error){const code=(error as NodeJS.ErrnoException)?.code;if(typeof code==='string')throw new Error(code==='ENOENT'?'The selected local record or source is no longer available. Refresh the view or select it again.':code==='EACCES'||code==='EPERM'?'Local file permissions refused this operation. Choose an accessible source or destination.':code==='EEXIST'?'Destination already exists. Choose a new filename to preserve existing data.':'Local storage could not complete this operation. Check permissions and free space.');throw error;}}
+    private async dispatch(action: LocalToolsAction, payload: LocalToolsPayload = {}): Promise<unknown> {
         await this.ready;
         if (!Object.hasOwn(schemas, action))
             throw new Error('Unknown local tool operation');
@@ -51,6 +60,18 @@ export class LocalToolsService {
             if (!schemas[action].includes(field))
                 throw new Error('Unsupported local tool field');
         switch (action) {
+            case 'converter-discovery-start':return this.discovery.start();
+            case 'converter-discovery-status':return payload.id?this.discovery.status(payload):{sourceDirectory:!!this.options.pickSourceDirectory,outputDirectory:!!this.options.pickOutputDirectory,last:await this.discovery.latest()};
+            case 'converter-discovery-pause':return this.discovery.pause(payload);
+            case 'converter-discovery-resume':return this.discovery.resume(payload);
+            case 'converter-discovery-cancel':return this.discovery.pause(payload,true);
+            case 'converter-discovery-page':return this.discovery.page(payload);
+            case 'converter-source-inspect':return this.inspectDiscoverySource(payload.discovery,payload.version,payload.id);
+            case 'converter-source-review-cancel':return this.sourceAdmission.cancelReview();
+            case 'converter-source-review':return this.sourceAdmission.review(payload);
+            case 'converter-source-admit':return this.sourceAdmission.admit(payload);
+            case 'converter-admission-status':return this.sourceAdmission.status(payload);
+            case 'converter-admission-cancel':return this.sourceAdmission.cancel(payload);
             case 'converter-catalog': return this.registry();
             case 'converter-pick': if(payload.purpose!==undefined&&payload.purpose!=='chat-images')throw new Error('Unsupported native file picker purpose');return this.pick(payload.purpose as 'chat-images'|undefined);
             case 'converter-inspect':{const grant=await this.grant(payload.grant);if(grant.type!=='pdf')return {type:grant.type,bytes:grant.bytes};if(!this.options.engines)throw new Error('Bundled PDF worker is not configured');const bytes=await this.readBounded(grant.path);if(createHash('sha256').update(bytes).digest('hex')!==grant.digest)throw new Error('Source changed; select it again');return (await this.options.engines.convert({adapter:'pdf-inspect',inputs:[{name:grant.name,bytes}],options:{}},AbortSignal.timeout(45000))).details;}
@@ -94,7 +115,7 @@ export class LocalToolsService {
             case 'harness-restore': return this.models.restoreHarness(payload);
         }
     }
-    private async readBounded(path: string,limit=FILE_LIMIT): Promise<Buffer> { const file = await open(path, 'r'); try {
+    private async readBounded(path: string,limit=FILE_LIMIT): Promise<Buffer> { const file = await open(path, constants.O_RDONLY|(constants.O_NOFOLLOW??0)); try {
         const s = await file.stat();
         if (!s.isFile() || s.size > limit)
             throw new Error('Choose a regular file no larger than 32 MiB');
@@ -114,17 +135,16 @@ export class LocalToolsService {
     finally {
         await file.close();
     } }
-    private async pick(purpose?:'chat-images') { const paths = await this.options.pickSources(purpose); const registry = await this.registry(); const result: FileGrant[] = []; for (const path of paths) {
-        const bytes = await this.readBounded(path), s = await stat(path), type = inspectBytes(bytes);
-        if (type === 'png' || type === 'jpeg')
-            imageDimensions(bytes);
+    private async pick(purpose?:'chat-images') { const paths = await this.options.pickSources(purpose);if(paths.length>250)throw new Error('Choose at most 250 files with this picker, or use paged folder discovery for a larger source set'); const registry = await this.registry(); const result: FileGrant[] = []; for (const path of paths) {
+        const bytes = await this.readBounded(path), s = await stat(path), type = (await inspectSourceBytes(bytes)).type;
         const grant: PrivateGrant = { id: randomUUID(), name: basename(path), bytes: bytes.length, type, path, mtime: s.mtimeMs, digest: createHash('sha256').update(bytes).digest('hex'), preview: ['text', 'json', 'base64'].includes(type) ? new TextDecoder().decode(bytes.subarray(0, 2048)) : 'Binary file, preview restricted to detected type and byte count.', compatible: registry.filter(a => a.enabled && (a.sourceTypes.includes(type) || a.sourceTypes.includes('*'))).map(a => a.id) };
         await atomicJson(join(this.directory, 'grants', grant.id + '.json'), grant);
         const { path: _path, mtime: _mtime, digest: _digest, ...publicGrant } = grant;
         result.push(publicGrant);
     } return result; }
+    private async inspectDiscoverySource(discovery:unknown,version:unknown,entryId:unknown):Promise<FileGrant>{const {manifest,item}=await this.discovery.entry(discovery,entryId,version),path=await verifyFolderSource(manifest.root,item),bytes=await this.readBounded(path);await verifyFolderSource(manifest.root,item);const type=(await inspectSourceBytes(bytes)).type;const registry=await this.registry(),grant:PrivateGrant={id:item.id,name:basename(path),path,mtime:item.mtime,digest:createHash('sha256').update(bytes).digest('hex'),folderRoot:manifest.root,folderEntry:item,bytes:bytes.length,type,preview:['text','json','base64'].includes(type)?new TextDecoder().decode(bytes.subarray(0,2048)):'Binary source; inspect an adapter before conversion.',compatible:registry.filter(adapter=>adapter.enabled&&(adapter.sourceTypes.includes('*')||adapter.sourceTypes.includes(type))).map(adapter=>adapter.id)};await atomicJson(join(this.directory,'grants',item.id+'.json'),grant);const {path:_path,mtime:_mtime,digest:_digest,folderRoot:_root,folderEntry:_entry,...publicGrant}=grant;return publicGrant;}
     private async grant(identifier: unknown): Promise<PrivateGrant> { const record = JSON.parse(await readFile(join(this.directory, 'grants', id(identifier) + '.json'), 'utf8')); if (typeof record.path !== 'string' || typeof record.digest !== 'string')
-        throw new Error('Invalid source capability'); return record; }
+        throw new Error('Invalid source capability'); if(record.folderRoot&&record.folderEntry){const resolved=await verifyFolderSource(record.folderRoot,record.folderEntry);if(resolved!==record.path)throw new Error('Folder source path changed after granting');}return record; }
     private async prepareChatImages(values: unknown): Promise<PreparedChatImage[]> {
         if (values === undefined) return [];
         if (!Array.isArray(values) || values.length > 4 || new Set(values).size !== values.length) throw new Error('Select at most four distinct opaque image grants');
