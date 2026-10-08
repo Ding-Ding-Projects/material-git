@@ -49,7 +49,7 @@ Windows CI builds/packages/publishes. It does not run tests or lint; notes must 
 
 [Documentation index](docs/README.md) · [Authentication](docs/authentication.md) · [Security](docs/security.md) · [Workspace records](docs/workspace.md) · [API workspace](docs/api-explorer.md) · [Design provenance](design/material-provenance.md).
 
-Earlier screenshots prove only the earlier interface. The remake needs genuine captures of every destination, settings/editor/dialog, empty/error state, narrow layout and both themes, bound to source and artifact provenance. The current recording and full language/scale matrix remain open.
+The [reviewed screenshot ledger](docs/images/README.md) preserves nine genuine desktop captures from source `44dc9d8`, with exact capture times and SHA-256 hashes. They describe that earlier source, independently of the Windows release and newer implementation. Additional genuine export, download, appearance, language and startup-photo captures have been inspected; they remain outside the published gallery until a coherent capture receipt records each image’s source, timestamp and hash. Final destination coverage, recording and the full language/scale matrix remain open.
 
 The site is https://material-git.earlyray.chatgpt.site and currently owner-private. Repository About homepage PATCH returned HTTP 403 with the connected credential; permission/deployment verification belong to the publishing owner. Source visibility and site audience are independent.
 

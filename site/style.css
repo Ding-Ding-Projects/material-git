@@ -7,3 +7,5 @@ mg-site-layout,mg-site-surface{min-width:0;max-width:100%}
 .file-control{min-width:0!important;max-width:100%;width:100%}.file-control input[type=file]{display:block;min-width:0;width:100%;max-width:100%}label{min-width:0;max-width:100%}mg-site-schedules,mg-site-tabs,mg-site-appearance{display:block;min-width:0;max-width:100%}
 .one-thing .hero-aside,.one-thing .feature-grid,.one-thing .next-step{display:none}.one-thing .hero{grid-template-columns:1fr}.momentum-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:18px 0;padding:12px 18px;border-radius:16px;background:var(--md-sys-color-surface-container-low);font-size:.8rem}
 .brand{flex:1}.brand>span{min-width:0;overflow-wrap:anywhere}.header-actions{flex:none}
+
+.docs-index>md-outlined-select+md-outlined-select{margin-top:16px}
