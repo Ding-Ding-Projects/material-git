@@ -2,7 +2,7 @@
 
 A Windows desktop workspace for Git repositories and GitHub. Navigate real repositories, issues, pull requests, Actions, releases and related records through contextual tasks. Local Git support is being expanded around changes, history, branches and repository operations.
 
-Install the unsigned Windows application from [build-15-1](https://github.com/Ding-Ding-Projects/material-git/releases/tag/build-15-1). [Documentation site](https://material-git.earlyray.chatgpt.site) · [Feature status](docs/requirements/README.md) · [Roadmap](ROADMAP.md) · [Handoff](HANDOFF.md).
+Install the unsigned Windows application from [build-16-1](https://github.com/Ding-Ding-Projects/material-git/releases/tag/build-16-1). [Documentation site](https://material-git.earlyray.chatgpt.site) · [Feature status](docs/requirements/README.md) · [Roadmap](ROADMAP.md) · [Handoff](HANDOFF.md).
 
 **Full Git/GitHub action parity is not verified.** Upstream command and schema inventories do not prove working GUI behavior. The published release may precede changes documented in source. Current screenshots and recording for the domain remake await final build verification.
 
