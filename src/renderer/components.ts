@@ -29,7 +29,8 @@ const REGEX_TOKENS: Record<string, {
     anchors: [{ label: 'Start', value: '^', explanation: 'Start of input; with m, also start of a line.' }, { label: 'End', value: '$', explanation: 'End of input; with m, also end of a line.' }, { label: 'Word boundary', value: '\\b', explanation: 'Boundary between word and non-word characters.' }, { label: 'Non-word boundary', value: '\\B', explanation: 'A position that is not a word boundary.' }]
 };
 export class Search extends LitElement {
-    static properties = { query: { state: true }, regex: { state: true }, pattern: { state: true }, flags: { state: true }, error: { state: true }, expanded: { state: true }, category: { state: true }, token: { state: true }, fragment: { state: true }, captureName: { state: true }, captureIndex: { state: true }, minimum: { state: true }, maximum: { state: true }, literal: { state: true }, sample: { state: true }, replacement: { state: true }, preview: { state: true }, previewBusy: { state: true }, matchIndex: { state: true }, snippetName: { state: true }, snippets: { state: true }, snippetStatus: { state: true }, capabilities: { state: true }, anchorStyle: { state: true }, anchorSide: { state: true } };
+    static properties = { label: { type: String }, query: { state: true }, regex: { state: true }, pattern: { state: true }, flags: { state: true }, error: { state: true }, expanded: { state: true }, category: { state: true }, token: { state: true }, fragment: { state: true }, captureName: { state: true }, captureIndex: { state: true }, minimum: { state: true }, maximum: { state: true }, literal: { state: true }, sample: { state: true }, replacement: { state: true }, preview: { state: true }, previewBusy: { state: true }, matchIndex: { state: true }, snippetName: { state: true }, snippets: { state: true }, snippetStatus: { state: true }, capabilities: { state: true }, anchorStyle: { state: true }, anchorSide: { state: true } };
+    label = 'Search';
     query = '';
     regex = false;
     pattern = '';
@@ -197,7 +198,7 @@ export class Search extends LitElement {
         const definition = REGEX_TOKENS[this.category].find(item => item.value === this.token);
         const matches = this.preview.results || [];
         const selected = matches[this.matchIndex];
-        return html `<div class="row"><md-outlined-text-field label=${this.getAttribute('label') || 'Search'} .value=${this.query} @input=${(e: Event) => { this.query = (e.target as HTMLInputElement).value; this.changed(); }}></md-outlined-text-field><md-outlined-button aria-label="Configure regular expression" aria-expanded=${this.expanded} @click=${() => { if (this.expanded)
+        return html `<div class="row"><md-outlined-text-field label=${this.label || 'Search'} .value=${this.query} @input=${(e: Event) => { this.query = (e.target as HTMLInputElement).value; this.changed(); }}></md-outlined-text-field><md-outlined-button aria-label="Configure regular expression" aria-expanded=${this.expanded} @click=${() => { if (this.expanded)
             this.closeBuilder();
         else {
             this.expanded = true;
