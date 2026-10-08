@@ -1,0 +1,27 @@
+import {_electron as electron} from 'playwright';import {createServer} from 'node:http';
+import {mkdtemp,mkdir,readFile,readdir,rm} from 'node:fs/promises';import {join} from 'node:path';import {tmpdir} from 'node:os';import {createRequire} from 'node:module';import assert from 'node:assert/strict';
+// Explicit local protocol fixture, never model inference or an installed-model claim.
+let vision=false,copies=0;const models=['synthetic:fixture'],requests=[];
+const server=createServer(async(req,res)=>{let raw='';for await(const part of req){raw+=part;if(raw.length>256000){res.writeHead(413).end();return;}}const body=raw?JSON.parse(raw):{};requests.push({path:req.url,body});res.setHeader('Content-Type','application/json');
+ if(req.url==='/api/version')return res.end(JSON.stringify({version:'synthetic-loopback-fixture'}));
+ if(req.url==='/api/tags')return res.end(JSON.stringify({models:models.map(name=>({name,size:1024,digest:'a'.repeat(64)}))}));
+ if(req.url==='/api/ps')return res.end('{"models":[]}');
+ if(req.url==='/api/show')return res.end(JSON.stringify({capabilities:['completion',...(vision?['vision']:[])],model_info:{'synthetic.context_length':4096}}));
+ if(req.url==='/api/copy'){copies++;models.push(body.destination);res.writeHead(201);return res.end();}
+ if(req.url==='/api/generate'){res.setHeader('Content-Type','application/x-ndjson');res.write(JSON.stringify({response:'Synthetic generated response '})+'\n');return setTimeout(()=>res.end(JSON.stringify({response:'completed',done:true,eval_count:4})+'\n'),100);}
+ res.writeHead(404).end('{"error":"Unexpected fixture route"}');
+});
+await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(11434,'127.0.0.1',resolve);});
+const directory=await mkdtemp(join(tmpdir(),'material-ollama-ui-')),profile=join(directory,'profile');await mkdir(join(directory,'gh-config'),{recursive:true});
+const env={...process.env,MATERIAL_GIT_TEST:'1',MATERIAL_GIT_USER_DATA:profile,GH_CONFIG_DIR:join(directory,'gh-config')};for(const key of ['GH_TOKEN','GITHUB_TOKEN','GH_ENTERPRISE_TOKEN','GITHUB_ENTERPRISE_TOKEN'])delete env[key];
+const app=await electron.launch({executablePath:createRequire(import.meta.url)('electron'),args:['--no-sandbox','--ozone-platform=headless','.'],cwd:process.cwd(),env});const page=await app.firstWindow(),errors=[];page.on('pageerror',error=>errors.push(error.message));
+try{
+ await page.waitForFunction(()=>customElements.get('mg-ollama'));
+ await page.evaluate(()=>{const view=document.createElement('mg-ollama');view.settings={language:'en'};document.body.replaceChildren(view);});
+ await page.getByRole('button',{name:'Review local model copy',exact:true}).waitFor();await page.getByRole('button',{name:'Review local model copy',exact:true}).click();assert.equal(await page.getByRole('textbox',{name:'Destination model tag',exact:true}).inputValue(),'synthetic-copy:fixture');await page.getByRole('button',{name:'Confirm local copy',exact:true}).click();await page.waitForFunction(()=>document.querySelector('mg-ollama').models.length===2);assert.equal(copies,1);
+ await page.locator('mg-ollama').evaluate(view=>{view.tab='chat';});await page.getByRole('button',{name:'Create saved conversation',exact:true}).click();await page.getByRole('button',{name:'Choose PNG/JPEG images',exact:true}).waitFor();assert.equal(await page.getByRole('button',{name:'Choose PNG/JPEG images',exact:true}).isDisabled(),true);
+ vision=true;await page.getByRole('button',{name:'Verify active model capabilities',exact:true}).click();await page.getByRole('button',{name:'Choose PNG/JPEG images',exact:true}).waitFor();assert.equal(await page.getByRole('button',{name:'Choose PNG/JPEG images',exact:true}).isEnabled(),true);
+ await page.locator('mg-ollama').evaluate(view=>{view.tab='generate';});await page.getByRole('textbox',{name:'Generation prompt',exact:true}).fill('PRIVATE_SYNTHETIC_GENERATION_PROMPT');await page.getByRole('button',{name:'Generate locally',exact:true}).click();await page.waitForFunction(()=>document.querySelector('mg-ollama').generation?.status==='succeeded');
+ const generationDirectory=join(profile,'local-tools/local-tools/ollama/generations'),files=await readdir(generationDirectory),saved=await readFile(join(generationDirectory,files[0]),'utf8');assert.ok(saved.includes('Synthetic generated response completed'));assert.ok(!saved.includes('PRIVATE_SYNTHETIC_GENERATION_PROMPT'));assert.ok(requests.some(request=>request.path==='/api/generate'&&request.body.prompt==='PRIVATE_SYNTHETIC_GENERATION_PROMPT'));assert.deepEqual(errors,[]);
+ console.log(JSON.stringify({fixture:'Synthetic documented loopback API; no model inference',checks:['reviewed local copy','native capability-gated image button','documented native streaming generation','durable response excludes prompts'],errors}));
+}finally{await app.close().catch(()=>{});await new Promise(resolve=>server.close(resolve));await rm(directory,{recursive:true,force:true});}

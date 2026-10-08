@@ -1,6 +1,7 @@
 import {mkdirSync,writeFileSync,renameSync,existsSync} from 'node:fs';
 import path from 'node:path';
 import {execFileSync} from 'node:child_process';
+import {validateAppearance} from '../shared/appearance';
 import {randomUUID} from 'node:crypto';
 import {readBoundedFile} from './bounded-file';
 import {safeText,validateEnvelope,validateNotification,validateWorkspace,workspaceDefaults,type WorkspaceState,type WorkspaceAction,type WorkspaceResponse,type WorkspaceRevision,type WorkspaceNotification,type WorkspaceEnvelope,sanitizeRecord,type ManagedRecordRevision} from '../shared/workspace';
@@ -22,6 +23,9 @@ export class WorkspaceStore {
  const p=(payload&&typeof payload==='object'&&!Array.isArray(payload)?payload:{}) as Record<string,unknown>;
  if(action==='status')return this.status();
  if(action==='record-revisions')return {managedRevisions:structuredClone(this.managed)};
+ if(action==='record-label'){if(Object.keys(p).some(key=>!['id','label'].includes(key)))throw Error('Unsupported managed label fields.');const id=safeText(p.id,100),label=safeText(p.label,100);if(!this.managed.some(record=>record.id===id))throw Error('Managed revision not found.');const next=this.managed.map(record=>record.id===id?{...record,label}:record);this.write('managed-revisions',next);this.managed=next;return this.status();}
+ if(action==='record-prune'){if(Object.keys(p).some(key=>!['keep','confirmed'].includes(key))||p.confirmed!==true||!Number.isInteger(p.keep)||Number(p.keep)<1||Number(p.keep)>500)throw Error('Review managed retention before pruning; keep 1 to 500 revisions.');const next=this.managed.slice(-Number(p.keep));this.write('managed-revisions',next);this.managed=next;return this.status();}
+ if(action==='record-appearance'){if(Object.keys(p).some(key=>!['schemaVersion','targetId','record','changedAt'].includes(key))||p.schemaVersion!==1||typeof p.targetId!=='string'||!/^[a-zA-Z0-9._-]{1,128}$/.test(p.targetId)||['__proto__','constructor','prototype'].includes(p.targetId)||typeof p.changedAt!=='string'||!Number.isFinite(Date.parse(p.changedAt)))throw Error('Invalid appearance history event.');const record=validateAppearance(p.record);this.recordExternal('appearance',p.targetId,'Appearance changed',record);return {managedRevisions:structuredClone(this.managed),...(this.warning?{warning:this.warning}:{})};}
  if(action==='record-diff'){const before=this.managed.find(r=>r.id===p.before),after=this.managed.find(r=>r.id===p.after);if(!before||!after||before.kind!==after.kind||before.recordId!==after.recordId)throw Error('Choose two revisions of the same record.');return {diff:{before:before.snapshot,after:after.snapshot}};}
  if(action==='record-restore'){const revision=this.managed.find(r=>r.id===p.id);if(!revision||p.confirmed!==true)throw Error('Review the managed record revision before restoring.');if(!this.restorer)throw Error('This record has no supported restore handler.');const restored=this.restorer(revision.kind,revision.recordId,structuredClone(revision.snapshot));return Promise.resolve(restored).then(snapshot=>{this.recordExternal(revision.kind,revision.recordId,'Record restored',snapshot);return {managedRevisions:structuredClone(this.managed)};});}
  if(action==='discard'){const ids=p.ids;if(!Array.isArray(ids)||ids.length>100)throw Error('Invalid discarded tab selection.');this.recordExternal('draft-discard','task-tabs','Command inputs discarded',{tabs:ids.map(id=>safeText(id,160)),state:this.state});return this.status();}
