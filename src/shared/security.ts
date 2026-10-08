@@ -51,6 +51,8 @@ export function providerGitLockTargets():LockTarget[]{return [...providerGitSour
 
 /** These actions only stop a native-owned operation; their service still validates ownership. */
 export function isOwnedCancellation(channel:string,action:unknown):boolean{return channel==='git'&&action==='cancel'||channel==='cli-workflows'&&action==='cancel'||channel==='github'&&action==='actions.watch-cancel'||channel==='downloads'&&(action==='pause'||action==='cancel');}
+/** Revocation only removes unused native receipts; each service validates its opaque identifier. */
+export function isOwnedCleanup(channel:string,action:unknown):boolean{return isOwnedCancellation(channel,action)||channel==='github'&&action==='provider-source-discard'||channel==='git'&&action==='discard-review';}
 
 export const nativeLockLanes=['commands','codespaces','extensions','aliases','copilot','accounts','api','cli-config','settings','tools','security','history','notifications','records','integrations','assistant','downloads','updates','docs','about','home'] as const;
 export function nativeLockTargets(commands:Array<{id:string;title:string}>=[]):LockTarget[]{return [...nativeLockLanes.map(lane=>({id:`destination:${lane}`,label:lane})),...commands.flatMap(command=>[{id:`command:${command.id.replaceAll(' ','.')}`,label:command.title,ancestors:['destination:commands',...(cliWorkflowDestinations.get(command.id)||[]).map(lane=>`destination:${lane}`)]},{id:`tab:${command.id.replaceAll(' ','.')}`,label:command.title,ancestors:['destination:commands',...(cliWorkflowDestinations.get(command.id)||[]).map(lane=>`destination:${lane}`)]}])];}
