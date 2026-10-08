@@ -8,7 +8,7 @@ import {GitService} from '../src/main/git';
 import {GitHubService} from '../src/main/github';
 import {loadCatalog} from '../src/main/catalog';
 import {createElementLocks} from '../src/main/element-locks';
-import {isOwnedCancellation,nativeLockTargets,protectedLockIds,providerGitLockIds,providerGitKindLockIds,providerGitLockTargets} from '../src/shared/security';
+import {isOwnedCancellation,isOwnedCleanup,nativeLockTargets,protectedLockIds,providerGitLockIds,providerGitKindLockIds,providerGitLockTargets} from '../src/shared/security';
 import type {GitAction,GitPayload} from '../src/shared/git';
 import type {GitHubLocalSourceAction,GitHubPayload} from '../src/shared/github';
 
@@ -30,6 +30,21 @@ test('provider handoff lock origins are exact native action/kind mappings with r
  }
  for(const action of ['git:apply','repositories.clone','repo clone','destination:gists',{},undefined])assert.throws(()=>providerGitLockIds(action),/Unknown provider/);
  for(const kind of ['repositories','repo','pr',{},undefined])assert.throws(()=>providerGitKindLockIds(kind),/Unknown provider/);
+});
+
+test('cleanup authority admits only scoped native cancellation and exact unused-receipt revocation pairs',async()=>{
+ const f=await fixture();try{
+  for(const [channel,action] of [['git','cancel'],['cli-workflows','cancel'],['github','actions.watch-cancel'],['downloads','pause'],['downloads','cancel']] as const){assert.equal(isOwnedCancellation(channel,action),true);assert.equal(isOwnedCleanup(channel,action),true);}
+  for(const [channel,action] of [['github','provider-source-discard'],['git','discard-review']] as const){assert.equal(isOwnedCancellation(channel,action),false);assert.equal(isOwnedCleanup(channel,action),true);}
+  await f.lock('destination:git');await f.lock('destination:repositories');
+  for(const [channel,action] of [['git','apply'],['git','review'],['git','discard'],['github','repositories.clone-source'],['github','repositories.delete'],['github','discard-review'],['git','provider-source-discard'],['downloads','resume'],['cli-workflows','discard-review']] as const){
+   assert.equal(isOwnedCleanup(channel,action),false);
+  }
+  for(const action of [undefined,{},['discard-review'],'discard-review;apply','provider-source-discard.extra'])assert.equal(isOwnedCleanup('git',action),false);
+  const guard=async(channel:string,action:string)=>{if(!isOwnedCleanup(channel,action))await f.locks.assertUnlocked(channel==='github'?providerGitLockIds(action):protectedLockIds(channel,action));};
+  await guard('git','discard-review');await guard('github','provider-source-discard');
+  await assert.rejects(guard('git','apply'),/Element is locked/);await assert.rejects(guard('github','repositories.clone-source'),/Element is locked/);
+ }finally{await f.close();}
 });
 
 test('original provider destination, command and tab locks protect resolved native receipts independently of generic Git Apply',async()=>{
