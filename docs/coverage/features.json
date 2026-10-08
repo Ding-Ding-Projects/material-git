@@ -1,8 +1,8 @@
 {
   "version": 1,
-  "checkedAt": "2026-10-08T12:28:03.975705+00:00",
+  "checkedAt": "2026-10-08T13:12:32.360611+00:00",
   "scope": "104 public-neutral canonical obligations; independent app/site/repository assessments",
-  "auditedIntegratedCommit": "d2c1a7b",
+  "auditedIntegratedCommit": "44dc9d8dc30a4e327a98c8a6936f97a946feab55",
   "completenessCertified": false,
   "features": [
     {
@@ -601,8 +601,8 @@
       "surfaces": {
         "app": {
           "applicable": true,
-          "status": "partial",
-          "implementation": "Public-catalog-based surprise support exists. No local generated photo is acceptable evidence.",
+          "status": "open",
+          "implementation": "Startup surprise/photo handling is not established in the current renderer or native source. Its required behavior remains open; no documentation statement is treated as implementation.",
           "missing": [
             "Verify10% startup draw and once-per-launch behavior plus first-run/busy/error/update/School suppression."
           ],
@@ -610,7 +610,7 @@
             {
               "kind": "source-review",
               "reference": "docs/personalization.md",
-              "detail": "Public-catalog-based surprise support exists. No local generated photo is acceptable evidence."
+              "detail": "Startup surprise/photo handling is not established in the current renderer or native source. Its required behavior remains open; no documentation statement is treated as implementation."
             }
           ],
           "proof": {
@@ -664,7 +664,7 @@
         "en": "docs/requirements/personalization/dim-sum.md",
         "yue": "docs/requirements/personalization/dim-sum.yue.md"
       },
-      "implementationNotes": "Public-catalog-based surprise support exists. No local generated photo is acceptable evidence.",
+      "implementationNotes": "Startup surprise/photo handling is not established in the current renderer or native source. Its required behavior remains open; no documentation statement is treated as implementation.",
       "remaining": "Verify10% startup draw and once-per-launch behavior plus first-run/busy/error/update/School suppression.",
       "verificationPolicy": "A filename or source registry is supporting context only. It does not prove functional, live-service or platform support."
     },
@@ -676,8 +676,8 @@
       "surfaces": {
         "app": {
           "applicable": true,
-          "status": "partial",
-          "implementation": "Consumer source is the public dish-photo catalogue and release assets, never a local substitute.",
+          "status": "open",
+          "implementation": "The public dish-photo catalogue/release assets are the required consumer policy. This audit found no current runtime fetch/cache/unavailable-photo implementation, so source policy alone does not prove support.",
           "missing": [
             "Verify catalogue revision/cache provenance and genuine unavailable-photo behavior; do not commit consumer copies."
           ],
@@ -685,7 +685,7 @@
             {
               "kind": "source-review",
               "reference": "docs/personalization.md",
-              "detail": "Consumer source is the public dish-photo catalogue and release assets, never a local substitute."
+              "detail": "The public dish-photo catalogue/release assets are the required consumer policy. This audit found no current runtime fetch/cache/unavailable-photo implementation, so source policy alone does not prove support."
             }
           ],
           "proof": {
@@ -724,8 +724,8 @@
         },
         "repository": {
           "applicable": true,
-          "status": "partial",
-          "implementation": "Consumer source is the public dish-photo catalogue and release assets, never a local substitute.",
+          "status": "open",
+          "implementation": "The public dish-photo catalogue/release assets are the required consumer policy. This audit found no current runtime fetch/cache/unavailable-photo implementation, so source policy alone does not prove support.",
           "missing": [
             "Verify catalogue revision/cache provenance and genuine unavailable-photo behavior; do not commit consumer copies."
           ],
@@ -733,7 +733,7 @@
             {
               "kind": "source-review",
               "reference": "docs/personalization.md",
-              "detail": "Consumer source is the public dish-photo catalogue and release assets, never a local substitute."
+              "detail": "The public dish-photo catalogue/release assets are the required consumer policy. This audit found no current runtime fetch/cache/unavailable-photo implementation, so source policy alone does not prove support."
             }
           ],
           "proof": {
@@ -751,7 +751,7 @@
         "en": "docs/requirements/personalization/dim-sum-photo-source.md",
         "yue": "docs/requirements/personalization/dim-sum-photo-source.yue.md"
       },
-      "implementationNotes": "Consumer source is the public dish-photo catalogue and release assets, never a local substitute.",
+      "implementationNotes": "The public dish-photo catalogue/release assets are the required consumer policy. This audit found no current runtime fetch/cache/unavailable-photo implementation, so source policy alone does not prove support.",
       "remaining": "Verify catalogue revision/cache provenance and genuine unavailable-photo behavior; do not commit consumer copies.",
       "verificationPolicy": "A filename or source registry is supporting context only. It does not prove functional, live-service or platform support."
     },
@@ -848,6 +848,11 @@
               "kind": "source-review",
               "reference": "docs/coverage/github-actions-audit.md",
               "detail": "Integrated domain shell replaced the primary command catalog; source control is being added as a separate natural task workspace."
+            },
+            {
+              "kind": "interaction",
+              "reference": "docs/local-verification.md",
+              "detail": "Real Linux Electron opened repository/issue/pull/action/release, native Git, Accounts and Settings destinations at 44dc9d8; this proves the exercised routes, not all actions or window controls."
             }
           ],
           "proof": {
@@ -856,7 +861,7 @@
             "persistence": "needs-feature-specific-proof",
             "focusedGate": "needs-feature-specific-proof",
             "negativeGate": "inventory-omission-tested;feature-regression-needed",
-            "builtInteraction": "needs-final-build-proof",
+            "builtInteraction": "partial:source-tagged-read-only-Linux-44dc9d8;feature-matrix-open",
             "screenshot": "needs-final-build-capture"
           }
         },
@@ -1373,6 +1378,11 @@
               "kind": "source-review",
               "reference": "docs/scroll-surface.md",
               "detail": "Keyboard paths and Material components have focused checks. The full viewport/language/density/scale matrix remains open."
+            },
+            {
+              "kind": "interaction",
+              "reference": "docs/local-verification.md",
+              "detail": "The 800-pixel body fitted the viewport at 44dc9d8, but compact tabs were blank. This is defect evidence, not complete accessibility/layout proof."
             }
           ],
           "proof": {
@@ -1381,7 +1391,7 @@
             "persistence": "needs-feature-specific-proof",
             "focusedGate": "needs-feature-specific-proof",
             "negativeGate": "inventory-omission-tested;feature-regression-needed",
-            "builtInteraction": "needs-final-build-proof",
+            "builtInteraction": "partial:source-tagged-read-only-Linux-44dc9d8;feature-matrix-open",
             "screenshot": "needs-final-build-capture"
           }
         },
@@ -1448,6 +1458,11 @@
               "kind": "source-review",
               "reference": "docs/coverage/github-actions-audit.md",
               "detail": "Native domain actions and real lists/details are integrated. The action map explicitly separates candidate actions from live verification."
+            },
+            {
+              "kind": "interaction",
+              "reference": "docs/local-verification.md",
+              "detail": "Real provider lists and empty issue/pull states were observed at 44dc9d8 with no renderer errors. Remote writes and untested controls remain open."
             }
           ],
           "proof": {
@@ -1456,7 +1471,7 @@
             "persistence": "needs-feature-specific-proof",
             "focusedGate": "needs-feature-specific-proof",
             "negativeGate": "inventory-omission-tested;feature-regression-needed",
-            "builtInteraction": "needs-final-build-proof",
+            "builtInteraction": "partial:source-tagged-read-only-Linux-44dc9d8;feature-matrix-open",
             "screenshot": "needs-final-build-capture"
           }
         },
@@ -3227,7 +3242,7 @@
         "app": {
           "applicable": true,
           "status": "partial",
-          "implementation": "Local structured/text/color/time conversion is implemented; universal document/PDF/media/archive adapter coverage is incomplete.",
+          "implementation": "A native bounded converter registry, file grants, atomic output validation and cancellable result journal are integrated. Supported structured/text/image adapters remain distinct from unavailable PDF/audio/video/archive families.",
           "missing": [
             "Expose unavailable dependencies truthfully; prove byte detection, offline adapters, bounded queues, atomic output validation and crash recovery."
           ],
@@ -3235,7 +3250,7 @@
             {
               "kind": "source-review",
               "reference": "docs/converters.md",
-              "detail": "Local structured/text/color/time conversion is implemented; universal document/PDF/media/archive adapter coverage is incomplete."
+              "detail": "A native bounded converter registry, file grants, atomic output validation and cancellable result journal are integrated. Supported structured/text/image adapters remain distinct from unavailable PDF/audio/video/archive families."
             }
           ],
           "proof": {
@@ -3289,7 +3304,7 @@
         "en": "docs/requirements/tools/file-converter.md",
         "yue": "docs/requirements/tools/file-converter.yue.md"
       },
-      "implementationNotes": "Local structured/text/color/time conversion is implemented; universal document/PDF/media/archive adapter coverage is incomplete.",
+      "implementationNotes": "A native bounded converter registry, file grants, atomic output validation and cancellable result journal are integrated. Supported structured/text/image adapters remain distinct from unavailable PDF/audio/video/archive families.",
       "remaining": "Expose unavailable dependencies truthfully; prove byte detection, offline adapters, bounded queues, atomic output validation and crash recovery.",
       "verificationPolicy": "A filename or source registry is supporting context only. It does not prove functional, live-service or platform support."
     },
@@ -3302,7 +3317,7 @@
         "app": {
           "applicable": true,
           "status": "partial",
-          "implementation": "Local endpoint models/chat/pull/delete subset exists. Full official catalogue/tag/hardware-fit/harness suite is not established.",
+          "implementation": "Native model catalogue crawling, hardware evidence, reviewed persistent pull batches, stored streaming chat sessions and allowlisted harness lifecycle are integrated. Full live catalogue/tag/GPU/attachment/platform proof remains incomplete.",
           "missing": [
             "Audit complete API action mapping, attachment capabilities, cancellation, stored secrets, offline troubleshooting and rollback."
           ],
@@ -3310,7 +3325,7 @@
             {
               "kind": "source-review",
               "reference": "docs/ollama.md",
-              "detail": "Local endpoint models/chat/pull/delete subset exists. Full official catalogue/tag/hardware-fit/harness suite is not established."
+              "detail": "Native model catalogue crawling, hardware evidence, reviewed persistent pull batches, stored streaming chat sessions and allowlisted harness lifecycle are integrated. Full live catalogue/tag/GPU/attachment/platform proof remains incomplete."
             }
           ],
           "proof": {
@@ -3364,7 +3379,7 @@
         "en": "docs/requirements/tools/ollama-suite.md",
         "yue": "docs/requirements/tools/ollama-suite.yue.md"
       },
-      "implementationNotes": "Local endpoint models/chat/pull/delete subset exists. Full official catalogue/tag/hardware-fit/harness suite is not established.",
+      "implementationNotes": "Native model catalogue crawling, hardware evidence, reviewed persistent pull batches, stored streaming chat sessions and allowlisted harness lifecycle are integrated. Full live catalogue/tag/GPU/attachment/platform proof remains incomplete.",
       "remaining": "Audit complete API action mapping, attachment capabilities, cancellation, stored secrets, offline troubleshooting and rollback.",
       "verificationPolicy": "A filename or source registry is supporting context only. It does not prove functional, live-service or platform support."
     },
@@ -3737,6 +3752,11 @@
               "kind": "source-review",
               "reference": "docs/build.md",
               "detail": "Artifact provenance support is integrated; new initial-screen and site provenance evidence remains pending."
+            },
+            {
+              "kind": "interaction",
+              "reference": "docs/local-verification.md",
+              "detail": "The actual Electron build reported version 0.1.0 and exact source/build timestamp at 44dc9d8; the whole visual provenance inventory remains open."
             }
           ],
           "proof": {
@@ -3745,7 +3765,7 @@
             "persistence": "needs-feature-specific-proof",
             "focusedGate": "needs-feature-specific-proof",
             "negativeGate": "inventory-omission-tested;feature-regression-needed",
-            "builtInteraction": "needs-final-build-proof",
+            "builtInteraction": "partial:source-tagged-read-only-Linux-44dc9d8;feature-matrix-open",
             "screenshot": "needs-final-build-capture"
           }
         },
@@ -3812,6 +3832,11 @@
               "kind": "source-review",
               "reference": "docs/local-verification.md",
               "detail": "Earlier captures prove earlier surfaces only. Root is replacing them after the domain remake."
+            },
+            {
+              "kind": "interaction",
+              "reference": "docs/local-verification.md",
+              "detail": "A source-tagged Linux Electron receipt records real read-only domain interaction at 44dc9d8, no renderer errors and an observed narrow-tab defect. Later revisions and Windows require separate receipts."
             }
           ],
           "proof": {
@@ -3820,7 +3845,7 @@
             "persistence": "needs-feature-specific-proof",
             "focusedGate": "needs-feature-specific-proof",
             "negativeGate": "inventory-omission-tested;feature-regression-needed",
-            "builtInteraction": "needs-final-build-proof",
+            "builtInteraction": "partial:source-tagged-read-only-Linux-44dc9d8;feature-matrix-open",
             "screenshot": "needs-final-build-capture"
           }
         },
@@ -7241,5 +7266,21 @@
       "remaining": "No game rendering claims or invented captures.",
       "verificationPolicy": "A filename or source registry is supporting context only. It does not prove functional, live-service or platform support."
     }
-  ]
+  ],
+  "evidenceUpdate": {
+    "testRun": {
+      "tests": 214,
+      "pass": 214,
+      "fail": 0,
+      "skipped": 0,
+      "scope": "Integrated Linux suite before final semantic Git theme change; not asserted as the exact final 44dc9d8 test tree"
+    },
+    "gui": {
+      "commit": "44dc9d8dc30a4e327a98c8a6936f97a946feab55",
+      "builtAt": "2026-10-08T12:44:38.887Z",
+      "scope": "Read-only real repository/issue/pull/action/release lists, native Git open, account/settings navigation; no remote mutations or Windows proof",
+      "errors": 0
+    },
+    "capturePublication": "Public sanitized ledger/captures owned by site evidence lane; links pending integration"
+  }
 }

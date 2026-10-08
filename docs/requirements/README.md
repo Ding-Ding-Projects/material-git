@@ -10,29 +10,29 @@ Run `node scripts/check-feature-coverage.mjs` to validate rows and links while r
 
 ## personalization
 
-- [Language modes](personalization/language.md) · [粵語草稿](personalization/language.yue.md) — `language`
-- [Funny-level sliders and the dialog emoji switch](personalization/funny-emoji.md) · [粵語草稿](personalization/funny-emoji.yue.md) — `funny-emoji`
-- [Local personal-vocabulary JSON upload](personalization/personal-vocabulary.md) · [粵語草稿](personalization/personal-vocabulary.yue.md) — `personal-vocabulary`
-- [Universal School mode](personalization/school-mode.md) · [粵語草稿](personalization/school-mode.yue.md) — `school-mode`
-- [Spoken narrator and voice pickers](personalization/narration.md) · [粵語草稿](personalization/narration.yue.md) — `narration`
-- [Scheduled and external settings sources](personalization/scheduled-settings.md) · [粵語草稿](personalization/scheduled-settings.yue.md) — `scheduled-settings`
-- [Renaming the application](personalization/display-name.md) · [粵語草稿](personalization/display-name.yue.md) — `display-name`
-- [ADHD modes](personalization/adhd-modes.md) · [粵語草稿](personalization/adhd-modes.yue.md) — `adhd-modes`
-- [Dim sum surprise](personalization/dim-sum.md) · [粵語草稿](personalization/dim-sum.yue.md) — `dim-sum`
-- [Public dim-sum photo source](personalization/dim-sum-photo-source.md) · [粵語草稿](personalization/dim-sum-photo-source.yue.md) — `dim-sum-photo-source`
+- [Language modes](personalization/language.md) · [粵語文章](personalization/language.yue.md) — `language`
+- [Funny-level sliders and the dialog emoji switch](personalization/funny-emoji.md) · [粵語文章](personalization/funny-emoji.yue.md) — `funny-emoji`
+- [Local personal-vocabulary JSON upload](personalization/personal-vocabulary.md) · [粵語文章](personalization/personal-vocabulary.yue.md) — `personal-vocabulary`
+- [Universal School mode](personalization/school-mode.md) · [粵語文章](personalization/school-mode.yue.md) — `school-mode`
+- [Spoken narrator and voice pickers](personalization/narration.md) · [粵語文章](personalization/narration.yue.md) — `narration`
+- [Scheduled and external settings sources](personalization/scheduled-settings.md) · [粵語文章](personalization/scheduled-settings.yue.md) — `scheduled-settings`
+- [Renaming the application](personalization/display-name.md) · [粵語文章](personalization/display-name.yue.md) — `display-name`
+- [ADHD modes](personalization/adhd-modes.md) · [粵語文章](personalization/adhd-modes.yue.md) — `adhd-modes`
+- [Dim sum surprise](personalization/dim-sum.md) · [粵語文章](personalization/dim-sum.yue.md) — `dim-sum`
+- [Public dim-sum photo source](personalization/dim-sum-photo-source.md) · [粵語文章](personalization/dim-sum-photo-source.yue.md) — `dim-sum-photo-source`
 
 ## appearance
 
-- [Material Design 3 conformance](appearance/material-design.md) · [粵語草稿](appearance/material-design.yue.md) — `material-design`
-- [Workflow navigation and window chrome](appearance/workflow-navigation.md) · [粵語草稿](appearance/workflow-navigation.yue.md) — `workflow-navigation`
-- [Material Design 3 motion with a complete reduced-motion path](appearance/motion.md) · [粵語草稿](appearance/motion.yue.md) — `motion`
-- [Per-element appearance editor](appearance/appearance-editor.md) · [粵語草稿](appearance/appearance-editor.yue.md) — `appearance-editor`
-- [Infinite colour picker and translator](appearance/color-picker.md) · [粵語草稿](appearance/color-picker.yue.md) — `color-picker`
-- [application logo customization](appearance/logo-customization.md) · [粵語草稿](appearance/logo-customization.yue.md) — `logo-customization`
-- [Overlays and panels](appearance/overlay-panels.md) · [粵語草稿](appearance/overlay-panels.yue.md) — `overlay-panels`
-- [Collapsible filters and statistics](appearance/collapse-filters.md) · [粵語草稿](appearance/collapse-filters.yue.md) — `collapse-filters`
-- [Accessibility, sizing, and layout without layout clipping defect](appearance/accessibility-sizing.md) · [粵語草稿](appearance/accessibility-sizing.yue.md) — `accessibility-sizing`
-- [Functional UI and truthful empty states](appearance/functional-ui.md) · [粵語草稿](appearance/functional-ui.yue.md) — `functional-ui`
+- [Material Design 3 conformance](appearance/material-design.md) · [粵語文章](appearance/material-design.yue.md) — `material-design`
+- [Workflow navigation and window chrome](appearance/workflow-navigation.md) · [粵語文章](appearance/workflow-navigation.yue.md) — `workflow-navigation`
+- [Material Design 3 motion with a complete reduced-motion path](appearance/motion.md) · [粵語文章](appearance/motion.yue.md) — `motion`
+- [Per-element appearance editor](appearance/appearance-editor.md) · [粵語文章](appearance/appearance-editor.yue.md) — `appearance-editor`
+- [Infinite colour picker and translator](appearance/color-picker.md) · [粵語文章](appearance/color-picker.yue.md) — `color-picker`
+- [application logo customization](appearance/logo-customization.md) · [粵語文章](appearance/logo-customization.yue.md) — `logo-customization`
+- [Overlays and panels](appearance/overlay-panels.md) · [粵語文章](appearance/overlay-panels.yue.md) — `overlay-panels`
+- [Collapsible filters and statistics](appearance/collapse-filters.md) · [粵語文章](appearance/collapse-filters.yue.md) — `collapse-filters`
+- [Accessibility, sizing, and layout without layout clipping defect](appearance/accessibility-sizing.md) · [粵語文章](appearance/accessibility-sizing.yue.md) — `accessibility-sizing`
+- [Functional UI and truthful empty states](appearance/functional-ui.md) · [粵語文章](appearance/functional-ui.yue.md) — `functional-ui`
 
 ## navigation
 
