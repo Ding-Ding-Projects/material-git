@@ -47,6 +47,7 @@ export class GitHubProviderTargets {
    if(await this.deps.account()!==plan.account)throw Error('The selected GitHub account changed. Select the local source again.');
    const current=await this.read(plan.action,plan.payload,plan.target.hostname,plan.account,id,plan.target.expiresAt);
    if(await this.deps.account()!==plan.account)throw Error('The active account changed while verifying the local source. Review again.');
+   if(this.plans.get(id)!==plan)throw Error('The provider source receipt was revoked. Select the record again.');
    if(this.deps.selectedHostname()!==plan.target.hostname||Date.parse(plan.target.expiresAt)<this.now())throw Error('The provider source context changed or expired. Select it again.');
    if(JSON.stringify(current)!==JSON.stringify(plan.target))throw Error('The selected provider source changed. Refresh and review again.');
    return structuredClone(current);
