@@ -1,1 +1,95 @@
-{"schemaVersion":1,"captures":[]}
+{
+  "schemaVersion": 1,
+  "captures": [
+    {
+      "file": "docs/images/desktop.png",
+      "title": "Desktop workspace",
+      "titleYue": "桌面工作空間",
+      "description": "The genuine desktop workspace, showing the live public repository and its detail panel.",
+      "descriptionYue": "真實桌面工作空間，顯示公開倉庫嘅即時資料同詳細資料面板。",
+      "screen": "desktop",
+      "sourceCommit": "44dc9d8dc30a4e327a98c8a6936f97a946feab55",
+      "capturedAt": "2026-10-08T12:46:10.780Z"
+    },
+    {
+      "file": "docs/images/repositories.png",
+      "title": "Repository details",
+      "titleYue": "倉庫資料",
+      "description": "The authenticated repository view for Ding-Ding-Projects/material-git, captured from the running application.",
+      "descriptionYue": "喺已登入嘅應用程式擷取 Ding-Ding-Projects/material-git 倉庫畫面。",
+      "screen": "repositories",
+      "sourceCommit": "44dc9d8dc30a4e327a98c8a6936f97a946feab55",
+      "capturedAt": "2026-10-08T12:46:10.705Z"
+    },
+    {
+      "file": "docs/images/issues.png",
+      "title": "Issues: real empty state",
+      "titleYue": "Issues：實際空白狀態",
+      "description": "GitHub returned no open issues for this repository at capture time. The empty state contains no sample records.",
+      "descriptionYue": "擷取嗰陣，GitHub 冇傳回呢個倉庫嘅未關閉 issue。空白狀態冇加入示範資料。",
+      "screen": "issues",
+      "sourceCommit": "44dc9d8dc30a4e327a98c8a6936f97a946feab55",
+      "capturedAt": "2026-10-08T12:46:11.307Z"
+    },
+    {
+      "file": "docs/images/pull-requests.png",
+      "title": "Pull requests: real empty state",
+      "titleYue": "Pull requests：實際空白狀態",
+      "description": "GitHub returned no open pull requests for this repository at capture time. No fixture data is displayed.",
+      "descriptionYue": "擷取嗰陣，GitHub 冇傳回呢個倉庫嘅未關閉 pull request。畫面冇顯示測試資料。",
+      "screen": "pull-requests",
+      "sourceCommit": "44dc9d8dc30a4e327a98c8a6936f97a946feab55",
+      "capturedAt": "2026-10-08T12:46:11.907Z"
+    },
+    {
+      "file": "docs/images/actions.png",
+      "title": "Actions runs and jobs",
+      "titleYue": "Actions 執行同工作",
+      "description": "Live GitHub Actions history, with 15 returned runs and details of a successful Windows release job.",
+      "descriptionYue": "即時 GitHub Actions 記錄，傳回 15 次執行，並顯示一次成功嘅 Windows 發佈工作資料。",
+      "screen": "actions",
+      "sourceCommit": "44dc9d8dc30a4e327a98c8a6936f97a946feab55",
+      "capturedAt": "2026-10-08T12:46:13.524Z"
+    },
+    {
+      "file": "docs/images/releases.png",
+      "title": "Release history and notes",
+      "titleYue": "版本記錄同說明",
+      "description": "Live release history, with 10 returned records and the selected release’s original notes.",
+      "descriptionYue": "即時版本記錄，傳回 10 個版本，並顯示所選版本嘅原始說明。",
+      "screen": "releases",
+      "sourceCommit": "44dc9d8dc30a4e327a98c8a6936f97a946feab55",
+      "capturedAt": "2026-10-08T12:46:14.963Z"
+    },
+    {
+      "file": "docs/images/accounts.png",
+      "title": "Active account and credential source",
+      "titleYue": "使用中帳戶同憑證來源",
+      "description": "The authenticated active account and its environment-token notice. Environment credentials take precedence over saved accounts; no credential value is visible.",
+      "descriptionYue": "已驗證嘅使用中帳戶，同環境 token 來源提示。環境憑證優先於已儲存帳戶；畫面冇顯示憑證內容。",
+      "screen": "accounts",
+      "sourceCommit": "44dc9d8dc30a4e327a98c8a6936f97a946feab55",
+      "capturedAt": "2026-10-08T12:50:16.799Z"
+    },
+    {
+      "file": "docs/images/settings.png",
+      "title": "Desktop preferences",
+      "titleYue": "桌面偏好設定",
+      "description": "The desktop preferences screen, showing language, app name and playfulness controls and the available settings sections.",
+      "descriptionYue": "桌面偏好設定畫面，顯示語言、應用程式名稱、趣味程度控制項同可用設定分類。",
+      "screen": "settings",
+      "sourceCommit": "44dc9d8dc30a4e327a98c8a6936f97a946feab55",
+      "capturedAt": "2026-10-08T12:46:15.924Z"
+    },
+    {
+      "file": "docs/images/source-control.png",
+      "title": "Local source control",
+      "titleYue": "本機版本控制",
+      "description": "The actual local Git repository opened through the native picker, with a clean worktree and explicit repository trust controls. This frame does not verify a commit operation.",
+      "descriptionYue": "透過原生選擇器開啟嘅實際本機 Git 倉庫，顯示乾淨嘅工作樹同清楚嘅倉庫信任控制項。呢張畫面唔代表提交操作已驗證。",
+      "screen": "source-control",
+      "sourceCommit": "44dc9d8dc30a4e327a98c8a6936f97a946feab55",
+      "capturedAt": "2026-10-08T12:46:16.337Z"
+    }
+  ]
+}

@@ -6,6 +6,7 @@ import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 import {marked} from 'marked';
 import {validateDocumentationBundle} from '../src/site-shared/build-contract.mjs';
+import {validateUpstreamSource} from '../src/site-shared/source-provenance.mjs';
 const root=fileURLToPath(new URL('../',import.meta.url));
 const pkg=JSON.parse(await readFile(path.join(root,'package.json'),'utf8'));
 const out=path.join(root,'site/dist');
@@ -15,6 +16,8 @@ validateDocumentationBundle((await walk(path.join(root,'docs'))).map(file=>path.
 const gallery=JSON.parse(await readFile(path.join(root,'site/gallery.json'),'utf8'));
 if(gallery.schemaVersion!==1||!Array.isArray(gallery.captures))throw Error('Invalid gallery manifest');
 let commit='',updatedAt='',dirty=false;try{commit=execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim();updatedAt=execFileSync('git',['show','-s','--format=%cI',commit],{cwd:root,encoding:'utf8'}).trim();dirty=Boolean(execFileSync('git',['status','--porcelain','--untracked-files=no','--','site','src/site-shared','src/shared','docs','scripts/build-site.mjs','package.json','assets'],{cwd:root,encoding:'utf8'}).trim());if(dirty)updatedAt=''}catch{}
+let hostingPresent=false;try{hostingPresent=(await stat(path.join(root,'.openai/hosting.json'))).isFile()}catch(error){if(error.code!=='ENOENT')throw error}
+if(hostingPresent){let record;try{record=JSON.parse(await readFile(path.join(root,'.openai/upstream-source.json'),'utf8'))}catch(error){if(error.code!=='ENOENT')throw error}const upstream=validateUpstreamSource(record,true);if(upstream){commit=upstream.commit;updatedAt=upstream.updatedAt;dirty=false}}
 await rm(out,{recursive:true,force:true});await mkdir(out,{recursive:true});
 const define={__SITE_DIRTY__:JSON.stringify(dirty),__SITE_VERSION__:JSON.stringify(pkg.version),__SITE_COMMIT__:JSON.stringify(commit),__SITE_UPDATED_AT__:JSON.stringify(updatedAt),__SITE_DOCS__:JSON.stringify(articles),__SITE_GALLERY__:JSON.stringify(gallery.captures)};
 await build({entryPoints:[path.join(root,'site/app.ts')],outfile:path.join(out,'app.js'),bundle:true,format:'esm',target:'es2022',minify:true,define});

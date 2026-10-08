@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "route": "Playwright Electron headless",
+  "build": {
+    "version": "0.1.0",
+    "commit": "44dc9d8dc30a4e327a98c8a6936f97a946feab55",
+    "builtAt": "2026-10-08T12:44:38.887Z",
+    "platform": "linux",
+    "architecture": "x64"
+  },
+  "captures": [
+    {
+      "name": "desktop",
+      "capturedAt": "2026-10-08T12:46:10.780Z",
+      "timezone": "UTC",
+      "width": 1500,
+      "height": 950,
+      "sha256": "317a8520880384fe4d1ae9740c450da818e06d797373b9431b3e1f1fa9e5e129",
+      "file": "docs/images/desktop.png"
+    },
+    {
+      "name": "repositories",
+      "capturedAt": "2026-10-08T12:46:10.705Z",
+      "timezone": "UTC",
+      "width": 1500,
+      "height": 950,
+      "sha256": "d246a6677b802bb6a672c696f1c16418a38fe80a50a1f71856622aae68d95e81",
+      "file": "docs/images/repositories.png"
+    },
+    {
+      "name": "issues",
+      "capturedAt": "2026-10-08T12:46:11.307Z",
+      "timezone": "UTC",
+      "width": 1500,
+      "height": 950,
+      "sha256": "bd916b8db3d737498ed032537cc0a7a3fa751990fa230dc0a6fde2f3c6ab5c39",
+      "file": "docs/images/issues.png"
+    },
+    {
+      "name": "pull-requests",
+      "capturedAt": "2026-10-08T12:46:11.907Z",
+      "timezone": "UTC",
+      "width": 1500,
+      "height": 950,
+      "sha256": "7077e6e76bd14b20ed7c6553d2d2d8dfe3911e0c9f963d121be623f8cb691733",
+      "file": "docs/images/pull-requests.png"
+    },
+    {
+      "name": "actions",
+      "capturedAt": "2026-10-08T12:46:13.524Z",
+      "timezone": "UTC",
+      "width": 1500,
+      "height": 950,
+      "sha256": "be8719251f337c7981a332225a3041890178e7a81cc79cd0321711d7c9226ce4",
+      "file": "docs/images/actions.png"
+    },
+    {
+      "name": "releases",
+      "capturedAt": "2026-10-08T12:46:14.963Z",
+      "timezone": "UTC",
+      "width": 1500,
+      "height": 950,
+      "sha256": "916c960dd2c2bf041d45551be6cb3875cc9427dacf4196dd5b27fd74d37d905f",
+      "file": "docs/images/releases.png"
+    },
+    {
+      "name": "accounts",
+      "capturedAt": "2026-10-08T12:50:16.799Z",
+      "timezone": "UTC",
+      "width": 1500,
+      "height": 950,
+      "sha256": "b6560f841ede26ee44eba21e13ed39f4d8f73eb07d256733b0cc50d05fd2fed1",
+      "file": "docs/images/accounts.png"
+    },
+    {
+      "name": "settings",
+      "capturedAt": "2026-10-08T12:46:15.924Z",
+      "timezone": "UTC",
+      "width": 1500,
+      "height": 950,
+      "sha256": "955f8dad3ed5fdda0d01cc94b2ae3592d58f65a6066435e2507d5bd760e4233a",
+      "file": "docs/images/settings.png"
+    },
+    {
+      "name": "source-control",
+      "capturedAt": "2026-10-08T12:46:16.337Z",
+      "timezone": "UTC",
+      "width": 1500,
+      "height": 950,
+      "sha256": "eb42469f16332724603128b92be92ca68845a5a241c9e09587c49b16d0b16bec",
+      "file": "docs/images/source-control.png"
+    }
+  ]
+}

@@ -12,13 +12,15 @@ The builder bundles all `docs/**/*.md` articles, their original source text, and
 
 The initial screen shows the package version and the recorded source commit's updated-at date, including seconds and the visitor's local timezone. This date is not a launch time, file timestamp, or agent clock. Uncommitted website inputs are labelled development source and show the updated-at value as unavailable. Production should be built from the clean integrated source revision before packaging. The source link and bundled `documentation.json` preserve the source revision. Sites deployment source provenance is retained separately by its native source workflow.
 
+A Sites packaging checkout has an independent native Git history. When `.openai/hosting.json` exists, the builder accepts an optional `.openai/upstream-source.json` with exactly `schemaVersion: 1`, `repository: "https://github.com/Ding-Ding-Projects/material-git"`, a 40-character lowercase hexadecimal `commit`, and an ISO `updatedAt` timestamp from the public source commit. A malformed record fails the build. This trusted packaging record pins the exact upstream archive supplied by the publisher, independently of native Sites source and deployment revisions. Ordinary product checkouts ignore this hosting override and use their own Git revision and development-source detection. The publisher must create the record from the exact clean public archive being packaged.
+
 All scripts, styles, icons, and screenshot assets are bundled locally. Typography uses the user's installed system families, with no remote font request or incomplete vendored font set. There are no analytics or tracking scripts. GitHub release checks and explicitly configured external schedule sources are the only application-initiated network requests.
 
 ## Website sections
 
 - **Overview:** product introduction, repository/collaboration/delivery/account guidance, documentation and downloads entry points, and a reviewed application capture when one is available.
 - **Documentation:** categorized articles, full-text plain search, an adjacent regex builder, internal article links, sanitized Markdown rendering, related articles, individual article export, and selected-article JSON/Markdown/HTML export.
-- **Screenshots:** actual application captures declared in `site/gallery.json`. An empty manifest produces an honest unavailable state. Previous captures are never copied implicitly. The build rejects the obsolete command-catalog image by its recorded SHA-256, so a filename may be reused only with a genuinely replaced capture.
+- **Screenshots:** actual application captures declared in `site/gallery.json`. The current manifest includes nine unedited 1500 × 950 Linux Electron captures from source `44dc9d8dc30a4e327a98c8a6936f97a946feab55`, recorded on 8 October 2026. Issues and pull requests show genuine empty results; the accounts frame shows an authenticated environment account with its source limitations. The [capture ledger](images/README.md) records each timestamp and its evidence limits. An empty manifest produces an honest unavailable state. Previous captures are never copied implicitly. The build rejects the obsolete command-catalog image by its recorded SHA-256, so a filename may be reused only with a genuinely replaced capture.
 - **Downloads:** the actual latest stable public GitHub release, actual `.exe` assets, publication date, asset sizes, unsigned-installer disclosure, no-release state, failure state, retry, and links to the release source.
 - **Release notes:** original provider-authored Markdown and dates, page-by-page access to the complete public release history (100 records per page), independent search and regex builder, and export of the visible notes. The API does not reliably expose an exact commit SHA; the viewer says so and links to the release tag rather than guessing.
 - **Preferences:** independent website visitor preferences, voice enumeration and narration, language/playfulness controls, appearance, attention aids, personal vocabulary import, browser-local presentation mode, scheduling, navigation customization, history, and import/export.
@@ -59,7 +61,7 @@ The focused checks are:
 
 ```sh
 node scripts/build-site.mjs
-node --test site/regex-worker.test.mjs site/build.test.mjs
+node --test site/regex-worker.test.mjs site/build.test.mjs site/source-provenance.test.mjs
 node --import tsx --test site/model.test.ts
 node site/browser.test.mjs
 ```
