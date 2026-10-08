@@ -1,30 +1,65 @@
-import { test } from 'node:test';
+import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-const source = (path: string) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
-test('renderer connects to structured bridge and operation stream', () => { const app = source('src/renderer/app.ts'); for (const boundary of ['window.material.bootstrap()', 'window.material.execute({', 'window.material.onOperation(', 'window.material.cancel(', 'window.material.choices('])
-    assert.ok(app.includes(boundary), boundary); assert.ok(!app.includes('execSync')); assert.ok(!app.includes('innerHTML')); });
-test('official Material package and registered compositions form renderer', () => { assert.match(source('src/renderer/material.ts'), /import '@material\/web\/all.js'/); const components = source('src/renderer/components.ts'); for (const tag of ['mg-surface', 'mg-text', 'mg-layout', 'mg-search'])
-    assert.ok(components.includes(`customElements.define('${tag}'`)); });
-test('destructive review retains independent boundaries', () => { const app = source('src/renderer/app.ts').replace(/\s+/g, ''); assert.ok(app.includes('!this.keyOne||!this.keyTwo||this.confirmation!==100')); assert.ok(app.includes('(this.selected.mutation||this.selected.destructive)&&!confirmed')); assert.ok(app.includes("option.type==='secret')?'[redacted]'")); });
-test('reduced motion and honest provenance are retained', () => { assert.match(source('src/renderer/styles.css'), /prefers-reduced-motion:reduce/); assert.ok(source('src/renderer/app.ts').includes('build provenance unavailable')); assert.match(source('design/material-provenance.md'), /do not establish real graphical interaction/); });
-
-test('Material control tags have paired template boundaries',()=>{
-    const app=source('src/renderer/app.ts');
-    const tags=new Set([...app.matchAll(/<\/?(md-[a-z-]+)\b/g)].map(match=>match[1]));
-    for(const tag of tags){
-        const opens=[...app.matchAll(new RegExp(`<${tag}(?=[\\s>])`,'g'))].length;
-        const closes=[...app.matchAll(new RegExp(`</${tag}>`,'g'))].length;
-        assert.equal(opens,closes,`${tag} template opening and closing boundaries`);
-    }
+import {readFileSync} from 'node:fs';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+import ts from 'typescript';
+const root=process.env.MATERIAL_TEST_SOURCE_ROOT||fileURLToPath(new URL('..',import.meta.url));
+const source=(relative:string)=>readFileSync(path.join(root,relative),'utf8');
+// Execute the actual controller method with a fake bridge; no DOM or remote mutation.
+function controllerMethod(file:string,name:string,bindings:Record<string,unknown>={}) {
+ const text=source(file),tree=ts.createSourceFile(file,text,ts.ScriptTarget.Latest,true);let body:string|undefined,parameters='',asynchronous=false;
+ const visit=(node:ts.Node)=>{if(ts.isMethodDeclaration(node)&&node.name.getText(tree)===name&&node.body){body=node.body.getText(tree);parameters=node.parameters.map(p=>p.getText(tree)).join(',');asynchronous=!!node.modifiers?.some(m=>m.kind===ts.SyntaxKind.AsyncKeyword);}ts.forEachChild(node,visit);};visit(tree);assert.ok(body,`${file}:${name}`);
+ const output=ts.transpileModule(`export default ${asynchronous?'async ':''}function tested(${parameters})${body}`,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS}}).outputText;
+ // Named parameters in the body are supplied through bindings for event/ID methods.
+ return new Function(...Object.keys(bindings),`const exports={};${output};return exports.default;`)(...Object.values(bindings)) as (this:unknown,...args:unknown[])=>unknown;
+}
+test('functional shell wires domain bridge, operation stream and isolated renderer',()=>{
+ const app=source('src/renderer/app.ts');for(const boundary of ['window.material.bootstrap()','window.material.onOperation(','window.material.cancel(','window.material.choices(','mg-github-workspace','mg-api-explorer'])assert.ok(app.includes(boundary),boundary);
+ assert.match(source('src/renderer/github-workspace-model.ts'),/bridge\.github\(action,parameters\)/);
+ assert.ok(!app.includes('execSync'));assert.ok(!app.includes('innerHTML'));
 });
-test('execution context, tab drafts, and persistent error paths stay explicit',()=>{
-    const app=source('src/renderer/app.ts').replace(/\s+/g,'');
-    assert.ok(app.includes("repository:this.selected.options.some(option=>option.name==='repo')?"));
-    assert.ok(app.includes('this.values.json='));
-    assert.ok(app.includes('this.drafts.get(command.id)'));
-    assert.ok(app.includes("this.drafts.get(id)?.dirty&&!discard"));
-    assert.ok(app.includes('if(!persistent)this.notificationTimer='));
-    assert.ok(app.includes('restoreAppearance(this)'));
-    assert.ok(app.includes('?disabled=${!this.keyOne||!this.keyTwo}'));
+test('official Material package and registered compositions remain genuine',()=>{
+ assert.match(source('src/renderer/material.ts'),/import '@material\/web\/all.js'/);
+ for(const tag of ['mg-surface','mg-text','mg-layout','mg-search'])assert.ok(source('src/renderer/components.ts').includes(`customElements.define('${tag}'`));
+});
+test('actual domain mutation handler rejects missing review, reentry and incomplete destructive confirmation',async()=>{
+ const calls:unknown[]=[];const save=controllerMethod('src/renderer/github-workspace.ts','save',{github:async(...args:unknown[])=>{calls.push(args);return{};},rec:(v:unknown)=>v,str:(v:unknown)=>typeof v==='string'?v:''});
+ const reviewed={action:'delete',fields:[],values:{},review:true,reviewId:'native-receipt',destructive:true,keyOne:true,keyTwo:true,confirmation:100};
+ const context=(editor:unknown,saving=false,valid=true)=>({editor,saving,editorValid:()=>valid,workState:()=>{},copy:(en:string)=>en,load:async()=>{},readDetail:async()=>{},page:{page:1},selected:undefined,notice:''});
+ for(const editor of [undefined,{...reviewed,review:false},{...reviewed,reviewId:undefined},{...reviewed,keyOne:false},{...reviewed,keyTwo:false},{...reviewed,confirmation:99}])await save.call(context(editor));
+ await save.call(context(reviewed,true));await save.call(context(reviewed,false,false));assert.equal(calls.length,0);
+ const allowed=context(reviewed);await save.call(allowed);assert.deepEqual(calls,[['apply',{reviewId:'native-receipt',confirmed:true}]]);assert.equal(allowed.editor,undefined);assert.equal(allowed.saving,false);
+});
+test('failed apply invalidates review before a retry',async()=>{
+ let calls=0;const save=controllerMethod('src/renderer/github-workspace.ts','save',{github:async()=>{calls++;throw new Error('permission denied');},rec:(v:unknown)=>v,str:String});
+ const context={editor:{fields:[],values:{},review:true,reviewId:'receipt',destructive:false},saving:false,editorValid:()=>true,workState:()=>{},notice:'',copy:(en:string)=>en};
+ await save.call(context);await save.call(context);assert.equal(calls,1);assert.equal(context.editor.review,false);assert.equal(context.editor.reviewId,undefined);assert.equal(context.notice,'permission denied');assert.equal(context.saving,false);
+});
+test('tab close controller uses actual work-state mapping for dirty and active destinations',()=>{
+ const key=controllerMethod('src/renderer/app.ts','workStateKey');
+ const review=controllerMethod('src/renderer/app.ts','closeTabReview');
+ for(const id of ['issues','api','cli-config','tools']){
+  let closed=0;const stateKey=String(key.call({},id));
+  const context={workStateKey:(target:string)=>key.call({},target),workStates:{[stateKey]:{dirty:true,busy:false}},closeTabs:[] as string[],closeTabNow:()=>closed++,notify:()=>{},copy:(en:string)=>en};
+  review.call(context,[id]);assert.deepEqual(context.closeTabs,[id]);assert.equal(closed,0);
+  context.closeTabs=[];context.workStates[stateKey]={dirty:false,busy:true};review.call(context,[id]);assert.equal(closed,0);assert.deepEqual(context.closeTabs,[]);
+  context.workStates[stateKey]={dirty:false,busy:false};review.call(context,[id]);assert.equal(closed,1);
+ }
+});
+test('actual tab discard waits for its native record and preserves tabs on failure',async()=>{
+ const key=controllerMethod('src/renderer/app.ts','workStateKey');let release!:()=>void;const gate=new Promise<void>(resolve=>release=resolve);const calls:unknown[]=[];
+ const close=controllerMethod('src/renderer/app.ts','closeTabNow',{window:{material:{workspace:async(...args:unknown[])=>{calls.push(args);await gate;}}}});
+ const context={workStateKey:(id:string)=>key.call({},id),workStates:{issues:{dirty:true,busy:false}},workspace:{tabs:[{id:'repositories'},{id:'issues'}]},closeTabs:['issues'],lane:'repositories',notify:()=>{},copy:(en:string)=>en,persist:()=>{},navigate:()=>{}};
+ const pending=close.call(context,['issues']);assert.equal(context.workspace.tabs.length,2);assert.deepEqual(calls,[['discard',{ids:['issues']}]]);release();await pending;assert.deepEqual(context.workspace.tabs,[{id:'repositories'}]);
+ const failed=controllerMethod('src/renderer/app.ts','closeTabNow',{window:{material:{workspace:async()=>{throw new Error('disk unavailable');}}}});
+ const unchanged={...context,workStates:{issues:{dirty:true,busy:false}},workspace:{tabs:[{id:'repositories'},{id:'issues'}]},closeTabs:['issues']};await failed.call(unchanged,['issues']);assert.equal(unchanged.workspace.tabs.length,2);assert.deepEqual(unchanged.closeTabs,['issues']);
+});
+test('reduced motion and build-bound provenance remain honest',()=>{
+ assert.match(source('src/renderer/styles.css'),/prefers-reduced-motion:reduce/);
+ const app=source('src/renderer/app.ts');assert.ok(app.includes('data.version'));assert.ok(app.includes('data.builtAt'));assert.ok(app.includes("this.copy('unavailable'"));assert.ok(!app.includes('builtAt:Date.now'));
+ assert.match(source('design/material-provenance.md'),/do not establish real graphical interaction/);
+});
+test('Material control template boundaries remain paired in the shell',()=>{
+ const app=source('src/renderer/app.ts');const tags=new Set([...app.matchAll(/<\/?(md-[a-z-]+)\b/g)].map(m=>m[1]));for(const tag of tags)assert.equal([...app.matchAll(new RegExp(`<${tag}(?=[\\s>])`,'g'))].length,[...app.matchAll(new RegExp(`</${tag}>`,'g'))].length,tag);
 });

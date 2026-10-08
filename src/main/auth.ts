@@ -1,7 +1,11 @@
 import { spawn, type ChildProcess, type SpawnOptions } from 'node:child_process';
+import {validateAuthHost} from './auth-hosts.js';
 import type { AuthAccount, AuthAction, AuthPayload, AuthState } from '../shared/types';
 export interface AuthServiceOptions {
  allowedHosts?: string[];
+ copyToken?: (token:string)=>void|Promise<void>;
+ registerHost?: (hostname:string)=>Promise<void>;
+ authorize?: (action:AuthAction,payload:AuthPayload)=>Promise<void>;
  spawn?: (binary: string, args: string[], options: SpawnOptions) => ChildProcess;
 }
 const ADDITIONAL_SCOPES = ['repo:status','repo_deployment','public_repo','repo:invite','security_events','admin:repo_hook','write:repo_hook','read:repo_hook','admin:org','write:org','admin:public_key','write:public_key','read:public_key','admin:org_hook','gist','notifications','user','read:user','user:email','user:follow','project','read:project','workflow','write:packages','read:packages','delete:packages','delete_repo','admin:gpg_key','write:gpg_key','read:gpg_key','admin:ssh_signing_key','write:ssh_signing_key','read:ssh_signing_key','read:discussion','write:discussion','codespace','codespace:secrets','copilot','manage_billing:copilot','audit_log','read:audit_log','admin:enterprise','manage_runners:enterprise','manage_billing:enterprise','read:enterprise','scim:enterprise','codespace:metadata','codespace:startup_script','codespace:user_secrets'];
@@ -16,11 +20,12 @@ export class AuthService {
  private checking?: Promise<AuthState>;
  private changing=false;
  private state: AuthState;
- constructor(private binary: string, private cwd: string, options: AuthServiceOptions = {}) {
+ constructor(private binary: string, private cwd: string, private serviceOptions: AuthServiceOptions = {}) {
+  const options=this.serviceOptions;
   this.hosts = [...new Set(options.allowedHosts || ['github.com'])];
   if(!this.hosts.length || this.hosts.some(host=>!HOST.test(host)))throw new Error('Authentication hosts must be exact lowercase DNS hostnames');
   this.spawnProcess=options.spawn || ((binary,args,opts)=>spawn(binary,args,opts));
-  this.state={status:'idle',accounts:[],allowedHosts:[...this.hosts],allowedScopes:[...ADDITIONAL_SCOPES]};
+  this.state={status:'idle',accounts:[],allowedHosts:[...this.hosts],allowedScopes:[...ADDITIONAL_SCOPES],tokenCopyAvailable:Boolean(options.copyToken),hostRegistrationAvailable:Boolean(options.registerHost)};
  }
  subscribe(callback: (state: AuthState) => void): () => void {this.listeners.add(callback);return()=>{this.listeners.delete(callback);};}
  snapshot(): AuthState {return structuredClone(this.state);}
@@ -34,7 +39,7 @@ export class AuthService {
  }
  private async run(args: string[], binary=this.binary): Promise<{code:number|null;stdout:string}> {
   return new Promise((resolve,reject)=>{
-   const child=this.spawnProcess(binary,args,this.options());let stdout='';let settled=false;
+   let child:ChildProcess;try{child=this.spawnProcess(binary,args,this.options());}catch{reject(new Error('Unable to start GitHub CLI authentication'));return;}let stdout='';let settled=false;
    const finish=(error?:Error,code:number|null=null)=>{if(settled)return;settled=true;clearTimeout(timer);error?reject(error):resolve({code,stdout});};
    const timer=setTimeout(()=>{child.kill();finish(new Error('Authentication status timed out'));},30000);timer.unref();
    child.stdout?.on('data',(chunk:Buffer)=>{stdout+=chunk.toString('utf8');if(stdout.length>131072){child.kill();finish(new Error('Authentication response exceeded its limit'));}});
@@ -66,10 +71,18 @@ export class AuthService {
   return this.checking;
  }
  async action(action: AuthAction, payload: AuthPayload = {}): Promise<AuthState> {
-  if(!['status','login','refresh','setup-git','cancel','switch','logout'].includes(action))throw new Error('Unknown authentication action');
+  if(!['status','login','refresh','setup-git','cancel','switch','logout','copy-token','register-host'].includes(action))throw new Error('Unknown authentication action');
   if(!payload||typeof payload!=='object'||Array.isArray(payload))throw new Error('Invalid authentication request');
-  for(const key of Object.keys(payload))if(!['hostname','login','scopes','removeScopes','resetScopes','confirmed'].includes(key))throw new Error('Unknown authentication parameter');
+  for(const key of Object.keys(payload))if(!['hostname','login','scopes','removeScopes','resetScopes','confirmed','reviewedHostname','clipboardConsent'].includes(key))throw new Error('Unknown authentication parameter');
+  if(action!=='status'&&action!=='cancel')await this.serviceOptions.authorize?.(action,payload);
   if(action==='status')return this.refresh();
+  if(action==='register-host'){
+   const host=validateAuthHost(payload.hostname).hostname;
+   if(payload.confirmed!==true||payload.reviewedHostname!==host)throw new Error('Review and confirm the exact enterprise hostname');
+   if(!this.serviceOptions.registerHost)throw new Error('Host registration is unavailable in this installation');
+   if(this.child||this.changing)throw new Error('Finish the current account change first');
+   this.changing=true;try{await this.serviceOptions.registerHost(host);if(!this.hosts.includes(host))this.hosts.push(host);this.update({allowedHosts:[...this.hosts],message:`Approved ${host} for HTTPS GitHub Enterprise authentication and API requests. TLS certificates are verified; sign-in is a separate action.`,error:undefined});return this.snapshot();}finally{this.changing=false;}
+  }
   if(action==='cancel') {const child=this.child;this.child=undefined;this.generation++;if(child){child.kill();const timer=setTimeout(()=>child.kill('SIGKILL'),2000);timer.unref();}this.update({status:'cancelled',deviceCode:undefined,verificationUrl:undefined,message:'GitHub authorization cancelled.',error:undefined});return this.snapshot();}
   if(this.child)throw new Error('Finish or cancel the current sign-in first');
   if(this.changing)throw new Error('Wait for the current account change to finish');
@@ -108,6 +121,17 @@ export class AuthService {
   }
   if(payload.confirmed!==true)throw new Error('Review and confirm the account change');
   if(typeof payload.login!=='string'||! /^(?:[A-Za-z0-9][A-Za-z0-9-]{0,38})(?:\[bot\])?$/.test(payload.login))throw new Error('Select a valid GitHub account');
+  if(action==='copy-token'){
+   if(payload.clipboardConsent!==true)throw new Error('Explicitly consent to copying a usable credential to the system clipboard');
+   if(!this.serviceOptions.copyToken)throw new Error('Native credential clipboard is unavailable in this installation');
+   this.changing=true;let token='';try{
+    await this.refresh();const account=this.state.accounts.find(a=>a.host===host&&a.login===payload.login&&a.state==='success');if(!account)throw new Error('Select a known authenticated account');
+    const result=await this.run(['auth','token',`--hostname=${host}`,`--user=${payload.login}`]);token=result.stdout.trim();result.stdout='';
+    if(result.code!==0||!token||token.length>16384||/[\s\u0000-\u001f]/.test(token))throw new Error('GitHub CLI could not retrieve the selected account credential');
+    try{await this.serviceOptions.copyToken(token);}catch{throw new Error('The native clipboard could not accept the credential');}
+    this.update({message:`Credential copied to the system clipboard for ${payload.login} on ${host}. Other applications may read it; clear the clipboard after use.`,error:undefined});return this.snapshot();
+   }finally{token='';this.changing=false;}
+  }
   if(action==='setup-git'){
    this.changing=true;
    try{

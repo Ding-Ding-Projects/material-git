@@ -1,3 +1,4 @@
+import {verifyDocumentationBundle} from './docs-bundle.mjs';
 import { resolveBuildVersion } from './build-version.mjs';
 import { build } from 'esbuild';
 import { build as buildRenderer } from 'vite';
@@ -11,6 +12,7 @@ await rm('dist', { recursive: true, force: true });
 await mkdir('dist/main', { recursive: true });
 await build({ entryPoints: ['src/main/main.ts', 'src/main/preload.ts'], outdir: 'dist/main', outExtension: { '.js': '.cjs' }, bundle: true, platform: 'node', format: 'cjs', target: 'node22', external: ['electron'], sourcemap: false });
 await buildRenderer({ root: 'src/renderer', base: './', build: { outDir: '../../dist/renderer', emptyOutDir: true }, logLevel: 'info' });
+await verifyDocumentationBundle();
 await copyFile('data/gh-catalog.json', 'dist/main/gh-catalog.json');
 await copyFile('data/github-api-catalog.json', 'dist/main/github-api-catalog.json');
 await copyFile('data/github-graphql-schema.graphql', 'dist/main/github-graphql-schema.graphql');

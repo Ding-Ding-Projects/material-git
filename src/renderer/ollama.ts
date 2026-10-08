@@ -34,254 +34,40 @@ class ModelText extends LitElement {
     }
 }
 customElements.define('mg-model-text', ModelText);
-interface LocalModel {
-    name: string;
-    model?: string;
-    size?: number;
-    digest?: string;
-    modified_at?: string;
-    details?: Record<string, unknown>;
-    expires_at?: string;
-    size_vram?: number;
+import type {LocalToolsAction,LocalToolsPayload,CatalogVariant,CatalogStatus,HardwareEvidence,PullItem,ChatSession,ChatRun,HarnessState,FitEvidence} from '../shared/local-tools';
+const local=(action:LocalToolsAction,payload:LocalToolsPayload={})=>(window.material as typeof window.material&{localTools:(action:LocalToolsAction,payload?:LocalToolsPayload)=>Promise<unknown>}).localTools(action,payload);
+interface Model{name:string;size?:number;details?:Record<string,unknown>}
+interface Variant extends CatalogVariant{fit:FitEvidence}
+interface SessionRow{id:string;name:string;model:string;at:string;count:number}
+/** Local-only suite; official catalog refresh and downloads are explicit actions. */
+export class OllamaWorkspace extends LitElement{
+ static properties={settings:{attribute:false},schoolMode:{type:Boolean},health:{state:true},models:{state:true},running:{state:true},visible:{state:true},tab:{state:true},busy:{state:true},error:{state:true},notice:{state:true},catalog:{state:true},variants:{state:true},catalogTotal:{state:true},catalogPage:{state:true},catalogNext:{state:true},catalogQuery:{state:true},family:{state:true},capability:{state:true},sort:{state:true},families:{state:true},hardware:{state:true},cart:{state:true},review:{state:true},pulls:{state:true},sessions:{state:true},session:{state:true},selectedModel:{state:true},prompt:{state:true},system:{state:true},temperature:{state:true},tokens:{state:true},context:{state:true},chat:{state:true},name:{state:true},harness:{state:true},detail:{state:true},deleteTarget:{state:true},keyOne:{state:true},keyTwo:{state:true},confirmation:{state:true},parallel:{state:true}};
+ settings?:AppSettings;schoolMode=false;health:{available:boolean;version?:string;error?:string}|null=null;models:Model[]=[];running:Model[]=[];visible:Model[]=[];tab='models';busy=false;error='';notice='';catalog:CatalogStatus|null=null;variants:Variant[]=[];catalogTotal=0;catalogPage=1;catalogNext=false;catalogQuery='';family='';capability='';sort='name';families:string[]=[];hardware:HardwareEvidence|null=null;cart:string[]=[];review:Record<string,unknown>|null=null;pulls:PullItem[]=[];sessions:SessionRow[]=[];session:ChatSession|null=null;selectedModel='';prompt='';system='';temperature=.7;tokens=1024;context=4096;chat:ChatRun|null=null;name='';harness:HarnessState|null=null;detail:Record<string,unknown>|null=null;deleteTarget:{kind:'model'|'session';id:string}|null=null;keyOne=false;keyTwo=false;confirmation=0;parallel=1;private timer?:ReturnType<typeof setInterval>;private pollBusy=false;private alive=true;private catalogSearch?:Search;
+ static styles=css`:host{display:block;min-width:0;color:var(--md-sys-color-on-surface);font-family:var(--md-ref-typeface-plain,system-ui,sans-serif);font-size:var(--mg-body-size,.8125rem);line-height:1.5}*{box-sizing:border-box}mg-layout,mg-surface,mg-text,mg-search{min-width:0;max-width:100%}mg-text{overflow-wrap:anywhere}md-outlined-text-field,md-outlined-select{min-width:0;width:100%;max-width:100%;--md-outlined-text-field-container-shape:8px;--md-outlined-select-container-shape:8px}md-filled-button,md-outlined-button,md-text-button{max-width:100%;--md-filled-button-container-shape:8px;--md-outlined-button-container-shape:8px}md-dialog{max-width:calc(100vw - 32px);--md-dialog-container-shape:12px}.error{color:var(--md-sys-color-error)}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:12px}md-slider{width:100%}`;
+ private text(en:string,yue:string){const language=this.schoolMode?'en':this.settings?.language??'en';return language==='yue'?yue:language==='both'?en+' · '+yue:en;}
+ private bytes(n?:number){return n===undefined?'Unknown':`${(n/1024**3).toFixed(2)} GiB`;}
+ connectedCallback(){super.connectedCallback();this.alive=true;void this.refresh();this.timer=setInterval(()=>void this.poll(),700);}
+ disconnectedCallback(){super.disconnectedCallback();this.alive=false;clearInterval(this.timer);}
+ private async act(task:()=>Promise<void>){if(this.busy)return;this.busy=true;this.error='';try{await task();}catch(e){this.error=e instanceof Error?e.message:'Local model operation failed';}finally{this.busy=false;}}
+ private rows(value:unknown):Model[]{const rows=(value as{models?:Model[]})?.models;if(!Array.isArray(rows)||rows.length>10000)throw new Error('Invalid installed-model response');return rows.filter(m=>typeof m?.name==='string');}
+ async refresh(){await this.act(async()=>{const results=await Promise.allSettled([window.material.ollama('health'),local('catalog-status'),local('hardware'),local('sessions'),local('pull-status')]);for(let i=0;i<results.length;i++){const r=results[i];if(r.status==='rejected'){this.error=r.reason instanceof Error?r.reason.message:'Local state unavailable';continue;}if(i===0)this.health=r.value as typeof this.health;if(i===1)this.catalog=r.value as CatalogStatus;if(i===2)this.hardware=r.value as HardwareEvidence;if(i===3)this.sessions=r.value as SessionRow[];if(i===4)this.pulls=(r.value as{items:PullItem[]}).items;}if(this.health?.available){const [models,running]=await Promise.all([window.material.ollama('models'),window.material.ollama('running')]);this.models=this.rows(models);this.running=this.rows(running);this.visible=this.models;this.selectedModel=this.models.some(m=>m.name===this.selectedModel)?this.selectedModel:this.models[0]?.name??'';}await this.loadCatalog();});}
+ private async loadCatalog(){const result=await local('catalog-page',{page:this.catalogPage,size:24,query:this.catalogQuery,family:this.family,capability:this.capability,sort:this.sort})as{status:CatalogStatus;items:Variant[];total:number;hasNext:boolean;families:string[]};this.catalog=result.status;this.variants=result.items;this.catalogTotal=result.total;this.catalogNext=result.hasNext;this.families=result.families;if(this.catalogSearch){const matches=await this.catalogSearch.matchValues(this.variants.map(v=>`${v.tag} ${v.capabilities.join(' ')} ${v.fit.verdict}`));this.variants=this.variants.filter((_,i)=>matches[i]);}}
+ private async poll(){if(this.pollBusy||!this.alive)return;this.pollBusy=true;try{const status=await local('pull-status')as{active:boolean;items:PullItem[]};this.pulls=status.items;if(this.catalog?.state==='refreshing'){this.catalog=await local('catalog-status')as CatalogStatus;if(this.catalog.state!=='refreshing')await this.loadCatalog();}if(this.chat?.status==='running'){const chat=await local('chat-status',{id:this.chat.id})as ChatRun;this.chat=chat;if(chat.status!=='running'&&this.session){this.session=await local('sessions',{id:this.session.id})as ChatSession;this.sessions=await local('sessions')as SessionRow[];}}if(this.harness?.state==='starting')this.harness=await local('harness-status',{id:this.harness.id})as HarnessState;this.dispatchEvent(new CustomEvent('tools-work-state',{detail:{busy:status.active||this.chat?.status==='running'||this.harness?.state==='starting'||this.catalog?.state==='refreshing',dirty:!!this.prompt.trim()||!!this.session&&(this.system!==this.session.system||this.name!==this.session.name)},bubbles:true,composed:true}));}catch(e){if(!this.error)this.error=e instanceof Error?e.message:'Local job status unavailable';}finally{this.pollBusy=false;}}
+ private pick(label:string,value:string,items:Array<[string,string]>,change:(s:string)=>void){return html`<md-outlined-select .value=${value} label=${label} @change=${(e:Event)=>change((e.target as HTMLSelectElement).value)}>${items.map(([key,name])=>html`<md-select-option .value=${key}><mg-text slot="headline">${name}</mg-text></md-select-option>`)}</md-outlined-select>`;}
+ private async chooseSession(id:string){await this.act(async()=>{this.session=await local('sessions',{id})as ChatSession;this.system=this.session.system;this.selectedModel=this.session.model;this.name=this.session.name;this.chat=null;});}
+ private async createSession(){await this.act(async()=>{this.session=await local('session-create',{model:this.selectedModel})as ChatSession;this.sessions=await local('sessions')as SessionRow[];this.name=this.session.name;this.prompt='';this.system='';this.chat=null;});}
+ private async send(regenerate=false){await this.act(async()=>{if(!this.session)throw new Error('Choose or create a saved conversation first');const prompt=regenerate?[...this.session.messages].reverse().find(m=>m.role==='user')?.content??'':this.prompt;if(!prompt.trim())throw new Error('Enter a message');this.chat=await local('chat-start',{session:this.session.id,prompt,system:this.system,temperature:this.temperature,tokens:this.tokens,context:this.context,regenerate})as ChatRun;this.session=await local('sessions',{id:this.session.id})as ChatSession;this.prompt='';});}
+ private prepareDelete(kind:'model'|'session',id:string){this.deleteTarget={kind,id};this.keyOne=false;this.keyTwo=false;this.confirmation=0;}
+ private async deleteConfirmed(){if(!this.deleteTarget||!this.keyOne||!this.keyTwo||this.confirmation!==100)return;await this.act(async()=>{const target=this.deleteTarget!;if(target.kind==='model'){await window.material.ollama('delete',{model:target.id,confirmed:true});this.models=this.rows(await window.material.ollama('models'));this.visible=this.models;}else{await local('session-delete',{id:target.id,confirmed:true});if(this.session?.id===target.id)this.session=null;this.sessions=await local('sessions')as SessionRow[];}this.deleteTarget=null;});}
+ private installed(){return html`<mg-search label=${this.text('Search installed models','搜尋已安裝模型')} @search-change=${async(e:Event)=>{const matches=await(e.target as Search).matchValues(this.models.map(m=>m.name+' '+JSON.stringify(m.details??{})));this.visible=this.models.filter((_,i)=>matches[i]);}}></mg-search><mg-layout grid class="cards">${this.visible.map(model=>html`<mg-surface><mg-layout column><mg-text kind="title">${model.name}</mg-text><mg-text>${this.bytes(model.size)} · ${String(model.details?.parameter_size??'Parameter count unknown')} · ${String(model.details?.quantization_level??'Quantization unknown')}</mg-text><md-assist-chip .label=${this.running.some(m=>m.name===model.name)?this.text('Running','運行中'):this.text('Installed','已安裝')}></md-assist-chip><md-text-button @click=${()=>this.act(async()=>{this.detail=await window.material.ollama('show',{model:model.name})as Record<string,unknown>;})}>${this.text('Inspect capabilities and metadata','檢查功能同資料')}</md-text-button><md-text-button @click=${()=>{this.selectedModel=model.name;this.tab='chat';}}>${this.text('Chat with this model','用呢個模型對話')}</md-text-button><md-text-button @click=${()=>this.prepareDelete('model',model.name)}>${this.text('Delete model','刪除模型')}</md-text-button></mg-layout></mg-surface>`)}</mg-layout>${!this.visible.length?html`<mg-text>${this.text('No installed model matches. Browse the Model Store to select real official tags.','冇相符嘅已安裝模型。喺模型庫選擇真實官方版本。')}</mg-text>`:nothing}`;}
+ private store(){return html`<mg-layout column><mg-text kind="title">${this.text('Official Model Store','官方模型庫')}</mg-text><mg-text>${this.catalog?.state??'empty'} · ${this.catalog?.complete?'Verified complete last refresh':'Refresh incomplete'} · ${this.catalog?.families??0} families · ${this.catalog?.variants??0} variants · ${this.catalog?.pages??0} pages</mg-text><mg-text>Last verified refresh: ${this.catalog?.lastSuccess??'None'} ${this.catalog?.revision?'· SHA256 '+this.catalog.revision:''}</mg-text>${this.catalog?.error?html`<mg-text role="alert">${this.catalog.error}. The last verified inventory remains available.</mg-text>`:nothing}<md-outlined-button ?disabled=${this.catalog?.state==='refreshing'} @click=${()=>this.act(async()=>{this.catalog=await local('catalog-refresh')as CatalogStatus;})}>${this.text('Refresh every official family and tag','更新所有官方模型同版本')}</md-outlined-button><mg-text kind="muted">${this.text('Refresh contacts the official public library. It never downloads models. Regex matches the displayed page; plain text queries search the full saved inventory.','更新會連接官方公開模型庫，唔會下載模型。正則表達式搜尋目前頁面，普通文字搜尋完整已儲存清單。')}</mg-text><mg-search label=${this.text('Search official inventory','搜尋官方模型清單')} @search-change=${async(e:CustomEvent)=>{this.catalogSearch=e.target as Search;this.catalogQuery=e.detail.regex?'':e.detail.query;this.catalogPage=1;await this.act(()=>this.loadCatalog());}}></mg-search>${this.pick(this.text('Family','模型系列'),this.family,[['','All families'],...this.families.map(f=>[f,f]as[string,string])],v=>{this.family=v;this.catalogPage=1;void this.act(()=>this.loadCatalog());})}${this.pick(this.text('Capability','功能'),this.capability,[['','All reported capabilities'],['text','Text'],['vision','Vision'],['embedding','Embedding']],v=>{this.capability=v;this.catalogPage=1;void this.act(()=>this.loadCatalog());})}${this.pick(this.text('Sort','排序'),this.sort,[['name','Name'],['size','Reported size, smallest first']],v=>{this.sort=v;void this.act(()=>this.loadCatalog());})}<mg-text>${this.catalogTotal} variants · page ${this.catalogPage}</mg-text><mg-layout><md-text-button ?disabled=${this.catalogPage<=1||this.busy} @click=${()=>{this.catalogPage--;void this.act(()=>this.loadCatalog());}}>${this.text('Previous','上一頁')}</md-text-button><md-text-button ?disabled=${!this.catalogNext||this.busy} @click=${()=>{this.catalogPage++;void this.act(()=>this.loadCatalog());}}>${this.text('Next','下一頁')}</md-text-button></mg-layout><mg-layout grid class="cards">${this.variants.map(v=>html`<mg-surface><mg-layout column><mg-text kind="title">${v.tag}</mg-text><mg-text>${this.bytes(v.bytes)} · Context ${v.context??'Unknown'} · ${v.capabilities.join(', ')||'Capability unknown'}</mg-text><mg-text>${v.fit.verdict}</mg-text>${v.fit.evidence.map(e=>html`<mg-text kind="muted">${e}</mg-text>`)}<md-outlined-button ?disabled=${this.cart.includes(v.tag)} @click=${()=>this.cart=[...this.cart,v.tag]}>${this.text('Add to download batch','加入下載清單')}</md-outlined-button></mg-layout></mg-surface>`)}</mg-layout></mg-layout>`;}
+ private downloads(){return html`<mg-layout column><mg-text kind="title">${this.text('Download batch','模型下載清單')}</mg-text><mg-text>${this.text('This batch downloads local model files. No payment or account is involved. Ollama safely reuses downloaded content-addressed blobs when retrying interrupted pulls.','呢份清單只會下載本機模型檔案，唔涉及付款或帳戶。重試中断下載時，Ollama 會重用已下載資料。')}</mg-text>${this.cart.map(tag=>html`<mg-layout spread><mg-text>${tag}</mg-text><md-text-button @click=${()=>this.cart=this.cart.filter(t=>t!==tag)}>${this.text('Remove from batch','移出清單')}</md-text-button></mg-layout>`)}${this.pick(this.text('Parallel downloads','同時下載數量'),String(this.parallel),[['1','1, recommended'],['2','2'],['3','3']],v=>this.parallel=Number(v))}<md-filled-button ?disabled=${!this.cart.length||this.busy} @click=${()=>this.act(async()=>{this.review=await local('pull-review',{tags:this.cart})as Record<string,unknown>;})}>${this.text('Review batch before starting','開始前檢查清單')}</md-filled-button>${this.pulls.map(p=>html`<mg-surface role="status"><mg-layout column><mg-text>${p.tag}: ${p.status}</mg-text><mg-text>${p.message??''} ${p.completed===undefined?'':p.completed.toLocaleString()+' / '+(p.total?.toLocaleString()??'unknown')+' bytes for current blob'} ${p.error??''}</mg-text>${p.status==='pulling'?html`<md-linear-progress ?indeterminate=${!p.total} .value=${p.total?Math.min(1,(p.completed??0)/p.total):0} aria-label="Current blob download progress"></md-linear-progress>`:nothing}${p.status==='queued'||p.status==='pulling'?html`<md-text-button @click=${()=>this.act(async()=>{await local('pull-cancel',{id:p.id});})}>${this.text('Cancel pull','取消下載')}</md-text-button>`:nothing}${['failed','cancelled','queued'].includes(p.status)?html`<md-text-button @click=${()=>this.act(async()=>{await local('pull-retry',{id:p.id});})}>${this.text('Retry or resume','重試或繼續')}</md-text-button>`:nothing}</mg-layout></mg-surface>`)}</mg-layout>`;}
+ private conversations(){return html`<mg-layout column><mg-text kind="title">${this.text('Saved local conversations','本機對話記錄')}</mg-text><mg-search label=${this.text('Search saved session names','搜尋已儲存對話名稱')} @search-change=${async(e:Event)=>{const all=await local('sessions')as SessionRow[];const matches=await(e.target as Search).matchValues(all.map(s=>s.name+' '+s.model));this.sessions=all.filter((_,i)=>matches[i]);}}></mg-search>${this.pick(this.text('Saved conversation','已儲存對話'),this.session?.id??'',[['','Select a conversation'],...this.sessions.map(s=>[s.id,s.name+' · '+s.model]as[string,string])],id=>{if(id)void this.chooseSession(id);})}${this.pick(this.text('Model for new conversation','新對話模型'),this.selectedModel,this.models.map(m=>[m.name,m.name]),v=>this.selectedModel=v)}<md-outlined-button ?disabled=${!this.selectedModel||this.busy||this.chat?.status==='running'} @click=${()=>this.createSession()}>${this.text('Create saved conversation','建立已儲存對話')}</md-outlined-button>${this.session?html`<md-outlined-text-field label=${this.text('Conversation name','對話名稱')} .value=${this.name} @input=${(e:Event)=>this.name=(e.target as HTMLInputElement).value}></md-outlined-text-field><mg-layout><md-text-button @click=${()=>this.act(async()=>{this.session=await local('session-rename',{id:this.session!.id,name:this.name})as ChatSession;this.sessions=await local('sessions')as SessionRow[];})}>${this.text('Rename','改名')}</md-text-button><md-text-button @click=${()=>this.act(async()=>{const data=await local('session-export',{id:this.session!.id});await window.material.exportData(data,'json');})}>${this.text('Export redacted chat','匯出已遮蓋敏感資料嘅對話')}</md-text-button><md-text-button ?disabled=${this.chat?.status==='running'} @click=${()=>this.prepareDelete('session',this.session!.id)}>${this.text('Delete saved chat','刪除已儲存對話')}</md-text-button></mg-layout><mg-text>Model: ${this.session.model}. Most recent 40 messages are sent as context; complete local history is saved up to 128 messages.</mg-text><md-outlined-text-field type="textarea" label=${this.text('System prompt','系統提示')} .value=${this.system} @input=${(e:Event)=>this.system=(e.target as HTMLInputElement).value}></md-outlined-text-field>${this.session.messages.map(m=>html`<mg-surface><mg-text kind="eyebrow">${m.role}</mg-text><mg-model-text .content=${m.content}></mg-model-text></mg-surface>`)}${this.chat?.status==='running'?html`<mg-surface role="status"><mg-text>${this.text('Streaming local response','本機回應串流中')}</mg-text><mg-model-text .content=${this.chat.content}></mg-model-text><md-text-button @click=${()=>local('chat-cancel',{id:this.chat!.id})}>${this.text('Stop response','停止回應')}</md-text-button></mg-surface>`:nothing}${this.chat?.error?html`<mg-text role="alert">${this.chat.status}: ${this.chat.error}</mg-text>`:nothing}<md-outlined-text-field type="textarea" label=${this.text('Your message','你嘅訊息')} .value=${this.prompt} @input=${(e:Event)=>this.prompt=(e.target as HTMLInputElement).value}></md-outlined-text-field><mg-text>${this.text('Temperature, recommended 0.7','溫度，建議 0.7')}: ${this.temperature}</mg-text><md-slider aria-label="Temperature" min="0" max="2" step="0.1" .value=${this.temperature} @input=${(e:Event)=>this.temperature=Number((e.target as HTMLInputElement).value)}></md-slider>${this.pick(this.text('Maximum output tokens','輸出 token 上限'),String(this.tokens),[['256','256'],['1024','1024, recommended'],['4096','4096'],['8192','8192']],v=>this.tokens=Number(v))}${this.pick(this.text('Context tokens','上下文 token 數量'),String(this.context),[['512','512'],['4096','4096, recommended'],['8192','8192'],['16384','16384'],['32768','32768']],v=>this.context=Number(v))}<md-outlined-button disabled>${this.text('Attachments unavailable','附件暫未可用')}</md-outlined-button><mg-text kind="muted">${this.text('An attachment decoder, opaque image grant and verified vision capability are required before attachments can be sent. Inspect model capabilities or filter the store for Vision.','傳送附件前需要附件解碼器、圖片授權同已驗證視覺功能。檢查模型功能，或喺模型庫篩選視覺模型。')}</mg-text><mg-layout><md-filled-button ?disabled=${this.busy||this.chat?.status==='running'||!this.prompt.trim()||!this.health?.available} @click=${()=>this.send()}>${this.text('Send','傳送')}</md-filled-button><md-text-button ?disabled=${this.busy||this.chat?.status==='running'||!this.session.messages.some(m=>m.role==='assistant')} @click=${()=>this.send(true)}>${this.text('Regenerate last answer','重新產生上一個答案')}</md-text-button></mg-layout>`:html`<mg-text>${this.text('Create a conversation with an installed model, or select saved history. History remains usable while the service is offline.','用已安裝模型建立對話，或選擇已儲存記錄。服務離線時仍可查看記錄。')}</mg-text>`}</mg-layout>`;}
+ private harnessPanel(){return html`<mg-layout column><mg-text kind="title">${this.text('Local service harness','本機服務啟動器')}</mg-text><mg-text>${this.text('The built-in profile starts an already installed official Ollama executable with fixed serve arguments. Preflight detects the executable and existing service before creating a review. Launch never installs software or downloads models.','內置設定會用固定參數啟動已安裝嘅官方 Ollama。預檢會偵測程式同現有服務，再顯示檢查畫面。啟動唔會安裝軟件或下載模型。')}</mg-text><md-outlined-button ?disabled=${this.busy} @click=${()=>this.act(async()=>{this.harness=await local('harness-preflight')as HarnessState;})}>${this.text('Run preflight','執行預檢')}</md-outlined-button>${this.harness?html`<mg-surface><mg-layout column><mg-text>${this.harness.profile}: ${this.harness.state}</mg-text><mg-text>Executable: ${this.harness.executable}. Arguments: ${this.harness.arguments.join(' ')}. Environment keys: ${this.harness.environmentKeys.join(', ')}. Port: 127.0.0.1:11434.</mg-text><mg-text>${this.harness.message}</mg-text>${this.harness.blockers.map(b=>html`<mg-text role="alert">${b}</mg-text>`)}${this.harness.state==='review'?html`<md-filled-button ?disabled=${!!this.harness.blockers.length||this.busy} @click=${()=>this.act(async()=>{this.harness=await local('harness-launch',{id:this.harness!.id,confirmed:true})as HarnessState;})}>${this.text('Confirm reviewed launch','確認啟動')}</md-filled-button>`:nothing}${this.harness.snapshot?html`<mg-text>Snapshot ${this.harness.snapshot}</mg-text><md-outlined-button ?disabled=${this.busy} @click=${()=>this.act(async()=>{this.harness=await local('harness-restore',{id:this.harness!.id})as HarnessState;})}>${this.text('Restore previous stopped state','還原之前已停止狀態')}</md-outlined-button>`:nothing}</mg-layout></mg-surface>`:nothing}<mg-text kind="muted">Additional arbitrary harnesses are unavailable. Only detected official installation locations and the fixed local-service profile are allowed.</mg-text></mg-layout>`;}
+ private help(){return html`<mg-layout column><mg-text kind="title">${this.text('Offline troubleshooter','離線疑難排解')}</mg-text><mg-text>${this.health?.error??'Service status is detected using the documented local version API.'}</mg-text><mg-text>1. If Ollama is missing, install the official platform installer already downloaded from ollama.com. This app does not install third-party software. On Windows, Ollama installs under the current user Programs folder and normally runs in the system tray. On Linux, the official installed service may be managed by the operating system.</mg-text><mg-text>2. If installed but stopped, open Local service harness and run preflight. The app detects supported official paths and reviews a fixed loopback service start.</mg-text><mg-text>3. Choose Refresh service to verify 127.0.0.1:11434. A healthy service has a version and actual installed models. Models are never invented in the app.</mg-text><mg-text>4. If the catalog is offline, the last verified refresh remains visible. Refresh the official catalog when a network connection returns. Pulls require the local service and its upstream network.</mg-text><mg-text>5. For an interrupted pull, use Retry or resume. Ollama reconciles existing content-addressed blobs. A timeout never proves download termination; installed tags are checked before a retry.</mg-text><mg-text>6. If memory is insufficient, inspect real blob sizes and CPU/RAM evidence. GPU/VRAM/driver fit remains Unknown until verified; smaller blobs still cannot guarantee successful inference.</mg-text>${this.hardware?html`<mg-text kind="code">${JSON.stringify(this.hardware,null,2)}</mg-text>`:nothing}<md-text-button @click=${()=>this.refresh()}>${this.text('Verify and return to interrupted workflow','驗證同返回原本操作')}</md-text-button></mg-layout>`;}
+ render(){return html`<mg-layout column aria-label=${this.text('Local Ollama manager','本機 Ollama 管理器')}><mg-surface><mg-layout column><mg-text kind="title">${this.text('Local Ollama manager','本機 Ollama 管理器')}</mg-text><mg-text role="status">${this.health===null?'Checking local service':this.health.available?'Connected · '+(this.health.version??'version unknown'):'Local service unavailable'}</mg-text><md-outlined-button ?disabled=${this.busy} @click=${()=>this.refresh()}>${this.text('Refresh service','重新檢查服務')}</md-outlined-button><mg-text>${this.text('Local runtime requests use only 127.0.0.1:11434. Official catalog refresh uses ollama.com. Model pulls can use the registry network. Saved chats stay local.','本機服務只會使用 127.0.0.1:11434。官方模型清單使用 ollama.com。下載模型會連接模型庫網絡。已儲存對話會保留喺本機。')}</mg-text></mg-layout></mg-surface>${this.error?html`<mg-text class="error" role="alert">${this.error}</mg-text><md-text-button @click=${()=>this.error=''}>${this.text('Dismiss','關閉提示')}</md-text-button>`:nothing}${this.pick(this.text('Workspace section','工作空間部份'),this.tab,[['models',this.text('Installed models','已安裝模型')],['store',this.text('Model Store','模型庫')],['pulls',this.text('Download batch','下載清單')],['chat',this.text('Saved chat','已儲存對話')],['harness',this.text('Local service harness','本機服務啟動器')],['help',this.text('Offline troubleshooter','離線疑難排解')]],v=>this.tab=v)}${this.tab==='models'?this.installed():this.tab==='store'?this.store():this.tab==='pulls'?this.downloads():this.tab==='chat'?this.conversations():this.tab==='harness'?this.harnessPanel():this.help()}
+ ${this.review?html`<md-dialog open @closed=${()=>this.review=null}><mg-text slot="headline">${this.text('Review model downloads','檢查模型下載')}</mg-text><mg-layout slot="content" column><mg-text>${String(this.review.disclosure)}</mg-text><mg-text>Known aggregate bytes: ${Number(this.review.totalKnownBytes).toLocaleString()}; unknown sizes: ${String(this.review.unknownSizes)}</mg-text>${(this.review.items as Array<{tag:string;bytes?:number;additionalDisk?:number;fit:FitEvidence}>).map(item=>html`<mg-surface><mg-text>${item.tag} · ${this.bytes(item.bytes)} · Additional disk estimate ${this.bytes(item.additionalDisk)} · ${item.fit.verdict}</mg-text>${item.fit.evidence.map(e=>html`<mg-text kind="muted">${e}</mg-text>`)}</mg-surface>`)}<mg-text>Detected model-volume free space: ${this.bytes((this.review.hardware as HardwareEvidence).diskFree)}. An externally configured service may use a different volume.</mg-text></mg-layout><md-text-button slot="actions" @click=${()=>this.review=null}>${this.text('Cancel','取消')}</md-text-button><md-filled-button slot="actions" ?disabled=${this.busy||!this.health?.available} @click=${()=>this.act(async()=>{await local('pull-start',{tags:this.cart,parallel:this.parallel,confirmed:true});this.cart=[];this.review=null;})}>${this.text('Start reviewed downloads','開始已檢查下載')}</md-filled-button></md-dialog>`:nothing}
+ ${this.detail?html`<md-dialog open @closed=${()=>this.detail=null}><mg-text slot="headline">${this.text('Verified local model metadata','已驗證本機模型資料')}</mg-text><mg-layout slot="content" column><mg-text kind="code">${JSON.stringify(this.detail,null,2)}</mg-text></mg-layout><md-text-button slot="actions" @click=${()=>this.detail=null}>${this.text('Close','關閉')}</md-text-button></md-dialog>`:nothing}
+ ${this.deleteTarget?html`<md-dialog open @closed=${()=>this.deleteTarget=null}><mg-text slot="headline">${this.text('Delete local data','刪除本機資料')}</mg-text><mg-layout slot="content" column><mg-text>${this.deleteTarget.kind}: ${this.deleteTarget.id}</mg-text><mg-layout><md-switch aria-label="I checked the selected data" .selected=${this.keyOne} @change=${(e:Event)=>{this.keyOne=(e.target as unknown as{selected:boolean}).selected;this.confirmation=0;}}></md-switch><mg-text>${this.text('I checked the selected data.','我已檢查選擇嘅資料。')}</mg-text></mg-layout><mg-layout><md-switch aria-label="I understand deletion cannot be undone" .selected=${this.keyTwo} @change=${(e:Event)=>{this.keyTwo=(e.target as unknown as{selected:boolean}).selected;this.confirmation=0;}}></md-switch><mg-text>${this.text('I understand this deletion cannot be undone.','我明白呢項刪除唔可以復原。')}</mg-text></mg-layout><md-slider aria-label="Deletion confirmation" min="0" max="100" step="1" .value=${this.confirmation} ?disabled=${!this.keyOne||!this.keyTwo} @input=${(e:Event)=>this.confirmation=Number((e.target as HTMLInputElement).value)}></md-slider></mg-layout><md-text-button slot="actions" @click=${()=>this.deleteTarget=null}>${this.text('Cancel','取消')}</md-text-button><md-filled-button slot="actions" ?disabled=${this.busy||!this.keyOne||!this.keyTwo||this.confirmation!==100} @click=${()=>this.deleteConfirmed()}>${this.text('Delete confirmed data','刪除已確認資料')}</md-filled-button></md-dialog>`:nothing}</mg-layout>`;}
 }
-interface ChatMessage {
-    role: 'user' | 'assistant';
-    content: string;
-}
-const suggestedModels = [
-    { name: 'llama3.2:3b', purpose: 'General conversation and everyday drafting' },
-    { name: 'qwen3:4b', purpose: 'General reasoning and multilingual conversation' },
-    { name: 'gemma3:4b', purpose: 'General conversation; requirements vary by model variant' },
-    { name: 'qwen2.5-coder:7b', purpose: 'Coding assistance; typically requires more memory than smaller models' }
-];
-const words: Record<string, [
-    string,
-    string
-]> = { title: ['Local model workspace', '本機模型工作空間'], refresh: ['Refresh local service', '重新檢查本機服務'], connected: ['Connected to local Ollama', '已連接本機 Ollama'], disconnected: ['Ollama is disconnected', 'Ollama 未連接'], checking: ['Checking local Ollama', '正在檢查本機 Ollama'], installed: ['Installed models', '已安裝模型'], running: ['Loaded in memory', '記憶體中嘅模型'], chat: ['Conversation', '對話'], send: ['Send message', '傳送訊息'], clear: ['Clear conversation', '清除對話'], model: ['Choose installed model', '選擇已安裝模型'], prompt: ['Your message', '你嘅訊息'], pull: ['Download model', '下載模型'], copy: ['Copy model', '複製模型'], remove: ['Delete local model', '刪除本機模型'], detail: ['Model details', '模型詳情'], previous: ['Previous', '上一頁'], next: ['Next', '下一頁'], close: ['Close', '關閉'], cancel: ['Cancel', '取消'], review: ['Review local change', '檢查本機變更'], confirm: ['Confirm and continue', '確認並繼續'], temperature: ['Temperature', '溫度'], tokens: ['Maximum generated tokens', '產生字詞數量上限'], help: ['Ollama setup documentation', 'Ollama 設定文件'], catalog: ['Browse official model library', '瀏覽官方模型庫'] };
-/** Dedicated registered Material composition. All model requests cross the main-process bridge. */
-export class OllamaWorkspace extends LitElement {
-    static properties = { settings: { attribute: false }, schoolMode: { type: Boolean }, health: { state: true }, models: { state: true }, running: { state: true }, filtered: { state: true }, page: { state: true }, tab: { state: true }, busy: { state: true }, actionStatus: { state: true }, error: { state: true }, selectedModel: { state: true }, prompt: { state: true }, messages: { state: true }, temperature: { state: true }, tokenBudget: { state: true }, detail: { state: true }, detailModel: { state: true }, reviewAction: { state: true }, reviewModel: { state: true }, destination: { state: true }, suggestion: { state: true }, keyOne: { state: true }, keyTwo: { state: true }, confirmation: { state: true }, metadata: { state: true } };
-    settings?: AppSettings;
-    schoolMode = false;
-    health: {
-        available: boolean;
-        version?: string;
-        error?: string;
-    } | null = null;
-    models: LocalModel[] = [];
-    running: LocalModel[] = [];
-    filtered: LocalModel[] = [];
-    page = 1;
-    tab = 'models';
-    busy = '';
-    actionStatus = '';
-    error = '';
-    selectedModel = '';
-    prompt = '';
-    messages: ChatMessage[] = [];
-    temperature = .7;
-    tokenBudget = 1024;
-    detail: Record<string, unknown> | null = null;
-    detailModel = '';
-    reviewAction: '' | 'pull' | 'delete' | 'copy' = '';
-    reviewModel = '';
-    destination = '';
-    suggestion = suggestedModels[0].name;
-    keyOne = false;
-    keyTwo = false;
-    confirmation = 0;
-    metadata = false;
-    private generation = 0;
-    static styles = css `
- :host{display:block;min-width:0;color:var(--md-sys-color-on-surface);font-family:var(--md-ref-typeface-plain,system-ui,sans-serif);font-size:var(--mg-body-size,.8125rem);line-height:1.5}
- *,*::before,*::after{box-sizing:border-box}mg-layout,mg-surface,mg-text,mg-search{min-width:0;max-width:100%}mg-text,p,h2,h3,label,small{overflow-wrap:anywhere}
- md-outlined-text-field,md-outlined-select,md-filled-select{min-width:0;max-width:100%;--md-outlined-text-field-container-shape:8px;--md-outlined-select-text-field-container-shape:8px;--md-filled-select-text-field-container-shape:8px;--md-outlined-text-field-input-text-size:var(--mg-body-size,.8125rem);--md-outlined-select-text-field-input-text-size:var(--mg-body-size,.8125rem)}
- md-filled-button,md-outlined-button,md-text-button{max-width:100%;--md-filled-button-container-shape:8px;--md-outlined-button-container-shape:8px;--md-text-button-container-shape:8px;--md-filled-button-label-text-size:var(--mg-body-size,.8125rem);--md-outlined-button-label-text-size:var(--mg-body-size,.8125rem);--md-text-button-label-text-size:var(--mg-body-size,.8125rem)}
- md-dialog{max-width:calc(100vw - 32px);--md-dialog-container-shape:12px;--md-dialog-container-color:var(--md-sys-color-surface-container-high)}
- ::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-track{background:var(--md-sys-color-surface-container-low)}::-webkit-scrollbar-thumb{background:var(--md-sys-color-outline-variant);border:2px solid var(--md-sys-color-surface-container-low);border-radius:8px}::-webkit-scrollbar-thumb:hover{background:var(--md-sys-color-outline)}
- .stack{display:grid;gap:12px}.toolbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.models{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:12px}.summary{display:grid;gap:8px}.muted{color:var(--md-sys-color-on-surface-variant);font-size:inherit;line-height:1.5}.error{color:var(--md-sys-color-error)}.conversation{display:grid;gap:12px}.message{--surface:var(--md-sys-color-surface-container-low)}.message[user]{--surface:var(--md-sys-color-secondary-container)}.message mg-text[kind=code]{font-family:inherit}.composer{display:grid;gap:12px}.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:12px}md-filled-select,md-outlined-text-field{width:100%}md-slider{width:100%}.dialog-content{display:grid;gap:12px}.detail{overflow-wrap:anywhere}.controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.temperature{display:grid;gap:6px}.status{border-left:3px solid var(--md-sys-color-primary);padding-left:12px}.card-title{font-size:1.15em;line-height:1.4;overflow-wrap:anywhere}@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}`;
-    connectedCallback() { super.connectedCallback(); void this.refresh(); }
-    disconnectedCallback() { super.disconnectedCallback(); this.generation++; }
-    private copy(key: string) { const [en, yue] = words[key] || [key, key]; const language = this.schoolMode ? 'en' : this.settings?.language || 'en'; return language === 'both' ? `${en} · ${yue}` : language === 'yue' ? yue : en; }
-    private failure(error: unknown) { this.error = error instanceof Error ? error.message : String(error); }
-    private bytes(value: unknown) { if (typeof value !== 'number' || !Number.isFinite(value) || value < 0)
-        return 'Unavailable'; if (value >= 1073741824)
-        return `${(value / 1073741824).toFixed(2)} GiB`; if (value >= 1048576)
-        return `${(value / 1048576).toFixed(1)} MiB`; return `${value.toLocaleString()} bytes`; }
-    private modelRows(result: unknown): LocalModel[] { const models = (result as {
-        models?: unknown;
-    })?.models; if (!Array.isArray(models) || models.length > 10000)
-        throw new Error('Local Ollama returned an invalid or oversized model collection.'); return models.filter((item): item is LocalModel => Boolean(item) && typeof item === 'object' && typeof item.name === 'string' && item.name.length <= 200); }
-    async refresh() {
-        if (this.busy)
-            return;
-        const generation = ++this.generation;
-        this.busy = 'refresh';
-        this.error = '';
-        try {
-            const health = await window.material.ollama('health') as {
-                available: boolean;
-                version?: string;
-                error?: string;
-            };
-            if (generation !== this.generation)
-                return;
-            this.health = health;
-            if (!health.available) {
-                this.models = [];
-                this.running = [];
-                this.filtered = [];
-                this.actionStatus = health.error || 'Start the local Ollama service, then retry.';
-                return;
-            }
-            const [models, running] = await Promise.allSettled([window.material.ollama('models'), window.material.ollama('running')]);
-            if (generation !== this.generation)
-                return;
-            if (models.status === 'fulfilled') {
-                this.models = this.modelRows(models.value);
-                this.filtered = this.models;
-                this.page = 1;
-                this.selectedModel = this.models.some(model => model.name === this.selectedModel) ? this.selectedModel : this.models[0]?.name || '';
-            }
-            else
-                throw models.reason;
-            if (running.status === 'fulfilled')
-                this.running = this.modelRows(running.value);
-            else {
-                this.running = [];
-                this.actionStatus = 'Installed models loaded. Memory status is unavailable: ' + String(running.reason);
-            }
-            if (running.status === 'fulfilled')
-                this.actionStatus = `${this.models.length} installed models · ${this.running.length} loaded in memory.`;
-        }
-        catch (error) {
-            if (generation === this.generation)
-                this.failure(error);
-        }
-        finally {
-            if (generation === this.generation)
-                this.busy = '';
-        }
-    }
-    private async filter(event: Event) { const search = event.target as Search; const matches = await search.matchValues(this.models.map(model => `${model.name} ${JSON.stringify(model.details || {})}`)); this.filtered = this.models.filter((_, index) => matches[index]); this.page = 1; }
-    private async show(model: string) { if (this.busy)
-        return; this.busy = 'show'; this.error = ''; try {
-        const result = await window.material.ollama('show', { model });
-        if (!result || typeof result !== 'object' || Array.isArray(result))
-            throw new Error('No model details were returned.');
-        this.detail = result as Record<string, unknown>;
-        this.detailModel = model;
-        this.metadata = false;
-    }
-    catch (error) {
-        this.failure(error);
-    }
-    finally {
-        this.busy = '';
-    } }
-    private review(action: 'pull' | 'delete' | 'copy', model: string) { if (this.busy)
-        return; this.reviewAction = action; this.reviewModel = model; this.destination = ''; this.keyOne = false; this.keyTwo = false; this.confirmation = 0; }
-    private safetyKey(key: 'one' | 'two', value: boolean) { if (key === 'one')
-        this.keyOne = value;
-    else
-        this.keyTwo = value; if (!this.keyOne || !this.keyTwo)
-        this.confirmation = 0; }
-    private modelIdentity(name: string) { return name.lastIndexOf(':') > name.lastIndexOf('/') ? name : name + ':latest'; }
-    private async mutate() {
-        if (this.busy || !this.reviewAction)
-            return;
-        const action = this.reviewAction, model = this.reviewModel;
-        if (action === 'delete' && (!this.keyOne || !this.keyTwo || this.confirmation !== 100)) {
-            this.error = 'Complete both deletion acknowledgements and move the slider to 100.';
-            return;
-        }
-        if (action === 'copy' && (!/^[A-Za-z0-9_./:-]{1,200}$/.test(this.destination) || this.models.some(item => this.modelIdentity(item.name) === this.modelIdentity(this.destination)))) {
-            this.error = 'Choose a new valid local model name. Existing names cannot be overwritten here.';
-            return;
-        }
-        this.busy = action;
-        this.error = '';
-        this.actionStatus = action === 'pull' ? `Downloading ${model}. Ollama provides no progress stream through this bounded interface; the request has a 120-second deadline.` : `Applying ${action} to ${model}.`;
-        try {
-            const payload = action === 'copy' ? { source: model, destination: this.destination } : action === 'delete' ? { model, confirmed: true } : { model };
-            await window.material.ollama(action, payload);
-            this.actionStatus = `${action} completed for ${model}.`;
-            this.reviewAction = '';
-            this.busy = '';
-            await this.refresh();
-            this.actionStatus = `${action} completed for ${model}. ${this.actionStatus}`;
-        }
-        catch (error) {
-            this.failure(error);
-        }
-        finally {
-            this.busy = '';
-        }
-    }
-    private async send() {
-        if (this.busy || !this.selectedModel)
-            return;
-        if (!Number.isFinite(this.temperature) || this.temperature < 0 || this.temperature > 2 || !Number.isInteger(this.tokenBudget) || this.tokenBudget < 256 || this.tokenBudget > 4096) {
-            this.error = 'Generation controls are outside their supported bounds.';
-            return;
-        }
-        const prompt = this.prompt.trim();
-        if (!prompt || prompt.length > 16000) {
-            this.error = 'Enter a message between 1 and 16000 characters.';
-            return;
-        }
-        if (!this.models.some(model => model.name === this.selectedModel)) {
-            this.error = 'Choose a currently installed model.';
-            return;
-        }
-        const request: ChatMessage[] = [...this.messages.slice(-20), { role: 'user', content: prompt }];
-        if (JSON.stringify(request).length > 240000) {
-            this.error = 'Conversation context is too large. Clear this conversation or shorten your message.';
-            return;
-        }
-        this.busy = 'chat';
-        this.error = '';
-        this.actionStatus = 'Waiting for the local model. This interface returns one complete response; streaming and cancellation are unavailable. The service deadline is 120 seconds.';
-        try {
-            const result = await window.material.ollama('chat', { model: this.selectedModel, messages: request, options: { temperature: this.temperature, num_predict: this.tokenBudget } }) as {
-                message?: {
-                    content?: unknown;
-                };
-                done?: boolean;
-                prompt_eval_count?: number;
-                eval_count?: number;
-                total_duration?: number;
-            };
-            if (typeof result.message?.content !== 'string')
-                throw new Error('The local model returned no assistant message.');
-            this.messages = [...this.messages, { role: 'user', content: prompt }, { role: 'assistant', content: result.message.content.slice(0, 100000) }];
-            this.prompt = '';
-            this.actionStatus = `Response received${typeof result.eval_count === 'number' ? ` · ${result.eval_count} generated tokens` : ''}${typeof result.total_duration === 'number' ? ` · ${(result.total_duration / 1e9).toFixed(2)} seconds` : ''}${result.message.content.length > 100000 ? ' · Display was truncated to 100000 characters' : ''}.`;
-        }
-        catch (error) {
-            this.failure(error);
-        }
-        finally {
-            this.busy = '';
-        }
-    }
-    private modelCard(model: LocalModel) { const details = model.details || {}; const loaded = this.running.find(item => item.name === model.name); return html `<mg-surface class="summary"><mg-layout spread><mg-text class="card-title">${model.name}</mg-text><md-assist-chip label=${loaded ? 'Loaded' : 'On disk'}></md-assist-chip></mg-layout><mg-text kind="muted">${this.bytes(model.size)}${details.parameter_size ? ` · ${details.parameter_size}` : ''}${details.quantization_level ? ` · ${details.quantization_level}` : ''}</mg-text><mg-text kind="muted">${details.family ? `Family ${details.family} · ` : ''}${model.modified_at ? `Modified ${new Date(model.modified_at).toLocaleString()}` : 'Modification date unavailable'}</mg-text>${loaded ? html `<mg-text kind="muted">Memory ${this.bytes(loaded.size_vram)}${loaded.expires_at ? ` · expires ${new Date(loaded.expires_at).toLocaleString()}` : ''}</mg-text>` : nothing}<mg-layout><md-outlined-button ?disabled=${Boolean(this.busy)} @click=${() => this.show(model.name)}>${this.copy('detail')}</md-outlined-button><md-text-button ?disabled=${Boolean(this.busy)} @click=${() => { this.selectedModel = model.name; this.tab = 'chat'; }}>${this.copy('chat')}</md-text-button><md-text-button ?disabled=${Boolean(this.busy)} @click=${() => this.review('copy', model.name)}>${this.copy('copy')}</md-text-button><md-text-button ?disabled=${Boolean(this.busy)} @click=${() => this.review('delete', model.name)}>${this.copy('remove')}</md-text-button></mg-layout></mg-surface>`; }
-    render() {
-        const pages = Math.max(1, Math.ceil(this.filtered.length / 8));
-        const online = this.health?.available === true;
-        return html `<mg-layout column><mg-surface><mg-layout spread><mg-layout column><mg-text kind="eyebrow">Ollama · local-only service</mg-text><mg-text kind="title">${this.copy('title')}</mg-text><mg-text kind="muted">${this.health === null ? this.copy('checking') : online ? `${this.copy('connected')}${this.health.version ? ` · ${this.health.version}` : ''}` : this.copy('disconnected')}</mg-text></mg-layout><md-outlined-button ?disabled=${Boolean(this.busy)} @click=${() => this.refresh()}>${this.copy('refresh')}</md-outlined-button></mg-layout><mg-layout class="toolbar"><md-text-button @click=${() => window.material.openExternal('https://docs.ollama.com/quickstart')}>${this.copy('help')}</md-text-button><md-text-button @click=${() => window.material.openExternal('https://ollama.com/library')}>${this.copy('catalog')}</md-text-button></mg-layout><mg-text kind="muted">Only http://127.0.0.1:11434 is used. This app does not install, start or stop Ollama. Model downloads are handled by the local service and may use its upstream network.</mg-text></mg-surface>
-        ${this.error ? html `<mg-surface role="alert"><mg-text class="error">${this.error}</mg-text><md-text-button ?disabled=${Boolean(this.busy)} @click=${() => this.refresh()}>Retry local connection</md-text-button><md-text-button @click=${() => this.error = ''}>Dismiss error</md-text-button></mg-surface>` : nothing}${this.actionStatus ? html `<mg-surface role="status"><mg-text class="status">${this.actionStatus}</mg-text>${this.busy ? html `<md-linear-progress indeterminate aria-label=${`Local Ollama ${this.busy} request pending; numerical progress is unavailable`}></md-linear-progress>` : nothing}</mg-surface>` : nothing}
-        ${!online ? html `<mg-surface><mg-text kind="title">Start your local model service</mg-text><mg-text kind="muted">${this.health?.error || 'Availability has not been confirmed.'} Install Ollama using the official setup documentation, start its local service, and choose Refresh. Installed model and conversation controls become available after a successful connection.</mg-text></mg-surface>` : html `<md-tabs .activeTabIndex=${this.tab === 'models' ? 0 : 1} @change=${(e: Event) => this.tab = (e.target as unknown as {
-            activeTabIndex: number;
-        }).activeTabIndex === 0 ? 'models' : 'chat'}><md-primary-tab>${this.copy('installed')} (${this.models.length})</md-primary-tab><md-primary-tab>${this.copy('chat')}</md-primary-tab></md-tabs>${this.tab === 'models' ? html `<mg-search search-id="ollama-installed-models" label="Search installed local models" @search-change=${(e: Event) => this.filter(e)}></mg-search><mg-layout grid>${this.filtered.slice((this.page - 1) * 8, this.page * 8).map(model => this.modelCard(model))}</mg-layout>${!this.filtered.length ? html `<mg-surface><mg-text kind="muted">${this.models.length ? 'No installed models match this search.' : 'No models are installed. Choose a suggested model below and review its download.'}</mg-text></mg-surface>` : nothing}<mg-layout spread><md-outlined-button ?disabled=${this.page <= 1} @click=${() => this.page--}>${this.copy('previous')}</md-outlined-button><mg-text kind="muted">Page ${this.page} of ${pages}</mg-text><md-outlined-button ?disabled=${this.page >= pages} @click=${() => this.page++}>${this.copy('next')}</md-outlined-button></mg-layout><mg-surface><mg-text kind="title">Suggested model downloads</mg-text><mg-text kind="muted">Curated registry suggestions are not installed-model status. Availability, download size, licenses and memory requirements vary; inspect the official model library before downloading.</mg-text><md-filled-select label="Suggested model" .value=${this.suggestion} @change=${(e: Event) => this.suggestion = (e.target as HTMLSelectElement).value}>${suggestedModels.map(model => html `<md-select-option value=${model.name}><div slot="headline">${model.name}</div><div slot="supporting-text">${model.purpose}</div></md-select-option>`)}</md-filled-select><md-filled-tonal-button ?disabled=${Boolean(this.busy)} @click=${() => this.review('pull', this.suggestion)}>${this.copy('pull')}</md-filled-tonal-button></mg-surface>` : html `<mg-surface class="composer"><md-filled-select label=${this.copy('model')} ?disabled=${Boolean(this.busy) || Boolean(this.messages.length)} .value=${this.selectedModel} @change=${(e: Event) => this.selectedModel = (e.target as HTMLSelectElement).value}>${this.models.map(model => html `<md-select-option value=${model.name}><div slot="headline">${model.name}</div></md-select-option>`)}</md-filled-select><mg-text kind="muted">Conversation stays in memory in this window. Clear it to change models. Each request sends at most the latest 20 messages plus your new message; older messages remain visible. Streaming and cancellation are unavailable.</mg-text><mg-layout column class="conversation" role="log" aria-label="Local model conversation" aria-live="polite">${this.messages.map(message => html `<mg-surface class="message" ?user=${message.role === 'user'}><mg-text kind="eyebrow">${message.role === 'user' ? 'You' : this.selectedModel}</mg-text>${message.role === 'assistant' ? html `<mg-model-text .content=${message.content}></mg-model-text>` : html `<mg-text kind="code">${message.content}</mg-text>`}</mg-surface>`)}</mg-layout><md-outlined-text-field type="textarea" rows="4" label=${this.copy('prompt')} ?disabled=${Boolean(this.busy)} .value=${this.prompt} @input=${(e: Event) => this.prompt = (e.target as HTMLInputElement).value}></md-outlined-text-field><mg-layout grid><mg-layout column class="temperature"><mg-text>${this.copy('temperature')} · ${this.temperature}</mg-text><md-slider aria-label=${this.copy('temperature')} min="0" max="2" step="0.1" labeled ?disabled=${Boolean(this.busy)} .value=${this.temperature} @input=${(e: Event) => this.temperature = Number((e.target as HTMLInputElement).value)}></md-slider></mg-layout><mg-layout column class="temperature"><mg-text>${this.copy('tokens')} · ${this.tokenBudget}</mg-text><md-slider aria-label=${this.copy('tokens')} min="256" max="4096" step="256" labeled ?disabled=${Boolean(this.busy)} .value=${this.tokenBudget} @input=${(e: Event) => this.tokenBudget = Number((e.target as HTMLInputElement).value)}></md-slider></mg-layout></mg-layout><mg-layout><md-filled-button ?disabled=${Boolean(this.busy) || !this.selectedModel || !this.prompt.trim()} @click=${() => this.send()}>${this.copy('send')}</md-filled-button><md-text-button ?disabled=${Boolean(this.busy) || !this.messages.length} @click=${() => { this.messages = []; this.actionStatus = 'Conversation cleared from this window.'; }}>${this.copy('clear')}</md-text-button></mg-layout></mg-surface>`}`}
-        ${this.detail ? html `<md-dialog open @closed=${() => this.detail = null}><mg-text slot="headline">${this.detailModel}</mg-text><mg-layout slot="content" column class="dialog-content"><mg-text kind="eyebrow">Installed model details</mg-text>${Object.entries((this.detail.details && typeof this.detail.details === 'object' ? this.detail.details : {}) as Record<string, unknown>).map(([key, value]) => html `<mg-layout spread><mg-text>${key}</mg-text><mg-text kind="muted">${String(value)}</mg-text></mg-layout>`)}<md-text-button aria-expanded=${this.metadata} @click=${() => this.metadata = !this.metadata}>${this.metadata ? 'Hide complete metadata' : 'Show complete metadata'}</md-text-button>${this.metadata ? html `<mg-text kind="code" class="detail">${JSON.stringify(this.detail, null, 2)}</mg-text>` : nothing}<mg-text kind="muted">Model-authored templates, parameters and license data are factual external metadata; this view does not certify their accuracy or suitability.</mg-text></mg-layout><md-text-button slot="actions" @click=${() => this.detail = null}>${this.copy('close')}</md-text-button></md-dialog>` : nothing}
-        ${this.reviewAction ? html `<md-dialog open @cancel=${(event: Event) => { if (this.busy)
-            event.preventDefault(); }} @closed=${() => { if (!this.busy)
-            this.reviewAction = ''; }}><mg-text slot="headline">${this.copy('review')}</mg-text><mg-layout slot="content" column class="dialog-content"><mg-text kind="title">${this.reviewAction} · ${this.reviewModel}</mg-text><mg-text kind="muted">${this.reviewAction === 'pull' ? 'The local Ollama service will download this registry model and store it on this computer. Download size and license must be checked in the official library. Requests time out after 120 seconds; a timeout does not establish whether the service stopped downloading.' : this.reviewAction === 'copy' ? 'Create a new local model alias from this installed model. Existing local names cannot be overwritten through this form.' : 'Delete this model from the local Ollama installation. It becomes unavailable to local conversations until downloaded again. Existing conversation messages in this app are not deleted.'}</mg-text>${this.reviewAction === 'copy' ? html `<md-outlined-text-field label="New local model name" .value=${this.destination} ?disabled=${Boolean(this.busy)} @input=${(e: Event) => this.destination = (e.target as HTMLInputElement).value}></md-outlined-text-field>` : nothing}${this.reviewAction === 'delete' ? html `<mg-layout><md-switch aria-label="I checked the local model selected for deletion" .selected=${this.keyOne} ?disabled=${Boolean(this.busy)} @change=${(e: Event) => this.safetyKey('one', (e.target as unknown as {
-            selected: boolean;
-        }).selected)}></md-switch><mg-text>I checked the selected local model.</mg-text></mg-layout><mg-layout><md-switch aria-label="I understand the model must be downloaded again after deletion" .selected=${this.keyTwo} ?disabled=${Boolean(this.busy)} @change=${(e: Event) => this.safetyKey('two', (e.target as unknown as {
-            selected: boolean;
-        }).selected)}></md-switch><mg-text>I understand the model must be downloaded again after deletion.</mg-text></mg-layout><md-slider aria-label="Local model deletion confirmation" min="0" max="100" step="1" labeled .value=${this.confirmation} ?disabled=${Boolean(this.busy) || !this.keyOne || !this.keyTwo} @input=${(e: Event) => this.confirmation = Number((e.target as HTMLInputElement).value)}></md-slider>` : nothing}${this.busy ? html `<md-linear-progress indeterminate aria-label="Local model change pending; service progress is unavailable"></md-linear-progress><mg-text kind="muted">${this.actionStatus}</mg-text>` : nothing}${this.error ? html `<mg-text role="alert" class="error">${this.error}</mg-text>` : nothing}</mg-layout><md-text-button slot="actions" ?disabled=${Boolean(this.busy)} @click=${() => this.reviewAction = ''}>${this.copy('cancel')}</md-text-button><md-filled-button slot="actions" ?disabled=${Boolean(this.busy) || (this.reviewAction === 'delete' && (!this.keyOne || !this.keyTwo || this.confirmation !== 100)) || (this.reviewAction === 'copy' && !this.destination.trim())} @click=${() => this.mutate()}>${this.copy('confirm')}</md-filled-button></md-dialog>` : nothing}</mg-layout>`;
-    }
-}
-customElements.define('mg-ollama', OllamaWorkspace);
+customElements.define('mg-ollama',OllamaWorkspace);

@@ -1,6 +1,13 @@
 import {contextBridge,ipcRenderer} from 'electron';
 import type {MaterialBridge,Operation} from '../shared/types';
 const api:MaterialBridge={
+ git:(action,payload)=>ipcRenderer.invoke('material:git',action,payload),
+ github:(action,payload)=>ipcRenderer.invoke('material:github',action,payload),
+ workspace:(action,payload)=>ipcRenderer.invoke('material:workspace',action,payload),
+ cliWorkflows:(action,payload)=>ipcRenderer.invoke('material:cli-workflows',action,payload),
+ localTools:(action,payload)=>ipcRenderer.invoke('material:local-tools',action,payload),
+ preferencesAdvanced:(action,payload)=>ipcRenderer.invoke('material:preferences-advanced',action,payload),
+ onPreferencesAdvanced:callback=>{const listener=(_event:unknown,status:Parameters<typeof callback>[0])=>callback(status);ipcRenderer.on('material:preferences-advanced-update',listener);return()=>ipcRenderer.removeListener('material:preferences-advanced-update',listener);},
  api:(action,payload)=>ipcRenderer.invoke('material:api',action,payload),
  cliConfig:(action,payload)=>ipcRenderer.invoke('material:cli-config',action,payload),
  onCloseRequested:callback=>{const listener=()=>callback();ipcRenderer.on('material:close-request',listener);return()=>ipcRenderer.removeListener('material:close-request',listener);},
