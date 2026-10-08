@@ -39,7 +39,7 @@ export class BundledEngines implements BundledEngineFacade {
     }
     catch {
         status.push({ kind: 'worker', available: false, reason: 'The built bundled-engines-worker.cjs artifact is missing. Run the application build with the converter worker entry.' });
-    } const key = (platform() + '-' + arch()) as keyof typeof manifest.files; const files = manifest.files[key]; for (const [kind, names] of [['ffmpeg', platform() === 'win32' ? ['ffmpeg.exe', 'ffprobe.exe', 'ffmpeg.LICENSE', 'ffmpeg.README'] : ['ffmpeg', 'ffprobe', 'ffmpeg.LICENSE', 'ffmpeg.README']], ['archive', [platform() === 'win32' ? '7za.exe' : '7zz', '7zip.LICENSE']]] as const) {
+    } const key = (platform() + '-' + arch()) as keyof typeof manifest.files; const files = manifest.files[key]; for (const [kind, names] of [['ffmpeg', manifest.engines.ffmpeg.files[key] ?? []], ['archive', [platform() === 'win32' ? '7za.exe' : '7zz', '7zip.LICENSE','7zip.SOURCE.tar.xz']]] as const) {
         try {
             if (!files)
                 throw new Error('Unsupported converter platform');
@@ -51,6 +51,7 @@ export class BundledEngines implements BundledEngineFacade {
                 if (!expected || receipt.files[name] !== expected || await sha(join(this.directory(), name)) !== expected)
                     throw new Error('Pinned payload checksum mismatch');
             }
+            if(kind==='ffmpeg'){const proof=JSON.parse(await readFile(join(this.directory(),'SOURCE_BUILD.json'),'utf8'));if(proof.platform!==key||proof.version!==manifest.engines.ffmpeg.version||proof.sourceManifest!==manifest.engines.ffmpeg.sourceManifestSha256)throw new Error('FFmpeg corresponding-source identity mismatch');}
             status.push({ kind, available: true, proof: 'App-owned pinned binaries, licenses and receipt reverified by SHA256', version: kind === 'archive' ? '7-Zip 26.04' : receipt.versions.ffmpeg });
         }
         catch (error) {

@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 export async function writeThirdPartyNotices(outputPath, projectRoot = fileURLToPath(new URL('..', import.meta.url))) {
  const lock = JSON.parse(await readFile(path.join(projectRoot, 'package-lock.json'), 'utf8'));
  if (!lock.packages) throw new Error('A modern reviewed package-lock.json is required for license collection.');
- const sections = ['Material Git third-party notices', 'Bundled GitHub CLI and PortableGit retain their upstream license files in vendor.', 'Electron runtime license and Chromium notices are shipped beside the application executable.'];
+ const sections = ['Material Git third-party notices', 'Bundled GitHub CLI and PortableGit retain their upstream license files in vendor.', 'Source-built FFmpeg/FFprobe retain complete preferred source, codec licenses, configuration and build scripts in vendor/converters. The official 7-Zip source archive and license are retained there too.', 'Electron runtime license and Chromium notices are shipped beside the application executable.'];
  const catalogue=JSON.parse(await readFile(path.join(projectRoot,'data/github-api-catalog.json'),'utf8'));
  for(const [name,filename] of [['rest','github-rest-api-description.txt'],['graphql','github-docs-cc-by-4.0.txt']]) {
   const source=catalogue.sources[name];
