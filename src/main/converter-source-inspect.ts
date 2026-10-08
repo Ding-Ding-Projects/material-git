@@ -1,0 +1,8 @@
+import {Worker} from 'node:worker_threads';
+import {inspectBytes,imageDimensions,FILE_LIMIT} from './local-tools-codecs';
+/** Type parsing runs outside the application thread with a finite memory/time budget. */
+export async function inspectSourceBytes(bytes:Uint8Array):Promise<{type:string}>{
+ if(bytes.length>FILE_LIMIT)throw new Error('Source inspection exceeds 32 MiB');
+ const worker=new Worker(`const{parentPort,workerData}=require('node:worker_threads');const inspectBytes=${inspectBytes.toString()};const imageDimensions=${imageDimensions.toString()};try{const bytes=Buffer.from(workerData),type=inspectBytes(bytes);if(type==='png'||type==='jpeg')imageDimensions(bytes);parentPort.postMessage({type});}catch(error){parentPort.postMessage({error:error.message});}`,{eval:true,workerData:bytes,execArgv:[],resourceLimits:{maxOldGenerationSizeMb:96,maxYoungGenerationSizeMb:16,stackSizeMb:2}});
+ return new Promise((resolve,reject)=>{let settled=false;const finish=(error?:Error,type?:string)=>{if(settled)return;settled=true;clearTimeout(timer);void worker.terminate();error?reject(error):resolve({type:type!});};const timer=setTimeout(()=>finish(new Error('Source type inspection exceeded its three-second budget')),3000);worker.on('message',(result:{type?:string;error?:string})=>{if(result.error)return finish(new Error(result.error));if(typeof result.type!=='string'||result.type.length>20)return finish(new Error('Invalid isolated source inspection'));finish(undefined,result.type);});worker.once('error',()=>finish(new Error('Source inspection exceeded its isolated memory or execution boundary')));worker.once('exit',()=>{if(!settled)finish(new Error('Source inspection ended before producing a verified type'));});});
+}
