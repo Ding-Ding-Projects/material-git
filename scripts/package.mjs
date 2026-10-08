@@ -1,5 +1,5 @@
 import { resolveBuildVersion } from './build-version.mjs';
-import packager from '@electron/packager';
+import { packager } from '@electron/packager';
 import winstaller from 'electron-winstaller';
 import { readFile, mkdir, rm, readdir, stat, writeFile, copyFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
