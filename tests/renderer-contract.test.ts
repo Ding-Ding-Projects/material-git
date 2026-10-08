@@ -8,11 +8,11 @@ const root=process.env.MATERIAL_TEST_SOURCE_ROOT||fileURLToPath(new URL('..',imp
 const source=(relative:string)=>readFileSync(path.join(root,relative),'utf8');
 // Execute the actual controller method with a fake bridge; no DOM or remote mutation.
 function controllerMethod(file:string,name:string,bindings:Record<string,unknown>={}) {
- const text=source(file),tree=ts.createSourceFile(file,text,ts.ScriptTarget.Latest,true);let body:string|undefined,asynchronous=false;
- const visit=(node:ts.Node)=>{if(ts.isMethodDeclaration(node)&&node.name.getText(tree)===name&&node.body){body=node.body.getText(tree);asynchronous=!!node.modifiers?.some(m=>m.kind===ts.SyntaxKind.AsyncKeyword);}ts.forEachChild(node,visit);};visit(tree);assert.ok(body,`${file}:${name}`);
- const output=ts.transpileModule(`export default ${asynchronous?'async ':''}function tested(...args:unknown[])${body}`,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS}}).outputText;
+ const text=source(file),tree=ts.createSourceFile(file,text,ts.ScriptTarget.Latest,true);let body:string|undefined,parameters='',asynchronous=false;
+ const visit=(node:ts.Node)=>{if(ts.isMethodDeclaration(node)&&node.name.getText(tree)===name&&node.body){body=node.body.getText(tree);parameters=node.parameters.map(p=>p.getText(tree)).join(',');asynchronous=!!node.modifiers?.some(m=>m.kind===ts.SyntaxKind.AsyncKeyword);}ts.forEachChild(node,visit);};visit(tree);assert.ok(body,`${file}:${name}`);
+ const output=ts.transpileModule(`export default ${asynchronous?'async ':''}function tested(${parameters})${body}`,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS}}).outputText;
  // Named parameters in the body are supplied through bindings for event/ID methods.
- return new Function(...Object.keys(bindings),`const exports={};${output};return exports.default;`)(...Object.values(bindings)) as (this:unknown)=>unknown;
+ return new Function(...Object.keys(bindings),`const exports={};${output};return exports.default;`)(...Object.values(bindings)) as (this:unknown,...args:unknown[])=>unknown;
 }
 test('functional shell wires domain bridge, operation stream and isolated renderer',()=>{
  const app=source('src/renderer/app.ts');for(const boundary of ['window.material.bootstrap()','window.material.onOperation(','window.material.cancel(','window.material.choices(','mg-github-workspace','mg-api-explorer'])assert.ok(app.includes(boundary),boundary);
@@ -36,12 +36,24 @@ test('failed apply invalidates review before a retry',async()=>{
  const context={editor:{fields:[],values:{},review:true,reviewId:'receipt',destructive:false},saving:false,editorValid:()=>true,workState:()=>{},notice:'',copy:(en:string)=>en};
  await save.call(context);await save.call(context);assert.equal(calls,1);assert.equal(context.editor.review,false);assert.equal(context.editor.reviewId,undefined);assert.equal(context.notice,'permission denied');assert.equal(context.saving,false);
 });
-test('tab close controller preserves dirty work and refuses active operations',()=>{
- const ids=['issues'];const review=controllerMethod('src/renderer/app.ts','closeTabReview',{ids});let closed=0;
- const context={workStates:{issues:{dirty:true,busy:false}},closeTabs:[] as string[],closeTabNow:()=>closed++,notify:()=>{},copy:(en:string)=>en};
- review.call(context);assert.deepEqual(context.closeTabs,ids);assert.equal(closed,0);
- context.closeTabs=[];context.workStates.issues={dirty:false,busy:true};review.call(context);assert.equal(closed,0);assert.deepEqual(context.closeTabs,[]);
- context.workStates.issues={dirty:false,busy:false};review.call(context);assert.equal(closed,1);
+test('tab close controller uses actual work-state mapping for dirty and active destinations',()=>{
+ const key=controllerMethod('src/renderer/app.ts','workStateKey');
+ const review=controllerMethod('src/renderer/app.ts','closeTabReview');
+ for(const id of ['issues','api','cli-config','tools']){
+  let closed=0;const stateKey=String(key.call({},id));
+  const context={workStateKey:(target:string)=>key.call({},target),workStates:{[stateKey]:{dirty:true,busy:false}},closeTabs:[] as string[],closeTabNow:()=>closed++,notify:()=>{},copy:(en:string)=>en};
+  review.call(context,[id]);assert.deepEqual(context.closeTabs,[id]);assert.equal(closed,0);
+  context.closeTabs=[];context.workStates[stateKey]={dirty:false,busy:true};review.call(context,[id]);assert.equal(closed,0);assert.deepEqual(context.closeTabs,[]);
+  context.workStates[stateKey]={dirty:false,busy:false};review.call(context,[id]);assert.equal(closed,1);
+ }
+});
+test('actual tab discard waits for its native record and preserves tabs on failure',async()=>{
+ const key=controllerMethod('src/renderer/app.ts','workStateKey');let release!:()=>void;const gate=new Promise<void>(resolve=>release=resolve);const calls:unknown[]=[];
+ const close=controllerMethod('src/renderer/app.ts','closeTabNow',{window:{material:{workspace:async(...args:unknown[])=>{calls.push(args);await gate;}}}});
+ const context={workStateKey:(id:string)=>key.call({},id),workStates:{issues:{dirty:true,busy:false}},workspace:{tabs:[{id:'repositories'},{id:'issues'}]},closeTabs:['issues'],lane:'repositories',notify:()=>{},copy:(en:string)=>en,persist:()=>{},navigate:()=>{}};
+ const pending=close.call(context,['issues']);assert.equal(context.workspace.tabs.length,2);assert.deepEqual(calls,[['discard',{ids:['issues']}]]);release();await pending;assert.deepEqual(context.workspace.tabs,[{id:'repositories'}]);
+ const failed=controllerMethod('src/renderer/app.ts','closeTabNow',{window:{material:{workspace:async()=>{throw new Error('disk unavailable');}}}});
+ const unchanged={...context,workStates:{issues:{dirty:true,busy:false}},workspace:{tabs:[{id:'repositories'},{id:'issues'}]},closeTabs:['issues']};await failed.call(unchanged,['issues']);assert.equal(unchanged.workspace.tabs.length,2);assert.deepEqual(unchanged.closeTabs,['issues']);
 });
 test('reduced motion and build-bound provenance remain honest',()=>{
  assert.match(source('src/renderer/styles.css'),/prefers-reduced-motion:reduce/);
