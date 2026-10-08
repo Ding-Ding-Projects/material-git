@@ -1,0 +1,132 @@
+{
+  "schema": 1,
+  "supportedPlatforms": [
+    "linux-x64",
+    "win32-x64"
+  ],
+  "engines": {
+    "7zip": {
+      "version": "26.04",
+      "license": "LGPL-2.1-or-later with BSD portions and unRAR restriction",
+      "source": "https://github.com/ip7z/7zip/tree/26.04"
+    },
+    "ffmpeg": {
+      "release": "b6.1.1",
+      "license": "GPL-3.0-or-later",
+      "source": "https://github.com/eugeneware/ffmpeg-static/releases/tag/b6.1.1",
+      "versions": {
+        "linux-x64": "7.0.2-static",
+        "win32-x64": "6.1.1-essentials_build-www.gyan.dev"
+      },
+      "upstreamSources": {
+        "linux-x64": "https://ffmpeg.org/releases/ffmpeg-7.0.2.tar.xz",
+        "win32-x64": "https://github.com/FFmpeg/FFmpeg/commit/e38092ef93"
+      }
+    }
+  },
+  "downloads": [
+    {
+      "platform": "linux-x64",
+      "asset": "ffmpeg-linux-x64",
+      "url": "https://github.com/eugeneware/ffmpeg-static/releases/download/b6.1.1/ffmpeg-linux-x64",
+      "sha256": "e7e7fb30477f717e6f55f9180a70386c62677ef8a4d4d1a5d948f4098aa3eb99",
+      "target": "ffmpeg",
+      "kind": "binary"
+    },
+    {
+      "platform": "linux-x64",
+      "asset": "ffprobe-linux-x64",
+      "url": "https://github.com/eugeneware/ffmpeg-static/releases/download/b6.1.1/ffprobe-linux-x64",
+      "sha256": "4f231a1960d83e403d08f7971e271707bec278a9ae18e21b8b5b03186668450d",
+      "target": "ffprobe",
+      "kind": "binary"
+    },
+    {
+      "platform": "win32-x64",
+      "asset": "ffmpeg-win32-x64",
+      "url": "https://github.com/eugeneware/ffmpeg-static/releases/download/b6.1.1/ffmpeg-win32-x64",
+      "sha256": "04e1307997530f9cf2fe35cba2ca7e8875ca91da02f89d6c7243df819c94ad00",
+      "target": "ffmpeg.exe",
+      "kind": "binary"
+    },
+    {
+      "platform": "win32-x64",
+      "asset": "ffprobe-win32-x64",
+      "url": "https://github.com/eugeneware/ffmpeg-static/releases/download/b6.1.1/ffprobe-win32-x64",
+      "sha256": "3a7e2dc003dc2cd1472827e4c7c4f056ae1ae0ae7c5bbc580c99b49827351ba4",
+      "target": "ffprobe.exe",
+      "kind": "binary"
+    },
+    {
+      "platform": "linux-x64",
+      "asset": "linux-x64.LICENSE",
+      "url": "https://github.com/eugeneware/ffmpeg-static/releases/download/b6.1.1/linux-x64.LICENSE",
+      "sha256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903",
+      "target": "ffmpeg.LICENSE",
+      "kind": "notice"
+    },
+    {
+      "platform": "linux-x64",
+      "asset": "linux-x64.README",
+      "url": "https://github.com/eugeneware/ffmpeg-static/releases/download/b6.1.1/linux-x64.README",
+      "sha256": "72f4b1b06d419d22ace6e7cc75f06826f90737345aa0b1736158929f4aacc537",
+      "target": "ffmpeg.README",
+      "kind": "notice"
+    },
+    {
+      "platform": "win32-x64",
+      "asset": "win32-x64.LICENSE",
+      "url": "https://github.com/eugeneware/ffmpeg-static/releases/download/b6.1.1/win32-x64.LICENSE",
+      "sha256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903",
+      "target": "ffmpeg.LICENSE",
+      "kind": "notice"
+    },
+    {
+      "platform": "win32-x64",
+      "asset": "win32-x64.README",
+      "url": "https://github.com/eugeneware/ffmpeg-static/releases/download/b6.1.1/win32-x64.README",
+      "sha256": "a636a7183c58006351acbaf35303c0ed85c6e1320fd4e80de453ba6157de6311",
+      "target": "ffmpeg.README",
+      "kind": "notice"
+    },
+    {
+      "platform": "linux-x64",
+      "asset": "7z2604-linux-x64.tar.xz",
+      "url": "https://github.com/ip7z/7zip/releases/download/26.04/7z2604-linux-x64.tar.xz",
+      "sha256": "fc0327ba27e89bd086cf426dff17d77de582953cdbbc10a6576540a06853ffcd",
+      "kind": "tar-xz"
+    },
+    {
+      "platform": "win32-x64",
+      "asset": "7z2604-extra.7z",
+      "url": "https://github.com/ip7z/7zip/releases/download/26.04/7z2604-extra.7z",
+      "sha256": "dc4b11d3399db18b063630137145f5585d8f7ac847bf3639bd1185d7d1f7cee0",
+      "kind": "7z"
+    },
+    {
+      "platform": "win32-x64",
+      "asset": "7zr.exe",
+      "url": "https://github.com/ip7z/7zip/releases/download/26.04/7zr.exe",
+      "sha256": "256feca8e274e5da655e2a284fabafd9f554365eb164862089dacd4e8276d282",
+      "kind": "bootstrap"
+    }
+  ],
+  "files": {
+    "linux-x64": {
+      "ffmpeg": "e7e7fb30477f717e6f55f9180a70386c62677ef8a4d4d1a5d948f4098aa3eb99",
+      "ffprobe": "4f231a1960d83e403d08f7971e271707bec278a9ae18e21b8b5b03186668450d",
+      "ffmpeg.LICENSE": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903",
+      "ffmpeg.README": "72f4b1b06d419d22ace6e7cc75f06826f90737345aa0b1736158929f4aacc537",
+      "7zz": "d1bc79f00e9815b24048ab167690bdd1dbc387de7dbc47e8d75d68689e49cf4f",
+      "7zip.LICENSE": "1790374e5352329cedb46ee3808930a88e9ca2f08b82b10fcf5cf605d2c301b1"
+    },
+    "win32-x64": {
+      "ffmpeg.exe": "04e1307997530f9cf2fe35cba2ca7e8875ca91da02f89d6c7243df819c94ad00",
+      "ffprobe.exe": "3a7e2dc003dc2cd1472827e4c7c4f056ae1ae0ae7c5bbc580c99b49827351ba4",
+      "ffmpeg.LICENSE": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903",
+      "ffmpeg.README": "a636a7183c58006351acbaf35303c0ed85c6e1320fd4e80de453ba6157de6311",
+      "7za.exe": "15d4c788c148e3677e2fc1c4a01f191fb6669eba4f6acf8a465f0f1a6f1e1260",
+      "7zip.LICENSE": "39d2187b942cc88818dd959e53c6b7dddd152097a42061467c4d56050168d646"
+    }
+  }
+}
