@@ -78,7 +78,7 @@ export interface MaterialBridge {
   pick(kind: 'file' | 'directory', options?: {extensions?: string[]; multiple?: boolean}): Promise<string[]>;
   settings(patch: Partial<AppSettings>): Promise<AppSettings>;
   history(): Promise<HistoryEntry[]>;
-  exportData(data: unknown, format: 'json' | 'csv' | 'md' | 'txt'): Promise<boolean>;
+  exportData(data: unknown, format: import('./exports').ExportFormat): Promise<boolean>;
   vocabulary(action: 'import' | 'clear' | 'status'): Promise<{loaded: boolean; entries?: Record<string, string>}>;
   openExternal(url: string): Promise<void>;
   window(action: 'minimize' | 'maximize' | 'close' | 'confirm-close'): Promise<void>;

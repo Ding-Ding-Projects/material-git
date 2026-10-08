@@ -14,6 +14,8 @@ import {CliWorkflowsService} from './cli-workflows';
 import {WorkspaceStore} from './workspace';
 import {PreferencesAdvancedService} from './preferences-advanced';
 import {LocalToolsService} from './local-tools';
+import {createBundledEngines} from './bundled-engines';
+import {serializeExport,type ExportFormat} from '../shared/exports';
 import {createAuthHostRegistry} from './auth-hosts';
 import {GitHubService} from './github';
 import {GitService} from './git';
@@ -60,16 +62,6 @@ function engine(root=workspace){if(!approvedRoots.has(root))throw new Error('Cho
 function validateSender(event:IpcMainInvokeEvent){if(!window||event.sender!==window.webContents||event.senderFrame!==window.webContents.mainFrame||!event.senderFrame.url.startsWith(pathToFileURL(entry).href))throw new Error('Untrusted application frame');}
 function handle(name:string,fn:(...args:any[])=>unknown){ipcMain.handle('material:'+name,async(event,...args)=>{validateSender(event);const consume=await actionGuard?.(name,args);const result=await fn(...args);consume?.();return result;});}
 function sizeBound(data:unknown){const encoded=JSON.stringify(data);if(!encoded||encoded.length>8*1024*1024)throw new Error('Export exceeds the 8 MiB limit');return encoded;}
-function exportText(data:unknown,format:string):string {
- const encoded=sizeBound(data);
- if(format==='json')return JSON.stringify(data,null,2);
- if(format==='txt'||format==='md')return typeof data==='string'?data:JSON.stringify(data,null,2);
- if(format!=='csv')throw new Error('Unknown export format');
- const rows=Array.isArray(data)?data:[data];if(rows.some(row=>!row||typeof row!=='object'||Array.isArray(row)))throw new Error('CSV needs a collection of records');
- const keys=[...new Set(rows.flatMap(row=>Object.keys(row)))];
- const cell=(value:unknown)=>{let text=value===undefined?'':typeof value==='object'?JSON.stringify(value):String(value);if(/^[=+\-@\t\r]/.test(text))text="'"+text;return '"'+text.replaceAll('"','""')+'"';};
- return [keys.map(cell).join(','),...rows.map(row=>keys.map(key=>cell(row[key])).join(','))].join('\r\n');
-}
 if(!installerLifecycle)app.whenReady().then(async()=>{
  if(!existsSync(binary)){dialog.showErrorBox('Bundled GitHub CLI is missing','Run npm run fetch-dependencies for a source checkout, or reinstall Material Git.');app.quit();return;}
  const workspaceRecords=new WorkspaceStore(app.getPath('userData'),(kind,_id,snapshot)=>{if(kind!=='settings')throw new Error('This record contains review-only metadata. Restore it through its original feature.');return store.update(snapshot);});
@@ -121,10 +113,11 @@ if(!installerLifecycle)app.whenReady().then(async()=>{
  preferencesAdvanced.subscribe(status=>{if(window&&!window.isDestroyed()){window.setTitle(status.effective.displayName);window.webContents.send('material:preferences-advanced-update',status);}});
  handle('preferences-advanced',(action,payload)=>preferencesAdvanced.handle(action,payload));
  app.once('will-quit',()=>preferencesAdvanced.close());
- const localTools=new LocalToolsService({storageDirectory:path.join(app.getPath('userData'),'local-tools'),pickSources:async()=>{const result=await dialog.showOpenDialog(window,{title:'Choose files to convert',properties:['openFile','multiSelections']});return result.canceled?[]:result.filePaths;},pickDestination:async suggestedName=>{const result=await dialog.showSaveDialog(window,{title:'Save converted file',defaultPath:suggestedName});return result.canceled?null:result.filePath??null;},imageEngine:async(bytes,target)=>{const image=nativeImage.createFromBuffer(Buffer.from(bytes));if(image.isEmpty())throw new Error('This image could not be decoded');return target==='png'?image.toPNG():image.toJPEG(90);},imageEngineProof:`Electron ${process.versions.electron} native image codec`});
+ const bundledEngines=createBundledEngines({vendorDirectory:path.join(app.getAppPath(),'vendor','converters').replace('app.asar'+path.sep,'app.asar.unpacked'+path.sep),workerPath:path.join(__dirname,'bundled-engines-worker.cjs')});
+ const localTools=new LocalToolsService({engines:bundledEngines,storageDirectory:path.join(app.getPath('userData'),'local-tools'),pickSources:async()=>{const result=await dialog.showOpenDialog(window,{title:'Choose files to convert',properties:['openFile','multiSelections']});return result.canceled?[]:result.filePaths;},pickDestination:async suggestedName=>{const result=await dialog.showSaveDialog(window,{title:'Save converted file',defaultPath:suggestedName});return result.canceled?null:result.filePath??null;},imageEngine:async(bytes,target)=>{const image=nativeImage.createFromBuffer(Buffer.from(bytes));if(image.isEmpty())throw new Error('This image could not be decoded');return target==='png'?image.toPNG():image.toJPEG(90);},imageEngineProof:`Electron ${process.versions.electron} native image codec`});
  handle('local-tools',(action,payload)=>localTools.request(action,payload));
  app.once('will-quit',()=>localTools.dispose());
- const gitTasks=new GitService({binary:process.platform==='win32'?path.join(gitDirectory,'git.exe'):'git',directory:app.getPath('userData'),pickWorktree:async()=>{const result=await dialog.showOpenDialog(window,{title:'Choose a Git working tree',properties:['openDirectory']});return result.canceled?null:result.filePaths[0]??null;},pickFile:async()=>{const result=await dialog.showOpenDialog(window,{title:'Choose a Git patch file',properties:['openFile'],filters:[{name:'Git patches',extensions:['patch','diff','mbox']}]});return result.canceled?null:result.filePaths[0]??null;}});
+ const gitTasks=new GitService({binary:process.platform==='win32'?path.join(gitDirectory,'git.exe'):'git',directory:app.getPath('userData'),...(process.platform==='linux'?{helperDirectory:path.join(app.getAppPath(),'vendor','git-linux')}:{}),pickWorktree:async()=>{const result=await dialog.showOpenDialog(window,{title:'Choose a Git working tree',properties:['openDirectory']});return result.canceled?null:result.filePaths[0]??null;},pickFile:async()=>{const result=await dialog.showOpenDialog(window,{title:'Choose a Git input file',properties:['openFile'],filters:[{name:'Git patches and bundles',extensions:['patch','diff','mbox','bundle']},{name:'All files',extensions:['*']}]});return result.canceled?null:result.filePaths[0]??null;}});
  handle('git',async(action,payload)=>{if(payload!==undefined&&sizeBound(payload).length>1024*1024)throw new Error('Git request exceeds the input limit');const id=payload?.reviewId??randomUUID();if(action!=='cancel')activeOperations.add(id);try{return await gitTasks.handle(action,payload);}finally{activeOperations.delete(id);}});
  app.once('will-quit',()=>gitTasks.close());
  handle('updates',(action:string)=>{if(action==='check')return checkForUpdates();if(action==='restart'){if(activeOperations.size||githubTasks.activeOperations.size||localTools.activeJobs())throw new Error('Wait for running operations or cancel them before restarting');const previous=quitApproved;quitApproved=true;try{restartToInstallUpdate();}catch(error){quitApproved=previous;throw error;}}else if(action!=='status')throw new Error('Unknown update action');return getUpdateState();});
@@ -142,7 +135,7 @@ if(!installerLifecycle)app.whenReady().then(async()=>{
  handle('settings',async(patch:Partial<AppSettings>)=>{const result=store.update(patch);await preferencesAdvanced.refresh(false);return result;});
  handle('history',()=>store.history());
  handle('vocabulary',async(action:string)=>{if(action==='clear')store.clearVocabulary();else if(action==='import'){const result=await dialog.showOpenDialog(window,{properties:['openFile'],filters:[{name:'Personal vocabulary',extensions:['json']}]});if(!result.canceled&&result.filePaths[0])store.setVocabulary(readBoundedFile(result.filePaths[0],65536));}else if(action!=='status')throw new Error('Unknown vocabulary operation');const current=store.vocabulary();return {loaded:!!current,...(current?{entries:current.entries}:{})};});
- handle('export',async(data:unknown,format:string)=>{const text=exportText(data,format);const result=await dialog.showSaveDialog(window,{defaultPath:`material-git-export.${format}`,filters:[{name:format.toUpperCase(),extensions:[format]}]});if(result.canceled||!result.filePath)return false;writeFileSync(result.filePath,text,{mode:0o600});store.record('Data exported; personal vocabulary omitted');return true;});
+ handle('export',async(data:unknown,format:string)=>{sizeBound(data);const exported=serializeExport(data,format as ExportFormat);const result=await dialog.showSaveDialog(window,{defaultPath:`material-git-export.${exported.extension}`,filters:[{name:format.toUpperCase(),extensions:[exported.extension]}]});if(result.canceled||!result.filePath)return false;writeFileSync(result.filePath,exported.text,{mode:0o600});store.record('Requested data exported');return true;});
  handle('external',async(value:string)=>{const url=new URL(value);if(url.protocol!=='https:'||url.username||url.password)throw new Error('Only HTTPS links can open externally');await shell.openExternal(url.href);});
  handle('window',(action:string)=>{if(action==='minimize')window.minimize();else if(action==='maximize')window.isMaximized()?window.unmaximize():window.maximize();else if(action==='close')window.close();else if(action==='confirm-close'){quitApproved=true;localTools.cancelAll();gitTasks.cancelAll();githubTasks.cancelAll();for(const e of engineByRoot.values())for(const id of activeOperations){try{e.cancel(id);}catch{}}window.close();}else throw new Error('Unknown window action');});
  handle('ollama',ollamaRequest);
