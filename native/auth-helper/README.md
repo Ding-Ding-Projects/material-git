@@ -1,0 +1,9 @@
+# Secure GitHub credential registration helper
+
+This small source-built helper uses the same `gh:<hostname>` keyring service, named account slot and empty active slot as GitHub CLI 2.102.0. Dependencies are pinned in go.mod/go.sum: go-keyring 0.2.8, go-gh 2.16.1 and YAML 3.0.1. Metadata follows the pinned CLI login/activate-user schema while omitting its plaintext fallback.
+
+Linux Secret Service and Windows Credential Manager are supported. macOS is unavailable because the pinned keyring backend passes passwords as subprocess arguments. The read-only capability probe addresses a reserved nonexistent item; it does not write a credential or prove a future write will be accepted. An absent or inaccessible vault is unavailable.
+
+The helper accepts one bounded JSON line on stdin. Registration secrets never enter command arguments, stdout, diagnostic history or metadata files. The native parent supplies the approved host, verified provider account and exact reviewed configuration fingerprint. The helper writes both secure slots, verifies readback, removes the selected host/account plaintext token fields, and atomically writes protected metadata. Previous credentials and metadata stay in memory until a second `commit` or `rollback` line after native CLI verification. EOF, a caught termination signal or a verification timeout requests rollback. Concurrent external edits are retained and reported as uncertain rather than overwritten. A hard process or operating-system interruption can leave partial state; inspect Accounts before retrying.
+
+Build with the exact Go 1.27.1 compiler and `node scripts/build-auth-helper.mjs`. The exported build and copy adapters validate source and executable hashes in data/auth-helper.json and bundle licenses plus corresponding source. No compiler or credential helper is downloaded at application runtime. Tests inject a vault in memory; they never write the operator's credentials.
