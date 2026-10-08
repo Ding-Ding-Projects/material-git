@@ -1,5 +1,5 @@
 /** Public, credential-free workspace records. Command drafts and provider output are never stored. */
-export type WorkspaceAction='status'|'save'|'notify'|'notifications'|'label'|'restore'|'prune'|'export'|'import-preview'|'import-apply'|'record-revisions'|'record-diff'|'record-restore'|'discard';
+export type WorkspaceAction='status'|'save'|'notify'|'notifications'|'label'|'restore'|'prune'|'export'|'import-preview'|'import-apply'|'record-revisions'|'record-diff'|'record-restore'|'record-label'|'record-prune'|'record-appearance'|'discard';
 export interface WorkspaceTab {id:string;label:string;pinned:boolean;group:string}
 export interface WorkspaceGroup {id:string;label:string;color:string;collapsed:boolean;pinned:boolean}
 export interface WorkspaceState {version:1;tabs:WorkspaceTab[];groups:WorkspaceGroup[];activeTab:string;lane:string;dock:'left'|'right'|'top'|'bottom';explorerWidth:number;dockHeight:number;explorerVisible:boolean;dockVisible:boolean;split:'none'|'vertical'|'horizontal';splitRatio:number;paletteSize:'card'|'window'}
