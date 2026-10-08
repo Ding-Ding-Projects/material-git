@@ -38,3 +38,8 @@ test('owned source discard revokes without host/account/authorization reads and 
  await assert.rejects(service.handle('provider-source-discard',{id:'renderer-created-id'}),/issued opaque/);await assert.rejects(service.handle('provider-source-discard',{id:'00000000-0000-4000-8000-000000000000'}),/issued opaque/);
  locked=false;await assert.rejects(service.resolveProviderTarget(id),/expired/);service.close();
 });
+test('revocation interrupts a provider target revalidation already in progress',async()=>{
+ let hold=false,release!:()=>void,entered!:()=>void;const gate=new Promise<void>(resolve=>release=resolve),started=new Promise<void>(resolve=>entered=resolve);
+ const registry=new GitHubProviderTargets({request:async()=>{if(hold){entered();await gate;}return {id:88,full_name:'owner/repo',clone_url:'https://github.com/owner/repo.git'};},account:async()=> '7',selectedHostname:()=> 'github.com',inHost:async(_host,work)=>work()});
+ const source=await registry.prepare('repositories.clone-source',{repository:'owner/repo',id:88},'github.com');hold=true;const pending=registry.resolve(source.id);await started;registry.discard(source.id);release();await assert.rejects(pending,/revoked/);await assert.rejects(registry.resolve(source.id),/expired/);
+});
