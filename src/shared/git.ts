@@ -7,6 +7,6 @@ export interface GitFile {path:string;originalPath?:string;index:string;worktree
 export interface GitSnapshot {worktreeId:string;name:string;root:string;gitDir:string;commonDir:string;bare:boolean;head:string;branch:string;version:string;helperVersion?:string;files:GitFile[];operation:string;bisectCandidate?:string;trust:string[];fingerprint:string;}
 export interface GitRow {id:string;label:string;detail:string;data?:Record<string,string>;}
 export interface GitReview {kind:'review';reviewId:string;worktreeId:string;task:GitTask;title:string;summary:string;argv:string[];warnings:string[];expiresAt:string;fingerprint:string;}
-export interface GitResult {kind:'result';ok:boolean;exitCode:number|null;output:string;error:string;cancelled:boolean;partialEffects:boolean;operationId:string;snapshot?:GitSnapshot;}
+export interface GitResult {kind:'result';ok:boolean;exitCode:number|null;output:string;error:string;cancelled:boolean;partialEffects:boolean;operationId:string;snapshot?:GitSnapshot;preview?:{tree:string;conflicts:boolean;snapshotUnchanged:boolean};}
 export type GitResponse = {kind:'snapshot';snapshot:GitSnapshot}|{kind:'rows';rows:GitRow[];hasNext:boolean;notice?:string}|{kind:'text';text:string}|{kind:'conflict';path:string;base:string;ours:string;theirs:string;working:string}|{kind:'file';fileId:string;name:string;preview:string}|{kind:'cancelled';partialEffects:boolean}|GitReview|GitResult;
 export interface GitBridge {git(action:GitAction,payload?:GitPayload):Promise<GitResponse>;}

@@ -4,6 +4,18 @@ Material Git's website is the desktop product's landing page, documentation libr
 
 The existing hosted address is <https://material-git.earlyray.chatgpt.site>. Hosting retains its existing owner-private audience. A source change or passing local check does not establish that the new source has been deployed. Native deployment and repository About metadata verification are separate steps.
 
+## Recorded Windows release checkpoint
+
+The separately recorded download baseline is [Material Git 0.16.1, `build-16-1`](https://github.com/Ding-Ding-Projects/material-git/releases/tag/build-16-1), published at `2026-10-08T13:45:56Z` from source [`85070852a673696c1881041b4bdc90112523dd9a`](https://github.com/Ding-Ding-Projects/material-git/commit/85070852a673696c1881041b4bdc90112523dd9a). The public GitHub release record confirms a non-draft, non-prerelease release and its actual `Setup.exe` asset: 210,647,040 bytes, SHA-256 `d08d37115e6ebf3e17a43cd1168e1ccdf47f0912c232126ca857104b6aa0d667`. The release also supplies `SHA256SUMS`, `RELEASES`, and its full Squirrel package. The website offers that verified asset independently of the live latest-release query, without labelling a recorded checkpoint as the newest source revision.
+
+The Windows release may precede current source changes, localized articles, or gallery captures. Website source version, recorded installer version, capture source, and live API release state are distinct facts. Windows artifacts are unsigned; publishing them does not establish native Windows installation, secure storage, updates, or universal feature completion. GitHub's latest-release endpoint remains the current provider state, including its explicit loading and failure cases.
+
+The current article bundle includes all 104 feature-specific Cantonese article counterparts. A separate Material article-language filter discovers actual `.yue.md` files without rewriting provider text. When the matching counterpart is bundled, the article toolbar opens it directly; absent counterparts do not produce an invented translation. The source action links to the bundled website source revision. Article availability does not prove that every application or website control is localized or functionally verified. The desktop has separate real download-queue and typed-export workspaces; this website's installer links and browser article exports do not embed those native services.
+
+### 廣東話版本說明
+
+另行記錄嘅 Windows 版本係 Material Git 0.16.1（`build-16-1`），喺 `2026-10-08T13:45:56Z` 發佈，由來源 `85070852a673696c1881041b4bdc90112523dd9a` 建置。GitHub 公開記錄已確認真實 `Setup.exe` 檔案同校驗碼。網站會將呢個已記錄版本，同即時查詢嘅最新版本分開標示；唔會將較早嘅安裝程式當成目前來源。安裝程式未簽署，發佈成功唔代表 Windows 安裝、憑證儲存、更新或者所有功能已驗證。104 篇廣東話功能文章已包含喺文件建置，但文章齊全唔代表介面翻譯同功能驗證已全部完成。
+
 ## Build and source provenance
 
 Run `node scripts/build-site.mjs` after installing the repository dependencies. Source lives in `site/` and browser-only reusable compositions live in `src/site-shared/`. The static output is ignored at `site/dist/`.
@@ -19,9 +31,9 @@ All scripts, styles, icons, and screenshot assets are bundled locally. Typograph
 ## Website sections
 
 - **Overview:** product introduction, repository/collaboration/delivery/account guidance, documentation and downloads entry points, and a reviewed application capture when one is available.
-- **Documentation:** categorized articles, full-text plain search, an adjacent regex builder, internal article links, sanitized Markdown rendering, related articles, individual article export, and selected-article JSON/Markdown/HTML export.
+- **Documentation:** categorized articles, an independent article-language filter, verified English/Cantonese counterpart navigation, full-text plain search, an adjacent regex builder, internal article links, sanitized Markdown rendering, related articles, individual article export, and selected-article JSON/Markdown/HTML export.
 - **Screenshots:** actual application captures declared in `site/gallery.json`. The current manifest includes nine unedited 1500 × 950 Linux Electron captures from source `44dc9d8dc30a4e327a98c8a6936f97a946feab55`, recorded on 8 October 2026. Issues and pull requests show genuine empty results; the accounts frame shows an authenticated environment account with its source limitations. The [capture ledger](images/README.md) records each timestamp and its evidence limits. An empty manifest produces an honest unavailable state. Previous captures are never copied implicitly. The build rejects the obsolete command-catalog image by its recorded SHA-256, so a filename may be reused only with a genuinely replaced capture.
-- **Downloads:** the actual latest stable public GitHub release, actual `.exe` assets, publication date, asset sizes, unsigned-installer disclosure, no-release state, failure state, retry, and links to the release source.
+- **Downloads:** a separately labelled verified `build-16-1` installer checkpoint and the actual latest stable public GitHub release, actual `.exe` assets, publication date, asset sizes, unsigned-installer disclosure, no-release state, failure state, retry, and links to the release source.
 - **Release notes:** original provider-authored Markdown and dates, page-by-page access to the complete public release history (100 records per page), independent search and regex builder, and export of the visible notes. The API does not reliably expose an exact commit SHA; the viewer says so and links to the release tag rather than guessing.
 - **Preferences:** independent website visitor preferences, voice enumeration and narration, language/playfulness controls, appearance, attention aids, personal vocabulary import, browser-local presentation mode, scheduling, navigation customization, history, and import/export.
 

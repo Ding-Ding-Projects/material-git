@@ -37,6 +37,7 @@ export interface AppSettings {
   fontWeight:number; fontStyle:'normal'|'italic'; letterSpacing:number; lineHeight:number; borderRadius:number;
 }
 export interface Bootstrap {
+  hostname?:string;
   startupFirstRun?:boolean;
   persistedSettingsKeys?:string[]; preferencesAdvanced?:import('./preferences-advanced').PreferenceStatus;
   catalog: Catalog; settings: AppSettings; version: string; builtAt: string | null;
@@ -44,7 +45,7 @@ export interface Bootstrap {
   account: string | null; repository: string | null; operations: Operation[];
 }
 export interface HistoryEntry { id: string; at: string; action: string; snapshot?: AppSettings }
-export type AuthAction = 'status' | 'login' | 'refresh' | 'setup-git' | 'cancel' | 'switch' | 'logout' | 'copy-token' | 'register-host';
+export type AuthAction = 'status' | 'login' | 'refresh' | 'setup-git' | 'cancel' | 'switch' | 'logout' | 'copy-token' | 'register-host' | 'select-host';
 export interface AuthAccount {
   host: string; login: string; active: boolean; state: string;
   scopes: string[]; gitProtocol: string; tokenSource: 'environment' | 'credential-store' | 'config-file' | 'unknown';
@@ -53,6 +54,7 @@ export interface AuthPayload { hostname?: string; login?: string; scopes?: strin
 export interface AuthState {
   status: 'idle' | 'checking' | 'starting' | 'waiting' | 'authenticated' | 'failed' | 'cancelled';
   accounts: AuthAccount[]; allowedHosts: string[]; allowedScopes: string[];
+  selectedHostname?:string; hostSelectionAvailable?:boolean;
   hostname?: string; deviceCode?: string; verificationUrl?: string; message?: string; error?: string; tokenCopyAvailable?: boolean; hostRegistrationAvailable?: boolean;
 }
 export interface MaterialBridge extends StartupBridge {
@@ -78,7 +80,7 @@ export interface MaterialBridge extends StartupBridge {
   execute(request: ExecutionRequest): Promise<Operation>;
   cancel(id: string): Promise<void>;
   operation(id: string): Promise<Operation>;
-  choices(entity: string, context: { repository?: string; query?: string; page?: number }): Promise<{items: Choice[]; hasNext: boolean;searchMode?:'remote'|'page-filter';notice?:string}>;
+  choices(entity: string, context: { hostname?:string; repository?: string; query?: string; page?: number }): Promise<{items: Choice[]; hasNext: boolean;searchMode?:'remote'|'page-filter';notice?:string}>;
   pick(kind: 'file' | 'directory', options?: {extensions?: string[]; multiple?: boolean}): Promise<string[]>;
   settings(patch: Partial<AppSettings>): Promise<AppSettings>;
   history(): Promise<HistoryEntry[]>;

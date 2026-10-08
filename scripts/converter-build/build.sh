@@ -14,7 +14,7 @@ export CXXFLAGS="$CFLAGS"
 export LDFLAGS='-L/build/prefix/lib -static-libgcc'
 export PKG_CONFIG_LIBDIR=/build/prefix/lib/pkgconfig
 export PKG_CONFIG_PATH="$PKG_CONFIG_LIBDIR"
-if [ -n "$converter_host" ]; then export CC=${converter_cross}gcc CXX=${converter_cross}g++ AR=${converter_cross}ar RANLIB=${converter_cross}ranlib; export LDFLAGS='-L/build/prefix/lib -static'; fi
+if [ -n "$converter_host" ]; then export CC=${converter_cross}gcc CXX=${converter_cross}g++ AR=${converter_cross}ar RANLIB=${converter_cross}ranlib; export LDFLAGS='-L/build/prefix/lib -static'; export LIBS=-lssp; CFLAGS='-O2 -fstack-protector-strong -ffile-prefix-map=/build=. -I/build/prefix/include'; export CFLAGS CXXFLAGS="$CFLAGS"; fi
 converter_configure() { if [ -n "$converter_host" ]; then ./configure --host="$converter_host" --prefix=/build/prefix --disable-shared --enable-static "$@"; else ./configure --prefix=/build/prefix --disable-shared --enable-static "$@"; fi; }
 for converter_library in libogg-1.3.6 libvorbis-1.3.7 opus-1.5.2 lame-3.100; do
  cd "/build/work/$converter_library"
@@ -33,7 +33,7 @@ make -j4 > /build/libvpx.log 2>&1
 make install >> /build/libvpx.log 2>&1
 cd /build/work/ffmpeg-9.0.2
 set -- --prefix=/build/prefix --extra-version=material-git-1 --disable-autodetect --disable-everything --enable-ffmpeg --enable-ffprobe --disable-ffplay --disable-doc --disable-debug --disable-network --enable-gpl --enable-version3 --enable-static --disable-shared --enable-libx264 --enable-libvpx --enable-libmp3lame --enable-libvorbis --enable-libopus --enable-protocol=file --enable-demuxer=mov,matroska,mp3,wav,flac,ogg,avi --enable-muxer=mp3,wav,flac,ogg,mp4,matroska,webm --enable-parser=aac,aac_latm,h264,hevc,vp8,vp9,mpegaudio,flac,opus,vorbis,mpeg4video,mjpeg --enable-decoder=aac,mp3,flac,vorbis,opus,h264,hevc,vp8,vp9,mpeg4,mjpeg,pcm_s16le,pcm_s24le,pcm_s32le,pcm_f32le,pcm_f64le,alac,ac3,eac3,wmav1,wmav2,pcm_u8 --enable-encoder=pcm_s16le,flac,aac,libmp3lame,libvorbis,libopus,libx264,libvpx_vp9 --enable-filter=aresample,anull,null,format,aformat,scale,color --enable-indev=lavfi --enable-swresample --enable-swscale --enable-avfilter --enable-bsf=aac_adtstoasc,h264_mp4toannexb,hevc_mp4toannexb,extract_extradata,null --extra-cflags="$CFLAGS" --extra-ldflags="$LDFLAGS" --pkg-config-flags=--static
-if [ -n "$converter_host" ]; then set -- "$@" --enable-cross-compile --cross-prefix="$converter_cross" --arch=x86_64 --target-os=mingw32; fi
+if [ -n "$converter_host" ]; then set -- "$@" --enable-cross-compile --cross-prefix="$converter_cross" --arch=x86_64 --target-os=mingw32 --pkg-config=pkg-config --extra-libs=-lssp; fi
 ./configure "$@" > /build/ffmpeg-configure.log 2>&1
 make -j4 > /build/ffmpeg.log 2>&1
 case "$converter_target" in win32-x64) cp ffmpeg.exe ffprobe.exe /out/;; *) cp ffmpeg ffprobe /out/;; esac

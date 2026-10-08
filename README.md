@@ -2,7 +2,7 @@
 
 A Windows desktop workspace for Git repositories and GitHub. Navigate real repositories, issues, pull requests, Actions, releases and related records through contextual tasks. Local Git support is being expanded around changes, history, branches and repository operations.
 
-Install the unsigned Windows application from [build-15-1](https://github.com/Ding-Ding-Projects/material-git/releases/tag/build-15-1). [Documentation site](https://material-git.earlyray.chatgpt.site) · [Feature status](docs/requirements/README.md) · [Roadmap](ROADMAP.md) · [Handoff](HANDOFF.md).
+Install the unsigned Windows application from [build-16-1](https://github.com/Ding-Ding-Projects/material-git/releases/tag/build-16-1). [Documentation site](https://material-git.earlyray.chatgpt.site) · [Feature status](docs/requirements/README.md) · [Roadmap](ROADMAP.md) · [Handoff](HANDOFF.md).
 
 **Full Git/GitHub action parity is not verified.** Upstream command and schema inventories do not prove working GUI behavior. The published release may precede changes documented in source. Current screenshots and recording for the domain remake await final build verification.
 
@@ -49,7 +49,7 @@ Windows CI builds/packages/publishes. It does not run tests or lint; notes must 
 
 [Documentation index](docs/README.md) · [Authentication](docs/authentication.md) · [Security](docs/security.md) · [Workspace records](docs/workspace.md) · [API workspace](docs/api-explorer.md) · [Design provenance](design/material-provenance.md).
 
-Earlier screenshots prove only the earlier interface. The remake needs genuine captures of every destination, settings/editor/dialog, empty/error state, narrow layout and both themes, bound to source and artifact provenance. The current recording and full language/scale matrix remain open.
+The [reviewed screenshot ledger](docs/images/README.md) preserves nine genuine desktop captures from source `44dc9d8`, with exact capture times and SHA-256 hashes. They describe that earlier source, independently of the Windows release and newer implementation. Additional genuine export, download, appearance, language and startup-photo captures have been inspected; they remain outside the published gallery until a coherent capture receipt records each image’s source, timestamp and hash. Final destination coverage, recording and the full language/scale matrix remain open.
 
 The site is https://material-git.earlyray.chatgpt.site and currently owner-private. Repository About homepage PATCH returned HTTP 403 with the connected credential; permission/deployment verification belong to the publishing owner. Source visibility and site audience are independent.
 

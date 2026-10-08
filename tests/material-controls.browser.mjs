@@ -10,7 +10,7 @@ const root=fileURLToPath(new URL('..',import.meta.url));
 const require=createRequire(import.meta.url);
 const out=await fs.mkdtemp(join(tmpdir(),'material-controls-'));
 const env={...process.env,MATERIAL_GIT_TEST:'1',MATERIAL_GIT_USER_DATA:join(out,'profile'),GH_CONFIG_DIR:join(out,'gh')};
-for(const key of ['GH_TOKEN','GITHUB_TOKEN','GH_ENTERPRISE_TOKEN','GITHUB_ENTERPRISE_TOKEN'])delete env[key];
+if(!process.env.MATERIAL_GIT_CONTROL_PUBLIC_REPOSITORY)for(const key of ['GH_TOKEN','GITHUB_TOKEN','GH_ENTERPRISE_TOKEN','GITHUB_ENTERPRISE_TOKEN'])delete env[key];
 await fs.mkdir(env.GH_CONFIG_DIR,{recursive:true});
 const app=await electron.launch({executablePath:require('electron'),args:['--no-sandbox','--ozone-platform=headless','.'],cwd:root,env});
 const page=await app.firstWindow(),checks=[],errors=[];
@@ -35,8 +35,49 @@ try{
  await page.screenshot({path:join(out,'settings-dark.png')});
  await choose(theme,'light');
  checks.push('Settings select accepts ordinary pointer clicks and persists each choice');
+ await page.locator('[data-design-id="workspace-titlebar"]').click({button:'right'});
+ const appearance=page.locator('mg-appearance'),interaction=appearance.locator('md-outlined-select').first();
+ await choose(interaction,'hover');
+ assert.equal(await appearance.evaluate(element=>element.state),'hover');
+ const nestedSearch=appearance.locator('mg-search').first();
+ await nestedSearch.getByRole('button',{name:'Configure regular expression',exact:true}).click();
+ const nestedFamily=nestedSearch.locator('md-filled-select[label="Token family"]');
+ await choose(nestedFamily,'anchors');await openSelect(nestedFamily);
+ await eventAfter(nestedFamily,'closed',()=>page.keyboard.press('Escape'));
+ assert.equal(await nestedSearch.evaluate(element=>element.expanded),true);
+ await page.keyboard.press('Escape');
+ assert.equal(await nestedSearch.evaluate(element=>element.expanded),false);
+ assert.equal(await appearance.isVisible(),true,'Closing the popover must preserve its parent dialog');
+ await page.screenshot({path:join(out,'appearance-dialog-light.png')});
+ await page.locator('md-dialog[open]').getByRole('button',{name:'Close',exact:true}).click();
+ checks.push('Dialog select and nested popover accept normal pointer input; Escape dismisses one layer at a time');
+ await page.getByTestId('nav-api').click();
+ const api=page.locator('mg-api-explorer'),category=api.locator('md-filled-select[label="Category"]');
+ await category.waitFor({timeout:30000});
+ const categoryValue=await category.locator('md-select-option').evaluateAll(options=>options.map(option=>option.value).find(Boolean));
+ assert.ok(categoryValue);await choose(category,categoryValue);
+ checks.push('API schema category select works with bundled metadata and no request execution');
+ if(process.env.MATERIAL_GIT_CONTROL_PUBLIC_REPOSITORY){
+  await page.getByTestId('nav-repositories').click();
+  const workspace=page.locator('mg-github-workspace').filter({has:page.getByTestId('repositories-workspace')});
+  await workspace.getByRole('textbox',{name:'Search repositories',exact:true}).fill('repo:'+process.env.MATERIAL_GIT_CONTROL_PUBLIC_REPOSITORY);
+  await page.waitForTimeout(500);await page.waitForFunction(()=>{const el=Array.from(document.querySelectorAll('mg-github-workspace')).find(el=>el.domain==='repositories');return el&&!el.loading;});
+  await workspace.getByRole('button',{name:'Create repository',exact:true}).click();
+  const visibility=page.locator('md-dialog[open] md-filled-select');await choose(visibility,'public');
+  await openSelect(visibility);await eventAfter(visibility,'closed',()=>page.keyboard.press('Escape'));
+  assert.equal(await page.locator('md-dialog[open]').count(),1);
+  await page.screenshot({path:join(out,'github-editor-light.png')});
+  await page.locator('md-dialog[open]').getByRole('button',{name:'Discard',exact:true}).click();
+  checks.push('Actual GitHub editor select works; draft discarded without reviewing or applying a GitHub mutation');
+ }
+
  await page.getByTestId('nav-tools').click();
  const tools=page.locator('mg-tools'),search=tools.locator('mg-search').first();
+ await tools.getByRole('textbox',{name:'Text to test locally',exact:true}).fill('alpha\nβeta');
+ await search.getByRole('textbox',{name:'Text or regular expression',exact:true}).fill('alpha');
+ await page.waitForFunction(()=>document.querySelector('mg-tools')?.regexResult==='alpha');
+ checks.push('Local workbench preserves matching user text verbatim');
+
  await search.getByRole('button',{name:'Configure regular expression',exact:true}).click();
  const family=search.locator('md-filled-select[label="Token family"]');
  await choose(family,'groups');
@@ -46,6 +87,7 @@ try{
  assert.equal(await family.evaluate(element=>element.open),false);
  await family.focus();await eventAfter(family,'opened',()=>page.keyboard.press('ArrowDown'));await page.keyboard.press('ArrowDown');await eventAfter(family,'closed',()=>page.keyboard.press('Enter'));
  assert.equal(await family.evaluate(element=>element.value),'classes');
+ assert.equal(await search.locator('md-filled-select[label="Token"]').evaluate(element=>element.displayText),'Digits');
  checks.push('Nested popover select supports pointer, arrows, Enter and scoped Escape');
  await page.screenshot({path:join(out,'regex-light.png')});
  await page.keyboard.press('Escape');
@@ -53,6 +95,8 @@ try{
  await page.setViewportSize({width:800,height:700});
  await search.getByRole('button',{name:'Configure regular expression',exact:true}).click();
  await choose(search.locator('md-filled-select[label="Token family"]'),'quantifiers');
+ assert.deepEqual(await search.locator('md-filled-select[label="Token"]').evaluate(element=>({value:element.value,label:element.displayText})),{value:'*',label:'Zero or more'});
+ checks.push('Changing token families resets both the actual selected value and its visible label');
  await page.screenshot({path:join(out,'regex-narrow.png')});
  assert.equal(await page.evaluate(()=>document.body.scrollWidth),800);
  checks.push('Narrow workbench remains usable without horizontal document overflow');

@@ -186,3 +186,14 @@ test('GraphQL sensitive typed argument preview is redacted while immutable actua
  const changed=await api.graphqlReview(request);accountId=2;await assert.rejects(()=>api.apply({reviewId:changed.reviewId,confirmed:true}),/account changed/);assert.equal(mutations,1);
  await assert.rejects(()=>api.graphqlExecute({...request,confirmed:true}),/single-use review/);
 });
+
+
+test('native account context changes invalidate all pending API receipts without sending mutations',async()=>{
+ let mutations=0;const api=service(async()=>{mutations++;return http({id:1});});
+ const change={...request,operationId:'items/update',body:{title:'reviewed value'}};
+ const first=await api.review(change),second=await api.review(change);
+ api.invalidateReviews();
+ for(const plan of [first,second])await assert.rejects(()=>api.apply({reviewId:plan.reviewId,confirmed:true}),/expired|already used/);
+ assert.equal(mutations,0);
+ const fresh=await api.review(change);await api.apply({reviewId:fresh.reviewId,confirmed:true});assert.equal(mutations,1);
+});
