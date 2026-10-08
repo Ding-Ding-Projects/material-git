@@ -87,6 +87,7 @@ try{
  assert.equal(await family.evaluate(element=>element.open),false);
  await family.focus();await eventAfter(family,'opened',()=>page.keyboard.press('ArrowDown'));await page.keyboard.press('ArrowDown');await eventAfter(family,'closed',()=>page.keyboard.press('Enter'));
  assert.equal(await family.evaluate(element=>element.value),'classes');
+ assert.equal(await search.locator('md-filled-select[label="Token"]').evaluate(element=>element.displayText),'Digits');
  checks.push('Nested popover select supports pointer, arrows, Enter and scoped Escape');
  await page.screenshot({path:join(out,'regex-light.png')});
  await page.keyboard.press('Escape');
@@ -94,6 +95,8 @@ try{
  await page.setViewportSize({width:800,height:700});
  await search.getByRole('button',{name:'Configure regular expression',exact:true}).click();
  await choose(search.locator('md-filled-select[label="Token family"]'),'quantifiers');
+ assert.deepEqual(await search.locator('md-filled-select[label="Token"]').evaluate(element=>({value:element.value,label:element.displayText})),{value:'*',label:'Zero or more'});
+ checks.push('Changing token families resets both the actual selected value and its visible label');
  await page.screenshot({path:join(out,'regex-narrow.png')});
  assert.equal(await page.evaluate(()=>document.body.scrollWidth),800);
  checks.push('Narrow workbench remains usable without horizontal document overflow');
