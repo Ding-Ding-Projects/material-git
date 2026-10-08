@@ -8,17 +8,17 @@ Every user-facing application and GitHub Pages ships a real local converter that
 
 ## Current support and configuration
 
-A native bounded converter registry, file grants, atomic output validation and cancellable result journal are integrated. Supported structured/text/image adapters remain distinct from unavailable PDF/audio/video/archive families.
+Native file grants, byte inspection, atomic multi-output publication and a durable disk-backed queue are integrated. Adapters now include bounded PDF operations, PNG/JPEG, typed structured data and safe ZIP, plus receipt-verified FFmpeg and 7-Zip capabilities. Missing engines and unsupported formats remain explicit.
 
 This is a scoped implementation assessment, not a claim that the whole requirement is finished. Surface states: **app: partial; site: unknown; repository: not-applicable**. See [implementation reference](../../converters.md) and the [complete inventory](../../coverage/features.json). Controls belong in the destination that owns the data; the primary UI must remain a productive task workspace.
 
 ## Controls, defaults and limits
 
-The native converter detects bounded bytes and caps one source at `32` MiB, allows two active conversions and requires at least `64` MiB reported destination free space. It refuses overwriting an existing path, verifies source hash/dimensions or codec output, writes atomically and reopens output. Unsupported PDF/audio/video/archive adapters remain disabled with reasons.
+Each granted source is at most `32` MiB. An operation permits `250` inputs/outputs and `64` MiB aggregate input/output; two admission slots and `128` MiB free destination space are required. Durable queue records have no total-count cap, but native selected-file arrays remain a discovery boundary. PDF outputs allow at most `250` pages and reject encrypted/signed/active-content/form PDFs. Media presets allow `300` seconds, `4096` pixels per side, about `8.3` million pixels/frame, four threads and a `90`-second deadline. Existing destinations are refused; output bytes are reopened and verified before publication. Missing engine receipts keep affected adapters disabled.
 
 ## Failures and remaining work
 
-Expose unavailable dependencies truthfully; prove byte detection, offline adapters, bounded queues, atomic output validation and crash recovery.
+Prove clean installed/offline operation, source discovery bounds, every native control, durable pause/resume/crash recovery and platform decoder containment. Office formats, advanced PDFs and external multi-volume imports retain explicit unsupported boundaries.
 
 Missing native dependencies, OS facilities, remote permissions and verification are reported separately. Disabled or unavailable behavior must explain the actual cause and preserve the existing data; no sample entity or fake success fills an empty state.
 

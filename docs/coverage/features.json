@@ -3242,15 +3242,15 @@
         "app": {
           "applicable": true,
           "status": "partial",
-          "implementation": "A native bounded converter registry, file grants, atomic output validation and cancellable result journal are integrated. Supported structured/text/image adapters remain distinct from unavailable PDF/audio/video/archive families.",
+          "implementation": "Native file grants, byte inspection, atomic multi-output publication and a durable disk-backed queue are integrated. Adapters now include bounded PDF operations, PNG/JPEG, typed structured data and safe ZIP, plus receipt-verified FFmpeg and 7-Zip capabilities. Missing engines and unsupported formats remain explicit.",
           "missing": [
-            "Expose unavailable dependencies truthfully; prove byte detection, offline adapters, bounded queues, atomic output validation and crash recovery."
+            "Prove clean installed/offline operation, source discovery bounds, every native control, durable pause/resume/crash recovery and platform decoder containment. Office formats, advanced PDFs and external multi-volume imports retain explicit unsupported boundaries."
           ],
           "evidence": [
             {
               "kind": "source-review",
               "reference": "docs/converters.md",
-              "detail": "A native bounded converter registry, file grants, atomic output validation and cancellable result journal are integrated. Supported structured/text/image adapters remain distinct from unavailable PDF/audio/video/archive families."
+              "detail": "Native file grants, byte inspection, atomic multi-output publication and a durable disk-backed queue are integrated. Adapters now include bounded PDF operations, PNG/JPEG, typed structured data and safe ZIP, plus receipt-verified FFmpeg and 7-Zip capabilities. Missing engines and unsupported formats remain explicit."
             }
           ],
           "proof": {
@@ -3304,8 +3304,8 @@
         "en": "docs/requirements/tools/file-converter.md",
         "yue": "docs/requirements/tools/file-converter.yue.md"
       },
-      "implementationNotes": "A native bounded converter registry, file grants, atomic output validation and cancellable result journal are integrated. Supported structured/text/image adapters remain distinct from unavailable PDF/audio/video/archive families.",
-      "remaining": "Expose unavailable dependencies truthfully; prove byte detection, offline adapters, bounded queues, atomic output validation and crash recovery.",
+      "implementationNotes": "Native file grants, byte inspection, atomic multi-output publication and a durable disk-backed queue are integrated. Adapters now include bounded PDF operations, PNG/JPEG, typed structured data and safe ZIP, plus receipt-verified FFmpeg and 7-Zip capabilities. Missing engines and unsupported formats remain explicit.",
+      "remaining": "Prove clean installed/offline operation, source discovery bounds, every native control, durable pause/resume/crash recovery and platform decoder containment. Office formats, advanced PDFs and external multi-volume imports retain explicit unsupported boundaries.",
       "verificationPolicy": "A filename or source registry is supporting context only. It does not prove functional, live-service or platform support."
     },
     {
@@ -7281,6 +7281,48 @@
       "scope": "Read-only real repository/issue/pull/action/release lists, native Git open, account/settings navigation; no remote mutations or Windows proof",
       "errors": 0
     },
-    "capturePublication": "Public sanitized ledger/captures owned by site evidence lane; links pending integration"
+    "capturePublication": "Public sanitized ledger/captures owned by site evidence lane; links pending integration",
+    "subsequentIntegratedSuite": {
+      "tests": 241,
+      "pass": 241,
+      "fail": 0,
+      "skipped": 0,
+      "scope": "Integrated Linux suite before latest CLI/Git/converter changes; not the later final tree"
+    },
+    "subsequentGuiReceipt": {
+      "commit": "ba2330e68c0f404f64f35bb9beaac4d7e28b48b0",
+      "builtAt": "2026-10-08T13:13:40.872Z",
+      "platform": "linux",
+      "architecture": "x64",
+      "captures": 10,
+      "errors": 0,
+      "scope": "Real read-only domain lists, Accounts navigation and native Git selection; no remote mutation or Windows proof"
+    },
+    "siteDeployment": {
+      "at": "2026-10-08T13:04:34.624998Z",
+      "url": "https://material-git.earlyray.chatgpt.site",
+      "audience": "owner-private",
+      "articles": 255,
+      "genuineImages": 9,
+      "scope": "Successful deployment predates later article checkpoints; deployment of subsequent edits and independent visitor feature parity remain open"
+    },
+    "laterIntegratedSuite": {
+      "tests": 275,
+      "pass": 275,
+      "fail": 0,
+      "skipped": 0,
+      "scope": "Integrated Linux suite after native converter payloads were available, before later startup and final renderer regression changes; not the later final tree"
+    }
+  },
+  "articleReview": {
+    "checkedAt": "2026-10-08T13:34:48.983950+00:00",
+    "featureSpecificCantoneseArticles": 104,
+    "controlLimitSections": 44,
+    "scope": "Requirement/current support/remaining work reviewed against each EN article; structured checks preserve identifiers and numeric facts. This is article evidence only.",
+    "runtimeLocalizationCertified": false
+  },
+  "sourceReviewUpdate": {
+    "commit": "95cc17976e67298c870ef5cb3ef5a9353c700006",
+    "scope": "Targeted source review of current native converter limits and renderer export/discard controllers; independent from the historical GUI receipt and full-suite source claims"
   }
 }
