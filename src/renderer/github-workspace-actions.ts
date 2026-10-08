@@ -4,6 +4,7 @@ import type {GitHubLocalSourceAction} from '../shared/github';
 export interface NativeArea {id:string;label:string;yue:string;icon:string;actions:string[];initial?:string;selected?:boolean;selection?:'run'|'workflow';handoffs?:{action:GitHubLocalSourceAction;label:string;yue:string}[];workflows?:{commandId:string;label:string;yue:string}[]}
 export const nativeAreas:Partial<Record<Domain,NativeArea[]>>={
  repositories:[
+ {id:'synchronize',label:'Synchronize branch',yue:'同步分支',icon:'refresh',selected:true,actions:['repositories.synchronize']},
  {id:'local-git',label:'Local Git',yue:'本地 Git',icon:'repo',selected:true,actions:[],handoffs:[{action:'repositories.clone-source',label:'Clone selected repository',yue:'複製所選儲存庫'}]},
  {id:'create',label:'Create or fork',yue:'建立或分叉',icon:'repo',actions:['repositories.create-with-options','repositories.fork-with-options'],initial:'repositories.create-with-options'},
  {id:'files',label:'Files',yue:'檔案',icon:'folder',actions:['repositories.read-directory','repositories.read-file','repositories.gitignore-list','repositories.gitignore-view','repositories.license-list','repositories.license-view'],initial:'repositories.read-directory'},
@@ -46,6 +47,7 @@ export const nativeAreas:Partial<Record<Domain,NativeArea[]>>={
  ]
 };
 export const taskLabels:Record<string,string>={
+ 'synchronize':'同步所選遠端分支',
  'dispatch-with-options':'輸入欄位同輸入檔案','fork-with-options':'分叉至帳戶或機構',
  'merge-with-options':'合併策略同自動合併','create-with-options':'完整建立選項','default-context':'預設儲存庫','account-status':'我嘅 GitHub 工作','license-notices':'應用程式授權聲明','clear-cli-cache':'清除設定快取',watch:'追蹤執行進度',
  'read-directory':'瀏覽目錄','read-file':'讀取檔案','gitignore-list':'忽略範本','gitignore-view':'查看忽略範本','license-list':'授權範本','license-view':'查看授權範本',
