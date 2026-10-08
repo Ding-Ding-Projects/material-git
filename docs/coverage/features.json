@@ -314,7 +314,7 @@
         "app": {
           "applicable": true,
           "status": "partial",
-          "implementation": "Installed-voice discovery and serialized narration exist; actual voice availability depends on the OS.",
+          "implementation": "Structured factual EN/Yue events use serialized narration, distinct error FIFO, ordinary category coalescing, explicit Hong Kong voices and quiet/screen-reader yielding. Exact installed voices and complete event coverage remain unverified.",
           "missing": [
             "Verify late/empty enumeration, missing Cantonese voice, screen-reader interaction and rate/pitch boundaries."
           ],
@@ -323,6 +323,11 @@
               "kind": "source-review",
               "reference": "docs/personalization.md",
               "detail": "Installed-voice discovery and serialized narration exist; actual voice availability depends on the OS."
+            },
+            {
+              "kind": "source-review",
+              "reference": "src/renderer/localization.ts",
+              "detail": "Feature-phase implementation progress. Structured factual EN/Yue events use serialized narration, distinct error FIFO, ordinary category coalescing, explicit Hong Kong voices and quiet/screen-reader yielding. Exact installed voices and complete event coverage remain unverified."
             }
           ],
           "proof": {
@@ -527,7 +532,7 @@
         "app": {
           "applicable": true,
           "status": "partial",
-          "implementation": "Five independent preference fields exist; complete adaptation of the new domain shell is pending.",
+          "implementation": "Independent elapsed/unchanged/context clocks, idle momentum with one-hour deferral, low-stimulation quieting and task-selection cues are integrated with durable local choices. Final product-level coverage/captures remain open.",
           "missing": [
             "Verify each mode alone and in combinations, discoverable hidden work, quiet/motion interactions and restart."
           ],
@@ -536,6 +541,11 @@
               "kind": "source-review",
               "reference": "docs/personalization.md",
               "detail": "Five independent preference fields exist; complete adaptation of the new domain shell is pending."
+            },
+            {
+              "kind": "source-review",
+              "reference": "src/renderer/task-support.ts",
+              "detail": "Feature-phase implementation progress. Independent elapsed/unchanged/context clocks, idle momentum with one-hour deferral, low-stimulation quieting and task-selection cues are integrated with durable local choices. Final product-level coverage/captures remain open."
             }
           ],
           "proof": {
@@ -994,7 +1004,7 @@
         "app": {
           "applicable": true,
           "status": "partial",
-          "implementation": "Element/state style editor exists; full typography/image-layer capability matrix remains an explicit obligation.",
+          "implementation": "Anchored actual-element editor now includes typography/color/rainbow, source-preserving PNG crop/rotate/flip, bounded vectors/arcs/freehand with retained raw recipes, explicit simplification, undo/redo and native validated SVG/PNG saving. Boolean geometry, text outlines, warps and full history restoration remain open.",
           "missing": [
             "Audit each property/state/layer, undo/redo, presets, copy/import, keyboard/context access and unsupported explanations."
           ],
@@ -1003,6 +1013,11 @@
               "kind": "source-review",
               "reference": "docs/personalization.md",
               "detail": "Element/state style editor exists; full typography/image-layer capability matrix remains an explicit obligation."
+            },
+            {
+              "kind": "source-review",
+              "reference": "docs/appearance-editor.md",
+              "detail": "Feature-phase implementation progress. Anchored actual-element editor now includes typography/color/rainbow, source-preserving PNG crop/rotate/flip, bounded vectors/arcs/freehand with retained raw recipes, explicit simplification, undo/redo and native validated SVG/PNG saving. Boolean geometry, text outlines, warps and full history restoration remain open."
             }
           ],
           "proof": {
@@ -1679,7 +1694,7 @@
         "app": {
           "applicable": true,
           "status": "partial",
-          "implementation": "Palette indexes destinations/settings/articles/current controls, excludes inactive mounted tabs across shadow roots and does not list the command registry.",
+          "implementation": "Off-page registry routes actual settings/property owners, including nested appearance controls, with originating sliders/choices and targeted focus. Full source/action coverage and final narrow-layout proof remain open.",
           "missing": [
             "Verify Ctrl+Shift+F, persisted size, exact owning-route teleport and every actionable setting/contextual control."
           ],
@@ -1688,6 +1703,11 @@
               "kind": "source-review",
               "reference": "docs/workspace.md",
               "detail": "Palette indexes destinations/settings/articles/current controls, excludes inactive mounted tabs across shadow roots and does not list the command registry."
+            },
+            {
+              "kind": "source-review",
+              "reference": "src/renderer/workspace-support.ts",
+              "detail": "Feature-phase implementation progress. Off-page registry routes actual settings/property owners, including nested appearance controls, with originating sliders/choices and targeted focus. Full source/action coverage and final narrow-layout proof remain open."
             }
           ],
           "proof": {
@@ -2504,7 +2524,7 @@
         "app": {
           "applicable": true,
           "status": "partial",
-          "implementation": "Native RFC TOTP validation and encrypted records have tests. QR image/camera and final GUI/platform support require separate evidence.",
+          "implementation": "Named/grouped/icon-bearing TOTP entries, edit/reorder, bounded native QR file/clipboard, one-use camera permit, exact removal gate and encrypted portable backup export/import are integrated. Independent protected history and platform vault proof remain open.",
           "missing": [
             "Verify RFC vectors, algorithms/digits/period, countdown/skew, all registration paths and confirmed sensitive exports."
           ],
@@ -2513,6 +2533,11 @@
               "kind": "source-review",
               "reference": "docs/security.md",
               "detail": "Native RFC TOTP validation and encrypted records have tests. QR image/camera and final GUI/platform support require separate evidence."
+            },
+            {
+              "kind": "source-review",
+              "reference": "docs/authenticator.md",
+              "detail": "Feature-phase implementation progress. Named/grouped/icon-bearing TOTP entries, edit/reorder, bounded native QR file/clipboard, one-use camera permit, exact removal gate and encrypted portable backup export/import are integrated. Independent protected history and platform vault proof remain open."
             }
           ],
           "proof": {
@@ -2579,7 +2604,7 @@
         "app": {
           "applicable": true,
           "status": "partial",
-          "implementation": "Local OTP URI/QR generation and code verification are available in native pairing.",
+          "implementation": "Local manual/URI/QR enrollment uses validated parameters and current-code confirmation. Native PNG/JPEG decoding bounds bytes/dimensions; actual Electron permission fixture proves one video request with simulated camera hardware. Physical camera and platform-specific availability remain unverified.",
           "missing": [
             "Verify both themes/quiet zone, explicit secret reveal, no plaintext persistence and activation only after one valid current code."
           ],
@@ -2588,6 +2613,11 @@
               "kind": "source-review",
               "reference": "docs/security.md",
               "detail": "Local OTP URI/QR generation and code verification are available in native pairing."
+            },
+            {
+              "kind": "source-review",
+              "reference": "tests/native-feature-hooks.browser.mjs",
+              "detail": "Feature-phase implementation progress. Local manual/URI/QR enrollment uses validated parameters and current-code confirmation. Native PNG/JPEG decoding bounds bytes/dimensions; actual Electron permission fixture proves one video request with simulated camera hardware. Physical camera and platform-specific availability remain unverified."
             }
           ],
           "proof": {
@@ -2729,7 +2759,7 @@
         "app": {
           "applicable": true,
           "status": "partial",
-          "implementation": "Isolated Git-backed sanitized workspace/external record history and async restore dispatcher exist. Complete per-kind restore UI and hooks remain open.",
+          "implementation": "Native managed revisions support date filters, labels/diffs, exact supported append-only restore, retention and exports. Dedicated independently protected secret-history, complete recoverable drafts and appearance restoration remain active work.",
           "missing": [
             "Prove one revision per actual mutation and append-only restores for settings/accounts/encrypted factors/schedules/discards; never plaintext tokens."
           ],
@@ -2738,6 +2768,11 @@
               "kind": "source-review",
               "reference": "docs/workspace.md",
               "detail": "Isolated Git-backed sanitized workspace/external record history and async restore dispatcher exist. Complete per-kind restore UI and hooks remain open."
+            },
+            {
+              "kind": "source-review",
+              "reference": "src/renderer/workspace-records.ts",
+              "detail": "Feature-phase implementation progress. Native managed revisions support date filters, labels/diffs, exact supported append-only restore, retention and exports. Dedicated independently protected secret-history, complete recoverable drafts and appearance restoration remain active work."
             }
           ],
           "proof": {
@@ -3167,7 +3202,7 @@
         "app": {
           "applicable": true,
           "status": "partial",
-          "implementation": "Durable bounded notification state/actions and reviewed history exports exist. Complete final-shell event integration is still unverified.",
+          "implementation": "Typed native notification history and bounded three-card stack now retain EN/Yue facts, task routes, persistent warnings/errors, ordinary expiry and save-failure disclosure. Managed centre supports filters, date range, selections and exports. Complete feature-event coverage and final current captures remain open.",
           "missing": [
             "Drive warning persistence/toast stacking/actions, focus/announcements, dismiss/restart/search and scoped bulk operations."
           ],
@@ -3176,6 +3211,11 @@
               "kind": "source-review",
               "reference": "docs/workspace.md",
               "detail": "Durable bounded notification state/actions and reviewed history exports exist. Complete final-shell event integration is still unverified."
+            },
+            {
+              "kind": "source-review",
+              "reference": "docs/requirements/records/notifications.md",
+              "detail": "Feature-phase implementation progress. Typed native notification history and bounded three-card stack now retain EN/Yue facts, task routes, persistent warnings/errors, ordinary expiry and save-failure disclosure. Managed centre supports filters, date range, selections and exports. Complete feature-event coverage and final current captures remain open."
             }
           ],
           "proof": {
@@ -3242,7 +3282,7 @@
         "app": {
           "applicable": true,
           "status": "partial",
-          "implementation": "Native file grants, byte inspection, atomic multi-output publication and a durable disk-backed queue are integrated. Adapters now include bounded PDF operations, PNG/JPEG, typed structured data and safe ZIP, plus receipt-verified FFmpeg and 7-Zip capabilities. Missing engines and unsupported formats remain explicit.",
+          "implementation": "Typed conversion adapters now have real native byte fixtures, durable paged source discovery, exact selected/all/range review, crash-reconciled streamed admissions, resume/remount and searchable outcome pages. Full adapter/task parity, complete editor mediation and platform proof remain open.",
           "missing": [
             "Prove clean installed/offline operation, source discovery bounds, every native control, durable pause/resume/crash recovery and platform decoder containment. Office formats, advanced PDFs and external multi-volume imports retain explicit unsupported boundaries."
           ],
@@ -3251,6 +3291,11 @@
               "kind": "source-review",
               "reference": "docs/converters.md",
               "detail": "Native file grants, byte inspection, atomic multi-output publication and a durable disk-backed queue are integrated. Adapters now include bounded PDF operations, PNG/JPEG, typed structured data and safe ZIP, plus receipt-verified FFmpeg and 7-Zip capabilities. Missing engines and unsupported formats remain explicit."
+            },
+            {
+              "kind": "source-review",
+              "reference": "docs/converters.md",
+              "detail": "Feature-phase implementation progress. Typed conversion adapters now have real native byte fixtures, durable paged source discovery, exact selected/all/range review, crash-reconciled streamed admissions, resume/remount and searchable outcome pages. Full adapter/task parity, complete editor mediation and platform proof remain open."
             }
           ],
           "proof": {
@@ -3317,7 +3362,7 @@
         "app": {
           "applicable": true,
           "status": "partial",
-          "implementation": "Native model catalogue crawling, hardware evidence, reviewed persistent pull batches, stored streaming chat sessions and allowlisted harness lifecycle are integrated. Full live catalogue/tag/GPU/attachment/platform proof remains incomplete.",
+          "implementation": "Native service includes streaming chat/generation, reviewed copy, capability gates and exact-byte runtime trust with three resource presets and native process-lifecycle checks. Full config snapshots, model-specific fit/launch and real installed-model inference remain unfinished.",
           "missing": [
             "Audit complete API action mapping, attachment capabilities, cancellation, stored secrets, offline troubleshooting and rollback."
           ],
@@ -3326,6 +3371,11 @@
               "kind": "source-review",
               "reference": "docs/ollama.md",
               "detail": "Native model catalogue crawling, hardware evidence, reviewed persistent pull batches, stored streaming chat sessions and allowlisted harness lifecycle are integrated. Full live catalogue/tag/GPU/attachment/platform proof remains incomplete."
+            },
+            {
+              "kind": "source-review",
+              "reference": "docs/ollama.md",
+              "detail": "Feature-phase implementation progress. Native service includes streaming chat/generation, reviewed copy, capability gates and exact-byte runtime trust with three resource presets and native process-lifecycle checks. Full config snapshots, model-specific fit/launch and real installed-model inference remain unfinished."
             }
           ],
           "proof": {
@@ -7324,5 +7374,7 @@
   "sourceReviewUpdate": {
     "commit": "95cc17976e67298c870ef5cb3ef5a9353c700006",
     "scope": "Targeted source review of current native converter limits and renderer export/discard controllers; independent from the historical GUI receipt and full-suite source claims"
-  }
+  },
+  "implementationProgressReviewedAt": "2026-10-08",
+  "implementationProgressNote": "Selected app rows refreshed from integrated feature source; original complete audit provenance and incomplete proof states retained. No certification."
 }
