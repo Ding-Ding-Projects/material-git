@@ -1,6 +1,6 @@
 # Reviewed desktop captures
 
-These 20 unedited captures come from the same running Material Git Linux x64 artifact, built from source [`e464ff70f195dbd9584614b92a9547074e49200d`](https://github.com/Ding-Ding-Projects/material-git/commit/e464ff70f195dbd9584614b92a9547074e49200d). Isolated Electron profiles used normal pointer and keyboard input. Real GitHub records were read from the explicitly selected public `Ding-Ding-Projects/material-git` repository. The local Git picker opened the actual public source checkout; no provider or Git mutation was performed for the captures. Owned native file-picker destinations were automated only within the verification profile.
+These 21 unedited captures come from the same running Material Git Linux x64 artifact, built from source [`e464ff70f195dbd9584614b92a9547074e49200d`](https://github.com/Ding-Ding-Projects/material-git/commit/e464ff70f195dbd9584614b92a9547074e49200d). Isolated Electron profiles used normal pointer and keyboard input. Real GitHub records were read from the explicitly selected public `Ding-Ding-Projects/material-git` repository. The local Git picker opened the actual public source checkout; no provider or Git mutation was performed for the captures. Owned native file-picker destinations were automated only within the verification profile.
 
 The capture sessions recorded zero application errors. Issues, pull requests and cloud workspaces show actual empty results. Actions includes an actual failed selected run; it is not presented as a successful release. The native SHA256SUMS transfer completed with 247 bytes, and its independently calculated SHA-256 matched the provider digest. Its recovery is session-only because protected storage was unavailable.
 
@@ -23,6 +23,7 @@ The capture sessions recorded zero application errors. Issues, pull requests and
 | [Local source control](source-control.png) | `2026-10-08T14:32:31.966Z` | 1500 × 950 | Native Git inspects the actual public source checkout with no changed files and explicit repository trust controls. No commit operation was performed for this capture. |
 | [Host-scoped repository picker](repository-picker.png) | `2026-10-08T14:32:21.341Z` | 1500 × 950 | The real repository picker filters the authenticated host’s public repository results before an explicit selection. |
 | [Ten export-format choices](export-formats.png) | `2026-10-08T14:32:30.168Z` | 1500 × 950 | The native export dialog for 11 selected release records, with CSV selected and its type-preservation limits disclosed. This frame does not prove a save operation. |
+| [Settled native download confirmation](download-start.png) | `2026-10-08T14:41:05.345Z` | 1500 × 950 | The fully opened Start dialog identifies the real SHA256SUMS release asset before a native destination is chosen. No transfer was initiated in this capture session. |
 | [Completed native download queue](downloads.png) | `2026-10-08T14:35:46.193Z` | 1500 × 950 | The genuine SHA256SUMS release asset completed: 247 bytes, with its saved SHA-256 matching the provider digest. Recovery is explicitly limited to this session. |
 | [Verified download progress](download-complete.png) | `2026-10-08T14:35:46.028Z` | 1500 × 950 | The independent progress dialog shows the real completed 247-byte asset and SHA-256 verification. No destination path or credential is disclosed. |
 | [Local converter workspace](converters.png) | `2026-10-08T14:35:46.764Z` | 1500 × 950 | The actual converter workspace displays available adapter records and PDF limits before a source is selected. This frame does not demonstrate a completed conversion. |
@@ -33,12 +34,12 @@ The capture sessions recorded zero application errors. Issues, pull requests and
 | [Cantonese desktop presentation](desktop-yue.png) | `2026-10-08T14:32:37.543Z` | 1500 × 950 | The same desktop with Cantonese presentation selected. External repository facts remain unchanged; this frame does not establish universal localization. |
 | [Bilingual desktop presentation](desktop-both.png) | `2026-10-08T14:32:38.963Z` | 1500 × 950 | The same desktop with English and Cantonese presentation selected, preserving provider-authored repository facts. |
 
-The earlier core capture set has been superseded in the website gallery. The accounts capture records a settled authenticated active account. The earlier loading frame is excluded; the opening-transition Download Start frame is withheld pending a clear recapture. The earlier narrow blank-tab frame remains excluded; this set’s narrow capture shows actual tab initials and repository details. Additional settings/editor/error/scale destinations and a current recording remain open.
+The earlier core capture set has been superseded in the website gallery. The accounts capture records a settled authenticated active account. The settled Download Start frame is included. Superseded account-loading, empty download-queue and opening-transition frames are excluded. The earlier narrow blank-tab frame remains excluded; this set’s narrow capture shows actual tab initials and repository details. Additional settings/editor/error/scale destinations and a current recording remain open.
 
 ## 廣東話說明
 
-呢 20 張未經修改嘅畫面，全部來自同一個 Linux x64 Material Git 建置，來源係 `e464ff70f195dbd9584614b92a9547074e49200d`。每張圖像都有準確 UTC 擷取時間、SHA-256、尺寸、主題同語言記錄，複製後已核對每個位元組。GitHub 記錄係真實公開倉庫資料；Issues、pull requests 同雲端工作空間係實際空白結果。Actions 所選執行真實失敗，唔會當成成功版本。
+呢 21 張未經修改嘅畫面，全部來自同一個 Linux x64 Material Git 建置，來源係 `e464ff70f195dbd9584614b92a9547074e49200d`。每張圖像都有準確 UTC 擷取時間、SHA-256、尺寸、主題同語言記錄，複製後已核對每個位元組。GitHub 記錄係真實公開倉庫資料；Issues、pull requests 同雲端工作空間係實際空白結果。Actions 所選執行真實失敗，唔會當成成功版本。
 
 真實 SHA256SUMS 檔案已下載 247 位元組，SHA-256 同提供者校驗碼相符。復原只限今次工作階段。轉換工具畫面顯示真實配接器同限制，唔代表已完成轉換。主題、廣東話、雙語同窄畫面都係同一個建置嘅實際顯示；唔代表所有介面、本機化、尺寸或 Windows 安裝已完成驗證。另行記錄嘅 Windows 安裝程式仍然係來源 `85070852` 嘅 0.16.1 版本。
 
-帳戶畫面記錄一個已完成載入嘅已驗證使用中帳戶，先前載入中畫面已排除。下載開始動畫中畫面暫時唔公開，等清楚同穩定嘅重新擷取。舊窄畫面嘅空白分頁圖像仍然排除；新窄畫面顯示真實分頁縮寫同倉庫詳細資料。
+帳戶畫面記錄一個已完成載入嘅已驗證使用中帳戶，先前載入中畫面已排除。下載開始對話框已重新擷取到清楚畫面。被取代嘅帳戶載入中、空白下載列同下載開始動畫中畫面都已排除。舊窄畫面嘅空白分頁圖像仍然排除；新窄畫面顯示真實分頁縮寫同倉庫詳細資料。

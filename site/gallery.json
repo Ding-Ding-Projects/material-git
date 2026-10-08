@@ -112,6 +112,16 @@
       "capturedAt": "2026-10-08T14:32:30.168Z"
     },
     {
+      "file": "docs/images/download-start.png",
+      "title": "Settled native download confirmation",
+      "titleYue": "清楚顯示嘅原生下載確認",
+      "description": "The fully opened Start dialog identifies the real SHA256SUMS release asset before a native destination is chosen. No transfer was initiated in this capture session.",
+      "descriptionYue": "完整開啟嘅開始對話框，喺揀原生儲存目的地之前，標示真實 SHA256SUMS 版本檔案。呢次擷取工作階段冇啟動傳輸。",
+      "screen": "download-start",
+      "sourceCommit": "e464ff70f195dbd9584614b92a9547074e49200d",
+      "capturedAt": "2026-10-08T14:41:05.345Z"
+    },
+    {
       "file": "docs/images/downloads.png",
       "title": "Completed native download queue",
       "titleYue": "已完成嘅原生下載列",
