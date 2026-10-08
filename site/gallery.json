@@ -1,0 +1,215 @@
+{
+  "schemaVersion": 1,
+  "captures": [
+    {
+      "file": "docs/images/desktop.png",
+      "title": "Desktop workspace",
+      "titleYue": "桌面工作空間",
+      "description": "The genuine desktop workspace with an explicitly selected public repository and live details.",
+      "descriptionYue": "真實桌面工作空間，顯示明確選取嘅公開倉庫同即時詳細資料。",
+      "screen": "desktop",
+      "sourceCommit": "e464ff70f195dbd9584614b92a9547074e49200d",
+      "capturedAt": "2026-10-08T14:32:22.923Z"
+    },
+    {
+      "file": "docs/images/repositories.png",
+      "title": "Repository details",
+      "titleYue": "倉庫資料",
+      "description": "The real Ding-Ding-Projects/material-git repository result, its context controls, and provider-authored details.",
+      "descriptionYue": "真實 Ding-Ding-Projects/material-git 倉庫結果、相關控制項同提供者原始詳細資料。",
+      "screen": "repositories",
+      "sourceCommit": "e464ff70f195dbd9584614b92a9547074e49200d",
+      "capturedAt": "2026-10-08T14:32:23.030Z"
+    },
+    {
+      "file": "docs/images/issues.png",
+      "title": "Issues: real empty state",
+      "titleYue": "Issues：實際空白狀態",
+      "description": "The all-state issues filter returned zero records for this repository at capture time. No sample records were added.",
+      "descriptionYue": "擷取嗰陣，呢個倉庫嘅全部狀態 issue 篩選傳回零項記錄。冇加入示範記錄。",
+      "screen": "issues",
+      "sourceCommit": "e464ff70f195dbd9584614b92a9547074e49200d",
+      "capturedAt": "2026-10-08T14:32:24.454Z"
+    },
+    {
+      "file": "docs/images/pull-requests.png",
+      "title": "Pull requests: real empty state",
+      "titleYue": "Pull requests：實際空白狀態",
+      "description": "The all-state pull-request filter returned zero records for this repository at capture time. No sample records were added.",
+      "descriptionYue": "擷取嗰陣，呢個倉庫嘅全部狀態 pull request 篩選傳回零項記錄。冇加入示範記錄。",
+      "screen": "pull-requests",
+      "sourceCommit": "e464ff70f195dbd9584614b92a9547074e49200d",
+      "capturedAt": "2026-10-08T14:32:26.018Z"
+    },
+    {
+      "file": "docs/images/actions.png",
+      "title": "Actions history and job results",
+      "titleYue": "Actions 記錄同工作結果",
+      "description": "Live Actions history with 19 returned runs. The selected release run and job show their actual failure state; other visible runs include successful results.",
+      "descriptionYue": "即時 Actions 記錄，傳回 19 次執行。所選發佈執行同工作顯示真實失敗狀態；其他可見執行亦有成功結果。",
+      "screen": "actions",
+      "sourceCommit": "e464ff70f195dbd9584614b92a9547074e49200d",
+      "capturedAt": "2026-10-08T14:32:27.553Z"
+    },
+    {
+      "file": "docs/images/releases.png",
+      "title": "Release history and notes",
+      "titleYue": "版本記錄同說明",
+      "description": "Eleven real release records, with Material Git 0.16.1 selected and its original release notes. The installer source differs from this capture source.",
+      "descriptionYue": "十一個真實版本記錄，選取 Material Git 0.16.1 並顯示原始版本說明。安裝程式來源同呢張畫面來源唔同。",
+      "screen": "releases",
+      "sourceCommit": "e464ff70f195dbd9584614b92a9547074e49200d",
+      "capturedAt": "2026-10-08T14:32:28.917Z"
+    },
+    {
+      "file": "docs/images/accounts.png",
+      "title": "Settled active account and credential source",
+      "titleYue": "已載入使用中帳戶同憑證來源",
+      "description": "The settled native account request reports one authenticated active account. Environment credentials take precedence over saved accounts; no credential value is visible.",
+      "descriptionYue": "已完成嘅原生帳戶請求傳回一個已驗證使用中帳戶。環境憑證優先於已儲存帳戶；畫面冇顯示憑證內容。",
+      "screen": "accounts",
+      "sourceCommit": "e464ff70f195dbd9584614b92a9547074e49200d",
+      "capturedAt": "2026-10-08T14:37:56.118Z"
+    },
+    {
+      "file": "docs/images/settings.png",
+      "title": "Desktop preferences",
+      "titleYue": "桌面偏好設定",
+      "description": "The actual General preferences view, with language, display name and playfulness controls.",
+      "descriptionYue": "真實一般偏好設定畫面，顯示語言、顯示名稱同趣味程度控制項。",
+      "screen": "settings",
+      "sourceCommit": "e464ff70f195dbd9584614b92a9547074e49200d",
+      "capturedAt": "2026-10-08T14:32:31.268Z"
+    },
+    {
+      "file": "docs/images/source-control.png",
+      "title": "Local source control",
+      "titleYue": "本機版本控制",
+      "description": "Native Git inspects the actual public source checkout with no changed files and explicit repository trust controls. No commit operation was performed for this capture.",
+      "descriptionYue": "原生 Git 檢查實際公開來源工作目錄，冇已修改檔案，並顯示清楚嘅倉庫信任控制項。擷取畫面冇執行提交操作。",
+      "screen": "source-control",
+      "sourceCommit": "e464ff70f195dbd9584614b92a9547074e49200d",
+      "capturedAt": "2026-10-08T14:32:31.966Z"
+    },
+    {
+      "file": "docs/images/repository-picker.png",
+      "title": "Host-scoped repository picker",
+      "titleYue": "按主機選取倉庫",
+      "description": "The real repository picker filters the authenticated host’s public repository results before an explicit selection.",
+      "descriptionYue": "真實倉庫選擇器喺明確選取之前，篩選已驗證主機嘅公開倉庫結果。",
+      "screen": "repository-picker",
+      "sourceCommit": "e464ff70f195dbd9584614b92a9547074e49200d",
+      "capturedAt": "2026-10-08T14:32:21.341Z"
+    },
+    {
+      "file": "docs/images/export-formats.png",
+      "title": "Ten export-format choices",
+      "titleYue": "十種匯出格式選擇",
+      "description": "The native export dialog for 11 selected release records, with CSV selected and its type-preservation limits disclosed. This frame does not prove a save operation.",
+      "descriptionYue": "十一個所選版本記錄嘅原生匯出對話框，選取 CSV 並清楚說明類型保留限制。呢張畫面唔代表儲存操作已驗證。",
+      "screen": "export-formats",
+      "sourceCommit": "e464ff70f195dbd9584614b92a9547074e49200d",
+      "capturedAt": "2026-10-08T14:32:30.168Z"
+    },
+    {
+      "file": "docs/images/download-start.png",
+      "title": "Settled native download confirmation",
+      "titleYue": "清楚顯示嘅原生下載確認",
+      "description": "The fully opened Start dialog identifies the real SHA256SUMS release asset before a native destination is chosen. No transfer was initiated in this capture session.",
+      "descriptionYue": "完整開啟嘅開始對話框，喺揀原生儲存目的地之前，標示真實 SHA256SUMS 版本檔案。呢次擷取工作階段冇啟動傳輸。",
+      "screen": "download-start",
+      "sourceCommit": "e464ff70f195dbd9584614b92a9547074e49200d",
+      "capturedAt": "2026-10-08T14:41:05.345Z"
+    },
+    {
+      "file": "docs/images/downloads.png",
+      "title": "Completed native download queue",
+      "titleYue": "已完成嘅原生下載列",
+      "description": "The genuine SHA256SUMS release asset completed: 247 bytes, with its saved SHA-256 matching the provider digest. Recovery is explicitly limited to this session.",
+      "descriptionYue": "真實 SHA256SUMS 版本檔案已完成下載：247 位元組，儲存檔案嘅 SHA-256 同提供者校驗碼相符。復原清楚限制於今次工作階段。",
+      "screen": "downloads",
+      "sourceCommit": "e464ff70f195dbd9584614b92a9547074e49200d",
+      "capturedAt": "2026-10-08T14:35:46.193Z"
+    },
+    {
+      "file": "docs/images/download-complete.png",
+      "title": "Verified download progress",
+      "titleYue": "已驗證嘅下載進度",
+      "description": "The independent progress dialog shows the real completed 247-byte asset and SHA-256 verification. No destination path or credential is disclosed.",
+      "descriptionYue": "獨立進度對話框顯示真實完成嘅 247 位元組檔案同 SHA-256 核對結果。冇顯示目的地路徑或憑證。",
+      "screen": "download-complete",
+      "sourceCommit": "e464ff70f195dbd9584614b92a9547074e49200d",
+      "capturedAt": "2026-10-08T14:35:46.028Z"
+    },
+    {
+      "file": "docs/images/converters.png",
+      "title": "Local converter workspace",
+      "titleYue": "本機轉換工具工作空間",
+      "description": "The actual converter workspace displays available adapter records and PDF limits before a source is selected. This frame does not demonstrate a completed conversion.",
+      "descriptionYue": "真實轉換工具工作空間喺未揀來源之前，顯示可用轉換配接器記錄同 PDF 限制。呢張畫面唔代表已完成轉換。",
+      "screen": "converters",
+      "sourceCommit": "e464ff70f195dbd9584614b92a9547074e49200d",
+      "capturedAt": "2026-10-08T14:35:46.764Z"
+    },
+    {
+      "file": "docs/images/codespaces.png",
+      "title": "Cloud workspaces: real empty state",
+      "titleYue": "雲端工作空間：實際空白狀態",
+      "description": "The actual provider cloud-workspace list returned zero records. No cloud resource was created for a screenshot.",
+      "descriptionYue": "實際提供者雲端工作空間清單傳回零項記錄。冇為截圖建立雲端資源。",
+      "screen": "codespaces",
+      "sourceCommit": "e464ff70f195dbd9584614b92a9547074e49200d",
+      "capturedAt": "2026-10-08T14:32:32.845Z"
+    },
+    {
+      "file": "docs/images/desktop-light.png",
+      "title": "Light desktop theme",
+      "titleYue": "淺色桌面主題",
+      "description": "The same built desktop and live repository using the persisted light theme.",
+      "descriptionYue": "同一個建置桌面同即時倉庫，使用已儲存嘅淺色主題。",
+      "screen": "desktop-light",
+      "sourceCommit": "e464ff70f195dbd9584614b92a9547074e49200d",
+      "capturedAt": "2026-10-08T14:32:35.845Z"
+    },
+    {
+      "file": "docs/images/desktop-dark.png",
+      "title": "Dark desktop theme",
+      "titleYue": "深色桌面主題",
+      "description": "The same built desktop and live repository using the persisted dark theme.",
+      "descriptionYue": "同一個建置桌面同即時倉庫，使用已儲存嘅深色主題。",
+      "screen": "desktop-dark",
+      "sourceCommit": "e464ff70f195dbd9584614b92a9547074e49200d",
+      "capturedAt": "2026-10-08T14:32:34.387Z"
+    },
+    {
+      "file": "docs/images/desktop-narrow.png",
+      "title": "Narrow desktop workspace",
+      "titleYue": "窄桌面工作空間",
+      "description": "The real 800 × 700 desktop with compact tab initials and a repository detail view. This is one observed layout, not proof of every screen size.",
+      "descriptionYue": "真實 800 × 700 桌面，顯示精簡分頁縮寫同倉庫詳細資料。呢個係其中一個已觀察排版，唔代表所有畫面尺寸都已驗證。",
+      "screen": "desktop-narrow",
+      "sourceCommit": "e464ff70f195dbd9584614b92a9547074e49200d",
+      "capturedAt": "2026-10-08T14:32:36.040Z"
+    },
+    {
+      "file": "docs/images/desktop-yue.png",
+      "title": "Cantonese desktop presentation",
+      "titleYue": "廣東話桌面顯示",
+      "description": "The same desktop with Cantonese presentation selected. External repository facts remain unchanged; this frame does not establish universal localization.",
+      "descriptionYue": "同一個桌面選取廣東話顯示。外部倉庫事實保持不變；呢張畫面唔代表所有介面本機化已完成。",
+      "screen": "desktop-yue",
+      "sourceCommit": "e464ff70f195dbd9584614b92a9547074e49200d",
+      "capturedAt": "2026-10-08T14:32:37.543Z"
+    },
+    {
+      "file": "docs/images/desktop-both.png",
+      "title": "Bilingual desktop presentation",
+      "titleYue": "雙語桌面顯示",
+      "description": "The same desktop with English and Cantonese presentation selected, preserving provider-authored repository facts.",
+      "descriptionYue": "同一個桌面選取英文同廣東話雙語顯示，保留提供者原始倉庫事實。",
+      "screen": "desktop-both",
+      "sourceCommit": "e464ff70f195dbd9584614b92a9547074e49200d",
+      "capturedAt": "2026-10-08T14:32:38.963Z"
+    }
+  ]
+}

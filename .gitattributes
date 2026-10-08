@@ -1,0 +1,10 @@
+# These checked-out text bytes participate in reviewed converter/source SHA256 proofs.
+# Keep them identical on Linux and Windows regardless of core.autocrlf.
+/data/converter-engines.json text eol=lf
+/data/ffmpeg-source-build.json text eol=lf
+/scripts/converter-build/Dockerfile text eol=lf
+/scripts/converter-build/build.sh text eol=lf
+/scripts/ffmpeg-source-build.mjs text eol=lf
+/LICENSE text eol=lf
+/data/licenses/nodable-val-parsers-MIT.txt text eol=lf
+/scripts/verified-download.mjs text eol=lf

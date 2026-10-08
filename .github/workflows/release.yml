@@ -7,7 +7,30 @@ on:
 permissions:
   contents: write
 jobs:
+  converter_sources:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.19.0'
+      - name: Build pinned Windows media engines and complete corresponding source
+        run: node scripts/ffmpeg-source-build.mjs win32-x64
+      - name: Bind reviewed source payload to this run and commit
+        run: node scripts/converter-artifact.mjs prepare out/converter-artifact
+      - uses: actions/upload-artifact@v4
+        with:
+          name: converter-source-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.sha }}
+          path: out/converter-artifact
+          if-no-files-found: error
+          retention-days: 7
   release:
+    needs: converter_sources
     # Runner inventory access was unavailable (HTTP 403); use the pinned hosted fallback.
     runs-on: windows-2022
     env:
@@ -19,6 +42,16 @@ jobs:
         run: |
           "WORKFLOW_STARTED=$((Get-Date).ToUniversalTime().ToString('o'))" >> $env:GITHUB_ENV
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.19.0'
+      - uses: actions/download-artifact@v4
+        with:
+          name: converter-source-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.sha }}
+          path: .cache/converter-artifact
+      - name: Verify same-run exact-source media payload
+        shell: pwsh
+        run: node scripts/converter-artifact.mjs import .cache/converter-artifact
       - name: Build through supported entrypoint
         shell: cmd
         run: build.bat /s
@@ -26,6 +59,7 @@ jobs:
         shell: cmd
         run: build-installer.bat /s
       - name: Publish unique release
+        if: ${{ github.ref == 'refs/heads/main' }}
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'

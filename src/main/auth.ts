@@ -3,6 +3,8 @@ import {validateAuthHost} from './auth-hosts.js';
 import type { AuthAccount, AuthAction, AuthPayload, AuthState } from '../shared/types';
 export interface AuthServiceOptions {
  allowedHosts?: string[];
+ selectedHostname?:string;
+ selectHost?:(hostname:string)=>Promise<string>;
  copyToken?: (token:string)=>void|Promise<void>;
  registerHost?: (hostname:string)=>Promise<void>;
  authorize?: (action:AuthAction,payload:AuthPayload)=>Promise<void>;
@@ -25,13 +27,14 @@ export class AuthService {
   this.hosts = [...new Set(options.allowedHosts || ['github.com'])];
   if(!this.hosts.length || this.hosts.some(host=>!HOST.test(host)))throw new Error('Authentication hosts must be exact lowercase DNS hostnames');
   this.spawnProcess=options.spawn || ((binary,args,opts)=>spawn(binary,args,opts));
-  this.state={status:'idle',accounts:[],allowedHosts:[...this.hosts],allowedScopes:[...ADDITIONAL_SCOPES],tokenCopyAvailable:Boolean(options.copyToken),hostRegistrationAvailable:Boolean(options.registerHost)};
+  const selectedHostname=options.selectedHostname??this.hosts[0];if(!this.hosts.includes(selectedHostname))throw new Error('Choose an approved GitHub hostname');
+  this.state={status:'idle',selectedHostname,hostSelectionAvailable:Boolean(options.selectHost),accounts:[],allowedHosts:[...this.hosts],allowedScopes:[...ADDITIONAL_SCOPES],tokenCopyAvailable:Boolean(options.copyToken),hostRegistrationAvailable:Boolean(options.registerHost)};
  }
  subscribe(callback: (state: AuthState) => void): () => void {this.listeners.add(callback);return()=>{this.listeners.delete(callback);};}
  snapshot(): AuthState {return structuredClone(this.state);}
  private update(patch: Partial<AuthState>) {this.state={...this.state,...patch};for(const callback of this.listeners){try{callback(this.snapshot());}catch{/* Subscriber errors cannot interrupt authentication cleanup. */}}}
  private host(payload: AuthPayload): string {
-  const host=payload.hostname || 'github.com';if(typeof host!=='string'||!HOST.test(host)||!this.hosts.includes(host))throw new Error('Choose an approved GitHub hostname');return host;
+  const host=payload.hostname || this.state.selectedHostname;if(typeof host!=='string'||!HOST.test(host)||!this.hosts.includes(host))throw new Error('Choose an approved GitHub hostname');return host;
  }
  private options(): SpawnOptions {
   // User-initiated browser opening belongs to the renderer's validated external-link workflow.
@@ -71,11 +74,17 @@ export class AuthService {
   return this.checking;
  }
  async action(action: AuthAction, payload: AuthPayload = {}): Promise<AuthState> {
-  if(!['status','login','refresh','setup-git','cancel','switch','logout','copy-token','register-host'].includes(action))throw new Error('Unknown authentication action');
+  if(!['status','login','refresh','setup-git','cancel','switch','logout','copy-token','register-host','select-host'].includes(action))throw new Error('Unknown authentication action');
   if(!payload||typeof payload!=='object'||Array.isArray(payload))throw new Error('Invalid authentication request');
   for(const key of Object.keys(payload))if(!['hostname','login','scopes','removeScopes','resetScopes','confirmed','reviewedHostname','clipboardConsent'].includes(key))throw new Error('Unknown authentication parameter');
   if(action!=='status'&&action!=='cancel')await this.serviceOptions.authorize?.(action,payload);
   if(action==='status')return this.refresh();
+  if(action==='select-host'){
+   const host=this.host(payload);if(payload.confirmed!==true||payload.reviewedHostname!==host)throw new Error('Review and confirm the exact workspace hostname');
+   if(!this.serviceOptions.selectHost)throw new Error('Workspace host selection is unavailable in this installation');
+   if(this.child||this.changing)throw new Error('Finish the current account change first');
+   this.changing=true;try{const selected=await this.serviceOptions.selectHost(host);if(selected!==host||!this.hosts.includes(selected))throw new Error('The native workspace hostname could not be verified');this.state={...this.state,selectedHostname:selected,error:undefined,message:`Workspace host selected: ${selected}. Choose a repository on this host; credentials and environment tokens are unchanged.`};return await this.refresh();}finally{this.changing=false;}
+  }
   if(action==='register-host'){
    const host=validateAuthHost(payload.hostname).hostname;
    if(payload.confirmed!==true||payload.reviewedHostname!==host)throw new Error('Review and confirm the exact enterprise hostname');

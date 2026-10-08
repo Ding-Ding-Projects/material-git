@@ -1,3 +1,4 @@
+import {workflowCommandIds} from './cli-workflows.js';
 export type TotpAlgorithm='SHA1'|'SHA256'|'SHA512';
 export interface TotpParameters{secret:string;algorithm:TotpAlgorithm;digits:6|7|8;period:number;issuer:string;account:string}
 export interface SecurityStatus{available:boolean;vaultAvailable:boolean;watching:boolean;error?:string;recoveryDirectory:string;lockRecoveryDirectory?:string;schoolMode:{displayName:string;active:boolean;revision:number;updatedAt:string|null};credentialSet:boolean}
@@ -34,5 +35,24 @@ export function protectedLockIds(channel:string,action?:string,commandId?:string
  const ids=[`destination:${lane}`];if(commandId){const key=commandId.replaceAll(' ','.');if(!validLockId(key))throw new Error('Invalid command lock identifier');ids.push(`command:${key}`,`tab:${key}`);}if(action){if(!validLockId(action))throw new Error('Invalid action lock identifier');ids.push(`${channel}:${action}`);}return ids;
 }
 
-export const nativeLockLanes=['commands','accounts','api','cli-config','settings','tools','security','history','notifications','records','integrations','assistant','downloads','updates','docs','about','home'] as const;
-export function nativeLockTargets(commands:Array<{id:string;title:string}>=[]):LockTarget[]{return [...nativeLockLanes.map(lane=>({id:`destination:${lane}`,label:lane})),...commands.flatMap(command=>[{id:`command:${command.id.replaceAll(' ','.')}`,label:command.title,ancestors:['destination:commands']},{id:`tab:${command.id.replaceAll(' ','.')}`,label:command.title,ancestors:['destination:commands']}])];}
+const cliWorkflowDestinations=new Map<string,readonly string[]>(workflowCommandIds.map(command=>[command,command.startsWith('codespace ')?['codespaces']:command.startsWith('extension ')?['extensions']:command.startsWith('alias ')?['aliases']:command==='copilot'?['tools','copilot']:['tools']]));
+/** Only supported native workflow IDs choose productive destinations; Apply uses the stored command. */
+export function cliWorkflowLockIds(commandId:unknown):string[]{if(typeof commandId!=='string'||!cliWorkflowDestinations.has(commandId))throw new Error('Unknown workflow command');return [...protectedLockIds('execute',undefined,commandId),...cliWorkflowDestinations.get(commandId)!.map(lane=>`destination:${lane}`)];}
+
+const providerGitSources=[
+ {action:'repositories.clone-source',kind:'repository',destination:'repositories',command:'repo clone',label:'Clone selected repository'},
+ {action:'gists.clone-source',kind:'gist',destination:'gists',command:'gist clone',label:'Clone selected gist'},
+ {action:'pulls.checkout-source',kind:'pull-request',destination:'pulls',command:'pr checkout',label:'Check out selected pull request'},
+] as const;
+/** Native receipt provenance selects these fixed origins; renderer IDs never choose lock authority. */
+export function providerGitLockIds(action:unknown):string[]{const source=providerGitSources.find(source=>source.action===action);if(!source)throw new Error('Unknown provider Git source');return [...protectedLockIds('execute',undefined,source.command),`destination:${source.destination}`,`github:${source.action}`];}
+export function providerGitKindLockIds(kind:unknown):string[]{const source=providerGitSources.find(source=>source.kind===kind);if(!source)throw new Error('Unknown provider Git source kind');return providerGitLockIds(source.action);}
+export function providerGitLockTargets():LockTarget[]{return [...providerGitSources.map(source=>({id:`destination:${source.destination}`,label:source.destination})),...providerGitSources.map(source=>({id:`github:${source.action}`,label:source.label,ancestors:providerGitLockIds(source.action).filter(id=>id!==`github:${source.action}`)}))];}
+
+/** These actions only stop a native-owned operation; their service still validates ownership. */
+export function isOwnedCancellation(channel:string,action:unknown):boolean{return channel==='git'&&action==='cancel'||channel==='cli-workflows'&&action==='cancel'||channel==='github'&&action==='actions.watch-cancel'||channel==='downloads'&&(action==='pause'||action==='cancel');}
+/** Revocation only removes unused native receipts; each service validates its opaque identifier. */
+export function isOwnedCleanup(channel:string,action:unknown):boolean{return isOwnedCancellation(channel,action)||channel==='github'&&action==='provider-source-discard'||channel==='git'&&action==='discard-review';}
+
+export const nativeLockLanes=['commands','codespaces','extensions','aliases','copilot','accounts','api','cli-config','settings','tools','security','history','notifications','records','integrations','assistant','downloads','updates','docs','about','home'] as const;
+export function nativeLockTargets(commands:Array<{id:string;title:string}>=[]):LockTarget[]{return [...nativeLockLanes.map(lane=>({id:`destination:${lane}`,label:lane})),...commands.flatMap(command=>[{id:`command:${command.id.replaceAll(' ','.')}`,label:command.title,ancestors:['destination:commands',...(cliWorkflowDestinations.get(command.id)||[]).map(lane=>`destination:${lane}`)]},{id:`tab:${command.id.replaceAll(' ','.')}`,label:command.title,ancestors:['destination:commands',...(cliWorkflowDestinations.get(command.id)||[]).map(lane=>`destination:${lane}`)]}])];}

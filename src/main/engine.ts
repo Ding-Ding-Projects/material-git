@@ -24,6 +24,7 @@ class OutputRedactor {
   return output;
  }
 }
+export interface PreparedExecution {commandId:string;argv:string[];secrets:string[];cwd:string}
 export class Engine {
  private operations = new Map<string, Operation>();
  private children = new Map<string, ChildProcess>();
@@ -35,7 +36,9 @@ export class Engine {
  private emit(op: Operation) {for(const callback of this.listeners) {try {callback(structuredClone(op));} catch { /* Subscriber failures must not interrupt process cleanup. */ }}}
  private terminate(child:ChildProcess,force=false){if(!child.pid)return;if(process.platform==='win32'){const killer=spawn('taskkill',['/PID',String(child.pid),'/T',...(force?['/F']:[])],{shell:false,windowsHide:true,stdio:'ignore'});killer.on('error',()=>{child.kill(force?'SIGKILL':'SIGTERM');});}else{try{process.kill(-child.pid,force?'SIGKILL':'SIGTERM');}catch{child.kill(force?'SIGKILL':'SIGTERM');}}}
  cancel(id: string): void {const child=this.children.get(id);const op=this.operations.get(id);if(child&&op?.status==='running'){op.status='cancelled';this.terminate(child);const timer=setTimeout(()=>{this.killTimers.delete(id);this.terminate(child,true);},2000);timer.unref();this.killTimers.set(id,timer);this.emit(op);}}
- execute(request: ExecutionRequest): Operation {
+ execute(request:ExecutionRequest):Operation{const prepared=this.prepare(request);return this.executeAdapter(prepared.commandId,prepared.argv,{secrets:prepared.secrets,cwd:prepared.cwd});}
+ /** Validate without spawning; dedicated task reviews bind this exact main-process result. */
+ prepare(request:ExecutionRequest):PreparedExecution {
  if(!request || typeof request!=='object')throw new Error('Invalid request');
  const command=this.catalog.commands.find(c=>c.id===request.commandId); if(!command)throw new Error('Unknown command');
  if(command.interactive)throw new Error(command.availability || 'Command requires a native terminal');
@@ -94,17 +97,18 @@ export class Engine {
  if(headers.some(h=>h!==undefined&&(typeof h!=='string'||! /^[A-Za-z0-9-]+:\s*[^\r\n]*$/.test(h))))throw new Error('API headers must use a structured name: value pair');
  if(headers.some(h=>typeof h==='string'&& /^(authorization|host|proxy-authorization)\s*:/i.test(h)))throw new Error('Authentication and host headers are managed by GitHub CLI');
  }
- return this.executeAdapter(command.id,argv,{secrets,cwd});
+ return {commandId:command.id,argv,secrets,cwd};
  }
  /** Main-process adapters alone may call this method; never expose argv directly over IPC. */
- executeAdapter(commandId:string,argv:string[],options:{secrets?:string[];cwd?:string;executable?:string;timeoutMs?:number}={}):Operation {
+ executeAdapter(commandId:string,argv:string[],options:{secrets?:string[];cwd?:string;executable?:string;timeoutMs?:number;hostname?:string}={}):Operation {
  if(typeof commandId!=='string'||!Array.isArray(argv)||argv.length>200||argv.some(value=>typeof value!=='string'||value.includes('\0')||value.length>65536))throw new Error('Invalid adapter arguments');
+ if(options.hostname&&!/^[a-zA-Z0-9.-]+$/.test(options.hostname))throw new Error('Invalid adapter hostname');
  const cwd=realpathSync(options.cwd||this.cwd),root=realpathSync(this.cwd);
  if(cwd!==root&&!cwd.startsWith(root+path.sep))throw new Error('Working directory must remain within the workspace');
  const secrets=[...(options.secrets||[]),...Object.entries(process.env).filter(([key,value])=>/TOKEN|PASSWORD|SECRET/.test(key)&&value).map(([,value])=>value!)];
  const op:Operation={id:randomUUID(),status:'running',commandId,startedAt:new Date().toISOString(),stdout:'',stderr:''};
  this.operations.set(op.id,op);
- const env={...process.env,GH_PROMPT_DISABLED:'1',GH_PAGER:'cat',PAGER:'cat',GH_EDITOR:'',GIT_TERMINAL_PROMPT:'0',NO_COLOR:'1',GH_FORCE_TTY:'',GH_BROWSER:''};
+ const env={...process.env,...(options.hostname?{GH_HOST:options.hostname}:{}),GH_PROMPT_DISABLED:'1',GH_PAGER:'cat',PAGER:'cat',GH_EDITOR:'',GIT_TERMINAL_PROMPT:'0',NO_COLOR:'1',GH_FORCE_TTY:'',GH_BROWSER:''};
  const child=spawn(options.executable||this.ghPath,argv,{cwd,env,shell:false,windowsHide:true,detached:process.platform!=='win32',stdio:['ignore','pipe','pipe']}); this.children.set(op.id,child);
  const redact=(value:string)=>new OutputRedactor(secrets).write(value,true);
  const buffers={stdout:'',stderr:''};const byteCounts={stdout:0,stderr:0};const capped={stdout:false,stderr:false};

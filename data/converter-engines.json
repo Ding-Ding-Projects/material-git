@@ -1,0 +1,156 @@
+{
+  "schema": 1,
+  "supportedPlatforms": [
+    "linux-x64",
+    "win32-x64"
+  ],
+  "engines": {
+    "7zip": {
+      "version": "26.04",
+      "license": "LGPL-2.1-or-later with BSD portions and unRAR restriction",
+      "source": "https://github.com/ip7z/7zip/tree/26.04"
+    },
+    "ffmpeg": {
+      "version": "9.0.2-material-git-1",
+      "versions": {
+        "linux-x64": "9.0.2-material-git-1",
+        "win32-x64": "9.0.2-material-git-1"
+      },
+      "license": "GPL-3.0-or-later",
+      "source": "https://ffmpeg.org/releases/ffmpeg-9.0.2.tar.xz",
+      "sourceManifest": "data/ffmpeg-source-build.json",
+      "sourceManifestSha256": "d2f79f090845077125bf4231de8d4ae40ffa65a24849c2eba6088e2caee57736",
+      "files": {
+        "linux-x64": [
+          "SOURCE_BUILD.json",
+          "build-toolchain-packages.txt",
+          "configure-output.txt",
+          "corresponding-source.tar",
+          "ffmpeg",
+          "ffmpeg-config.h",
+          "ffmpeg-config.mak",
+          "ffmpeg.LICENSE",
+          "ffmpeg.README",
+          "ffprobe",
+          "gcc-runtime.COPYRIGHT",
+          "lame-3.100.COPYING",
+          "lame-3.100.LICENSE",
+          "libogg-1.3.6.COPYING",
+          "libvorbis-1.3.7.COPYING",
+          "libvpx-6df3ec34557879fff673706f4a1d9fbd0f3a6f0e.LICENSE",
+          "opus-1.5.2.COPYING",
+          "x264-31e19f92f00c7003fa115047ce50978bc98c3a0d.COPYING"
+        ],
+        "win32-x64": [
+          "SOURCE_BUILD.json",
+          "build-toolchain-packages.txt",
+          "configure-output.txt",
+          "corresponding-source.tar",
+          "ffmpeg-config.h",
+          "ffmpeg-config.mak",
+          "ffmpeg.LICENSE",
+          "ffmpeg.README",
+          "ffmpeg.exe",
+          "ffprobe.exe",
+          "gcc-runtime.COPYRIGHT",
+          "lame-3.100.COPYING",
+          "lame-3.100.LICENSE",
+          "libogg-1.3.6.COPYING",
+          "libvorbis-1.3.7.COPYING",
+          "libvpx-6df3ec34557879fff673706f4a1d9fbd0f3a6f0e.LICENSE",
+          "mingw-runtime.COPYRIGHT",
+          "opus-1.5.2.COPYING",
+          "x264-31e19f92f00c7003fa115047ce50978bc98c3a0d.COPYING"
+        ]
+      }
+    }
+  },
+  "downloads": [
+    {
+      "platform": "linux-x64",
+      "asset": "7z2604-linux-x64.tar.xz",
+      "url": "https://github.com/ip7z/7zip/releases/download/26.04/7z2604-linux-x64.tar.xz",
+      "sha256": "fc0327ba27e89bd086cf426dff17d77de582953cdbbc10a6576540a06853ffcd",
+      "kind": "tar-xz"
+    },
+    {
+      "platform": "win32-x64",
+      "asset": "7z2604-extra.7z",
+      "url": "https://github.com/ip7z/7zip/releases/download/26.04/7z2604-extra.7z",
+      "sha256": "dc4b11d3399db18b063630137145f5585d8f7ac847bf3639bd1185d7d1f7cee0",
+      "kind": "7z"
+    },
+    {
+      "platform": "win32-x64",
+      "asset": "7zr.exe",
+      "url": "https://github.com/ip7z/7zip/releases/download/26.04/7zr.exe",
+      "sha256": "256feca8e274e5da655e2a284fabafd9f554365eb164862089dacd4e8276d282",
+      "kind": "bootstrap"
+    },
+    {
+      "platform": "linux-x64",
+      "asset": "7z2604-src.tar.xz",
+      "url": "https://github.com/ip7z/7zip/releases/download/26.04/7z2604-src.tar.xz",
+      "sha256": "9691944c0fe0d01bb49373a704fb983fd33bc98b1738695179dfbf99ac1734f6",
+      "target": "7zip.SOURCE.tar.xz",
+      "kind": "source"
+    },
+    {
+      "platform": "win32-x64",
+      "asset": "7z2604-src.tar.xz",
+      "url": "https://github.com/ip7z/7zip/releases/download/26.04/7z2604-src.tar.xz",
+      "sha256": "9691944c0fe0d01bb49373a704fb983fd33bc98b1738695179dfbf99ac1734f6",
+      "target": "7zip.SOURCE.tar.xz",
+      "kind": "source"
+    }
+  ],
+  "files": {
+    "linux-x64": {
+      "SOURCE_BUILD.json": "2bce5b1efbb12d5e6bc337a7162b4967362e51037c2f310e478cd86506a8981f",
+      "build-toolchain-packages.txt": "bbcc9d32a9a3f6756bbf9644bfa8bc9af823164685d850dcdd4d4ac53d1f0959",
+      "configure-output.txt": "dfdae20e329f5e1208ebd6b9634be78363f164e6c1a3fc804be50c83ff3d3d7c",
+      "corresponding-source.tar": "fa96b0c51c75565c7f1465dbd66055d44a2d247e6bfb88b8d46d625533e68683",
+      "ffmpeg": "9aa849469555a8b27cc348b86ea40dd9d0141d2d4d9afc23c62842441001f5c2",
+      "ffmpeg-config.h": "435575e28fae1af103c81a3bd2453b5e8cfb5d26976d00247a8f39a260b8ce03",
+      "ffmpeg-config.mak": "bebcb47fd271fe3e48cdaff9a1920f58c9967ec483f880461054cdc8eb37bcca",
+      "ffmpeg.LICENSE": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903",
+      "ffmpeg.README": "529e339b0a0589cb10d624e8bbd7e2e2306297482f2bc8cf2640d35b4c6379a2",
+      "ffprobe": "5500fe93497d4d2a7426815245d3ca2ff88eca8c9f0f70cd44f1ca6375de5594",
+      "gcc-runtime.COPYRIGHT": "719dd73912334e65a64c63fb1f7ccdacf70c27258570de0fb123b33d490eddf5",
+      "lame-3.100.COPYING": "bfe4a52dc4645385f356a8e83cc54216a293e3b6f1cb4f79f5fc0277abf937fd",
+      "lame-3.100.LICENSE": "7a40cbd8818c57e5285e83c772a459a996d1662c824a879836b97b473c07cae4",
+      "libogg-1.3.6.COPYING": "d2ab5758336489da61c12cc5bb757da5339c4ae9001f9bb0562b4370249af814",
+      "libvorbis-1.3.7.COPYING": "ec1815db59fcd302846df949d7424876cb2e2dc5ed1606c5fb0b36787b1cf43a",
+      "libvpx-6df3ec34557879fff673706f4a1d9fbd0f3a6f0e.LICENSE": "8267348d5af1262c11d1a08de2f5afc77457755f1ac658627dd9acf71011d615",
+      "opus-1.5.2.COPYING": "01e1167d54a096d123cf6dfbbeb19587278845c6481d2d66d545669846079551",
+      "x264-31e19f92f00c7003fa115047ce50978bc98c3a0d.COPYING": "32b1062f7da84967e7019d01ab805935caa7ab7321a7ced0e30ebe75e5df1670",
+      "7zz": "d1bc79f00e9815b24048ab167690bdd1dbc387de7dbc47e8d75d68689e49cf4f",
+      "7zip.LICENSE": "1790374e5352329cedb46ee3808930a88e9ca2f08b82b10fcf5cf605d2c301b1",
+      "7zip.SOURCE.tar.xz": "9691944c0fe0d01bb49373a704fb983fd33bc98b1738695179dfbf99ac1734f6"
+    },
+    "win32-x64": {
+      "SOURCE_BUILD.json": "f98d07f99e02eed415cbc529cd835c64415bbda7b8f6e697b30dd82946efb596",
+      "build-toolchain-packages.txt": "bbcc9d32a9a3f6756bbf9644bfa8bc9af823164685d850dcdd4d4ac53d1f0959",
+      "configure-output.txt": "150fb99da486be6da67a33f9540898b339502d4a9d50b551b788547b6e5f369b",
+      "corresponding-source.tar": "02e6385f75d6fc23bb9cd740aa8558b7b03617e577819c09f53c86a982f8f360",
+      "ffmpeg-config.h": "f8e1547b124e8c8638cde61b54e14c05629b36187231b8b95fece75a121a421e",
+      "ffmpeg-config.mak": "af9ad639b4fd820b81ccbd28f3c3a73d9dbd689db19f6413528dc7fc8772214b",
+      "ffmpeg.LICENSE": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903",
+      "ffmpeg.README": "461f28fb85c64caf9cceaf7f975d6250f5e8bed3b7f03fd9b11ad8dea248bc80",
+      "ffmpeg.exe": "3f7a5cad40de3f3b5d37cb0964f32f610751a874bfdd5c18dd6eb09e97f6807a",
+      "ffprobe.exe": "f723c410d6bee61b47bc0eeb3260bbbc40747a5742b0071319330e8dcce79f3c",
+      "gcc-runtime.COPYRIGHT": "719dd73912334e65a64c63fb1f7ccdacf70c27258570de0fb123b33d490eddf5",
+      "lame-3.100.COPYING": "bfe4a52dc4645385f356a8e83cc54216a293e3b6f1cb4f79f5fc0277abf937fd",
+      "lame-3.100.LICENSE": "7a40cbd8818c57e5285e83c772a459a996d1662c824a879836b97b473c07cae4",
+      "libogg-1.3.6.COPYING": "d2ab5758336489da61c12cc5bb757da5339c4ae9001f9bb0562b4370249af814",
+      "libvorbis-1.3.7.COPYING": "ec1815db59fcd302846df949d7424876cb2e2dc5ed1606c5fb0b36787b1cf43a",
+      "libvpx-6df3ec34557879fff673706f4a1d9fbd0f3a6f0e.LICENSE": "8267348d5af1262c11d1a08de2f5afc77457755f1ac658627dd9acf71011d615",
+      "mingw-runtime.COPYRIGHT": "a481f772f7a53335f13b32c6c54eb1c8577ce97704edd3757ab7ed4287a8e96a",
+      "opus-1.5.2.COPYING": "01e1167d54a096d123cf6dfbbeb19587278845c6481d2d66d545669846079551",
+      "x264-31e19f92f00c7003fa115047ce50978bc98c3a0d.COPYING": "32b1062f7da84967e7019d01ab805935caa7ab7321a7ced0e30ebe75e5df1670",
+      "7za.exe": "15d4c788c148e3677e2fc1c4a01f191fb6669eba4f6acf8a465f0f1a6f1e1260",
+      "7zip.LICENSE": "39d2187b942cc88818dd959e53c6b7dddd152097a42061467c4d56050168d646",
+      "7zip.SOURCE.tar.xz": "9691944c0fe0d01bb49373a704fb983fd33bc98b1738695179dfbf99ac1734f6"
+    }
+  }
+}

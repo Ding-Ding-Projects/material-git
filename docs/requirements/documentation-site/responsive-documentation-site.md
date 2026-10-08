@@ -1,0 +1,29 @@
+# A mobile-friendly GitHub Pages
+
+Public feature identifier: `responsive-documentation-site`. Category: **documentation-site**.
+
+## Required behavior
+
+Every GitHub Pages is responsive from roughly 320 px upward with a proper viewport meta tag, no sideways body scroll, wide content scrolling inside its own container, readable reflowing text, and touch targets that meet the platform minimum with safe separation. Vertical tab strips collapse, and anchored popovers, the appearance editor, the colour picker, and the palette stay inside the viewport and scroll internally. Menu filter fields stay typable with an on-screen keyboard raised, and every hover-only affordance gets a tap equivalent.
+
+## Current support and configuration
+
+Site source is being remade; current narrow/keyboard/scale evidence is pending.
+
+This is a scoped implementation assessment, not a claim that the whole requirement is finished. Surface states: **app: not-applicable; site: unknown; repository: not-applicable**. See [implementation reference](../../site.md) and the [complete inventory](../../coverage/features.json). Controls belong in the destination that owns the data; the primary UI must remain a productive task workspace.
+
+## Failures and remaining work
+
+Verify320px-upward layout, internal overflow, touch paths and overlays with virtual keyboard raised.
+
+Missing native dependencies, OS facilities, remote permissions and verification are reported separately. Disabled or unavailable behavior must explain the actual cause and preserve the existing data; no sample entity or fake success fills an empty state.
+
+## Privacy
+
+Personal vocabulary mappings, credentials, authentication headers, private keys and raw environment values never enter ordinary exports, history, logs, captures or public documentation. Local records use bounded versioned schemas; any sensitive export requires its dedicated reviewed flow. For an external/service requirement, only presence/status evidence is recorded.
+
+## Checks
+
+Inventory integrity is tested independently from feature behavior. Close this row only after feature-specific source/validation review, persistence and negative-regression checks, final built GUI interaction and genuine capture at the same revision. Linux evidence does not prove Windows installation or credential-storage behavior. Article translation is separate from complete app/site localization and live interface verification.
+
+Suggested articles: [requirements index](../README.md) · [GitHub actions audit](../../coverage/github-actions-audit.md) · [Git actions audit](../../coverage/git-actions-audit.md) · [Cantonese article](responsive-documentation-site.yue.md).

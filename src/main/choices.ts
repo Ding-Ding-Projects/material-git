@@ -1,6 +1,7 @@
+import {validateAuthHost} from './auth-hosts';
 import type { Choice } from '../shared/types';
 export type ChoiceRunner = (binary: string, args: string[], cwd: string) => Promise<string>;
-export interface ChoiceContext { repository?: string; query?: string; page?: number; owner?: string; valueField?: 'title' | 'number' | 'id' | 'slug' }
+export interface ChoiceContext { hostname?:string; repository?: string; query?: string; page?: number; owner?: string; valueField?: 'title' | 'number' | 'id' | 'slug' }
 export interface ChoiceResult { items: Choice[]; hasNext: boolean; searchMode: 'remote' | 'page-filter'; notice?: string }
 const SIZE=30;
 const LOGIN=/^[A-Za-z0-9][A-Za-z0-9-]{0,38}$/;
@@ -19,14 +20,14 @@ function decode(output:string):{body:unknown;hasNext:boolean}{
 export function createChoiceSource(runGh:ChoiceRunner){
  const sources=new Map<string,ChoiceSource>();
  return async(binary:string,cwd:string,entity:string,context:ChoiceContext={}):Promise<ChoiceResult>=>{
-  const key=JSON.stringify([binary,cwd]);let source=sources.get(key);if(!source){source=new ChoiceSource(binary,cwd,runGh);sources.set(key,source);if(sources.size>32)sources.delete(sources.keys().next().value!);}return source.list(entity,context);
+  const hostname=validateAuthHost(context.hostname??'github.com').hostname;const key=JSON.stringify([binary,cwd,hostname]);let source=sources.get(key);if(!source){source=new ChoiceSource(binary,cwd,runGh,hostname);sources.set(key,source);if(sources.size>32)sources.delete(sources.keys().next().value!);}return source.list(entity,context);
  };
 }
 export class ChoiceSource {
  private cursors=new Map<string,Map<number,string|null>>();
  private ownerTypes=new Map<string,'User'|'Organization'>();
- constructor(private binary:string,private cwd:string,private runGh:ChoiceRunner){}
- private async rest(endpoint:string){return decode(await this.runGh(this.binary,['api',endpoint,'--method=GET','--include'],this.cwd));}
+ constructor(private binary:string,private cwd:string,private runGh:ChoiceRunner,private hostname='github.com'){validateAuthHost(hostname);}
+ private async rest(endpoint:string){return decode(await this.runGh(this.binary,['api',endpoint,'--method=GET','--include',`--hostname=${this.hostname}`],this.cwd));}
  private async collection(endpoint:string,key:string|undefined,page:number,map:(row:Record<string,unknown>)=>Choice,query:string,remote=false):Promise<ChoiceResult>{
   const response=await this.rest(`${endpoint}${endpoint.includes('?')?'&':'?'}per_page=${SIZE}&page=${page}`);
   const body=response.body as Record<string,unknown>;
@@ -46,7 +47,7 @@ export class ChoiceSource {
   let current=Math.max(...[...cursors.keys()].filter(p=>p<=page));
   if(page-current>10)throw new Error('Load the preceding pages before jumping ahead in this GitHub collection');
   while(current<=page){
-   const args=['api','graphql','--method=POST','-f',`query=${document}`,'-F',`first=${SIZE}`,'-f',`search=${query}`];
+   const args=['api','graphql',`--hostname=${this.hostname}`,'--method=POST','-f',`query=${document}`,'-F',`first=${SIZE}`,'-f',`search=${query}`];
    for(const [name,value] of Object.entries(fields))args.push('-f',`${name}=${value}`);
    const cursor=cursors.get(current);if(cursor)args.push('-f',`after=${cursor}`);
    const raw=JSON.parse(await this.runGh(this.binary,args,this.cwd)) as {data?:Record<string,unknown>;errors?:unknown[]};
@@ -63,6 +64,7 @@ export class ChoiceSource {
   throw new Error('Invalid GitHub page');
  }
  async list(entity:string,context:ChoiceContext={}):Promise<ChoiceResult>{
+  if(context?.hostname!==undefined&&context.hostname!==this.hostname)throw new Error('The picker host context changed');
   if(typeof entity!=='string'||entity.length>64)throw new Error('Choose a valid entity source');
   if(!context||typeof context!=='object'||Array.isArray(context))throw new Error('Invalid choice context');
   const page=context.page??1;if(!Number.isInteger(page)||page<1||page>1000)throw new Error('Invalid page');

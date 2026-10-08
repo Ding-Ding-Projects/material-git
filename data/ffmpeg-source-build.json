@@ -1,0 +1,110 @@
+{
+  "schema": 1,
+  "version": "9.0.2-material-git-1",
+  "sourceDateEpoch": 1791417600,
+  "builderImage": "debian:bullseye-slim@sha256:e5b6442dd2e9684cf5e87d8338b5968f3b348636fc0be6d7850a381e3731a2bd",
+  "debianSnapshot": "20250101T000000Z",
+  "sources": [
+    {
+      "name": "ffmpeg",
+      "version": "9.0.2",
+      "asset": "ffmpeg-9.0.2.tar.xz",
+      "url": "https://ffmpeg.org/releases/ffmpeg-9.0.2.tar.xz",
+      "license": "GPL-3.0-or-later",
+      "sha256": "8c3850283eb25fa026482078a04051e0be17347b09ef81a0849bec15a96e002e"
+    },
+    {
+      "name": "x264",
+      "version": "31e19f92f00c7003fa115047ce50978bc98c3a0d",
+      "asset": "x264-31e19f92.tar.gz",
+      "url": "https://codeload.github.com/mirror/x264/tar.gz/31e19f92f00c7003fa115047ce50978bc98c3a0d",
+      "license": "GPL-2.0-or-later",
+      "sha256": "d053c9d86988d6bc78237ca5205865c5ddf99c98ef4cd9927eec8f6d388f6dd9"
+    },
+    {
+      "name": "libvpx",
+      "version": "1.17.0@6df3ec34557879fff673706f4a1d9fbd0f3a6f0e",
+      "asset": "libvpx-1.17.0.tar.gz",
+      "url": "https://codeload.github.com/webmproject/libvpx/tar.gz/6df3ec34557879fff673706f4a1d9fbd0f3a6f0e",
+      "license": "BSD-3-Clause",
+      "sha256": "073bd6202e4c55c8cb759abbb123aecd4cc8d99f52ba27af790178cfb1108423"
+    },
+    {
+      "name": "libmp3lame",
+      "version": "3.100",
+      "asset": "lame-3.100.tar.gz",
+      "url": "https://downloads.sourceforge.net/project/lame/lame/3.100/lame-3.100.tar.gz",
+      "license": "LGPL-2.0-or-later",
+      "sha256": "ddfe36cab873794038ae2c1210557ad34857a4b6bdc515785d1da9e175b1da1e"
+    },
+    {
+      "name": "libopus",
+      "version": "1.5.2",
+      "asset": "opus-1.5.2.tar.gz",
+      "url": "https://downloads.xiph.org/releases/opus/opus-1.5.2.tar.gz",
+      "license": "BSD-3-Clause",
+      "sha256": "65c1d2f78b9f2fb20082c38cbe47c951ad5839345876e46941612ee87f9a7ce1"
+    },
+    {
+      "name": "libogg",
+      "version": "1.3.6",
+      "asset": "libogg-1.3.6.tar.xz",
+      "url": "https://downloads.xiph.org/releases/ogg/libogg-1.3.6.tar.xz",
+      "license": "BSD-3-Clause",
+      "sha256": "5c8253428e181840cd20d41f3ca16557a9cc04bad4a3d04cce84808677fa1061"
+    },
+    {
+      "name": "libvorbis",
+      "version": "1.3.7",
+      "asset": "libvorbis-1.3.7.tar.xz",
+      "url": "https://downloads.xiph.org/releases/vorbis/libvorbis-1.3.7.tar.xz",
+      "license": "BSD-3-Clause",
+      "sha256": "b33cc4934322bcbf6efcbacf49e3ca01aadbea4114ec9589d1b1e9d20f72954b"
+    }
+  ],
+  "recipe": {
+    "Dockerfile": "b3b2e4e745411bcd44c8e04b3bbe1c9e5c59c36dbc77dc4b76afc482f44d4597",
+    "build.sh": "92437e6591260731e8722d1893213227b534663aebfec1065a9bd11c865cc7ce",
+    "ffmpeg-source-build.mjs": "52465faf75446c0a880ec8036c88f6d51ef8c2e6bb5dda1fbb5e9b6eb6356d85",
+    "verified-download.mjs": "9e6c98f2fbf585b26aa07e9bf956aeed268c04cbd8511e7d8f7d90754d22d11c"
+  },
+  "outputHashes": {
+    "linux-x64": {
+      "build-toolchain-packages.txt": "bbcc9d32a9a3f6756bbf9644bfa8bc9af823164685d850dcdd4d4ac53d1f0959",
+      "configure-output.txt": "dfdae20e329f5e1208ebd6b9634be78363f164e6c1a3fc804be50c83ff3d3d7c",
+      "ffmpeg": "9aa849469555a8b27cc348b86ea40dd9d0141d2d4d9afc23c62842441001f5c2",
+      "ffmpeg-config.h": "435575e28fae1af103c81a3bd2453b5e8cfb5d26976d00247a8f39a260b8ce03",
+      "ffmpeg-config.mak": "bebcb47fd271fe3e48cdaff9a1920f58c9967ec483f880461054cdc8eb37bcca",
+      "ffmpeg.LICENSE": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903",
+      "ffprobe": "5500fe93497d4d2a7426815245d3ca2ff88eca8c9f0f70cd44f1ca6375de5594",
+      "gcc-runtime.COPYRIGHT": "719dd73912334e65a64c63fb1f7ccdacf70c27258570de0fb123b33d490eddf5",
+      "lame-3.100.COPYING": "bfe4a52dc4645385f356a8e83cc54216a293e3b6f1cb4f79f5fc0277abf937fd",
+      "lame-3.100.LICENSE": "7a40cbd8818c57e5285e83c772a459a996d1662c824a879836b97b473c07cae4",
+      "libogg-1.3.6.COPYING": "d2ab5758336489da61c12cc5bb757da5339c4ae9001f9bb0562b4370249af814",
+      "libvorbis-1.3.7.COPYING": "ec1815db59fcd302846df949d7424876cb2e2dc5ed1606c5fb0b36787b1cf43a",
+      "libvpx-6df3ec34557879fff673706f4a1d9fbd0f3a6f0e.LICENSE": "8267348d5af1262c11d1a08de2f5afc77457755f1ac658627dd9acf71011d615",
+      "opus-1.5.2.COPYING": "01e1167d54a096d123cf6dfbbeb19587278845c6481d2d66d545669846079551",
+      "x264-31e19f92f00c7003fa115047ce50978bc98c3a0d.COPYING": "32b1062f7da84967e7019d01ab805935caa7ab7321a7ced0e30ebe75e5df1670",
+      "ffmpeg.README": "529e339b0a0589cb10d624e8bbd7e2e2306297482f2bc8cf2640d35b4c6379a2"
+    },
+    "win32-x64": {
+      "build-toolchain-packages.txt": "bbcc9d32a9a3f6756bbf9644bfa8bc9af823164685d850dcdd4d4ac53d1f0959",
+      "configure-output.txt": "150fb99da486be6da67a33f9540898b339502d4a9d50b551b788547b6e5f369b",
+      "ffmpeg-config.h": "f8e1547b124e8c8638cde61b54e14c05629b36187231b8b95fece75a121a421e",
+      "ffmpeg-config.mak": "af9ad639b4fd820b81ccbd28f3c3a73d9dbd689db19f6413528dc7fc8772214b",
+      "ffmpeg.LICENSE": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903",
+      "ffmpeg.exe": "3f7a5cad40de3f3b5d37cb0964f32f610751a874bfdd5c18dd6eb09e97f6807a",
+      "ffprobe.exe": "f723c410d6bee61b47bc0eeb3260bbbc40747a5742b0071319330e8dcce79f3c",
+      "gcc-runtime.COPYRIGHT": "719dd73912334e65a64c63fb1f7ccdacf70c27258570de0fb123b33d490eddf5",
+      "lame-3.100.COPYING": "bfe4a52dc4645385f356a8e83cc54216a293e3b6f1cb4f79f5fc0277abf937fd",
+      "lame-3.100.LICENSE": "7a40cbd8818c57e5285e83c772a459a996d1662c824a879836b97b473c07cae4",
+      "libogg-1.3.6.COPYING": "d2ab5758336489da61c12cc5bb757da5339c4ae9001f9bb0562b4370249af814",
+      "libvorbis-1.3.7.COPYING": "ec1815db59fcd302846df949d7424876cb2e2dc5ed1606c5fb0b36787b1cf43a",
+      "libvpx-6df3ec34557879fff673706f4a1d9fbd0f3a6f0e.LICENSE": "8267348d5af1262c11d1a08de2f5afc77457755f1ac658627dd9acf71011d615",
+      "mingw-runtime.COPYRIGHT": "a481f772f7a53335f13b32c6c54eb1c8577ce97704edd3757ab7ed4287a8e96a",
+      "opus-1.5.2.COPYING": "01e1167d54a096d123cf6dfbbeb19587278845c6481d2d66d545669846079551",
+      "x264-31e19f92f00c7003fa115047ce50978bc98c3a0d.COPYING": "32b1062f7da84967e7019d01ab805935caa7ab7321a7ced0e30ebe75e5df1670",
+      "ffmpeg.README": "461f28fb85c64caf9cceaf7f975d6250f5e8bed3b7f03fd9b11ad8dea248bc80"
+    }
+  }
+}

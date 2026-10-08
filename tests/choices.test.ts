@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+test('picker provider calls and cursor caches are scoped to the explicit approved host',async()=>{const calls:string[][]=[];const list=createChoiceSource(async(_binary,args)=>{calls.push(args);return JSON.stringify([]);});await list('gh','/workspace','repository',{hostname:'github.com'});await list('gh','/workspace','repository',{hostname:'github.example'});assert.ok(calls[0].includes('--hostname=github.com'));assert.ok(calls[1].includes('--hostname=github.example'));await assert.rejects(list('gh','/workspace','repository',{hostname:'https://untrusted.example'}));assert.equal(calls.length,2);});
 import { ChoiceSource, createChoiceSource } from '../src/main/choices';
 const response=(body:unknown,next=false)=>`HTTP/2.0 200 OK\r\nContent-Type: application/json\r\n${next?'Link: <https://api.github.com/example?page=2>; rel="next", <https://api.github.com/example?page=5>; rel="last"\r\n':''}\r\n${JSON.stringify(body)}`;
 test('repository search goes to the remote search API and does not filter a local page',async()=>{

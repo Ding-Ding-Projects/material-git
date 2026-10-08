@@ -1,6 +1,11 @@
 import {contextBridge,ipcRenderer} from 'electron';
 import type {MaterialBridge,Operation} from '../shared/types';
 const api:MaterialBridge={
+ downloads:request=>ipcRenderer.invoke('material:downloads',request),
+ onDownload:callback=>{const listener=(_event:unknown,job:Parameters<typeof callback>[0])=>callback(job);ipcRenderer.on('material:download-update',listener);return()=>ipcRenderer.removeListener('material:download-update',listener);},
+ startupPersonalization:()=>ipcRenderer.invoke('material:startup-personalization'),
+ git:(action,payload)=>ipcRenderer.invoke('material:git',action,payload),
+ github:(action,payload)=>ipcRenderer.invoke('material:github',action,payload),
  workspace:(action,payload)=>ipcRenderer.invoke('material:workspace',action,payload),
  cliWorkflows:(action,payload)=>ipcRenderer.invoke('material:cli-workflows',action,payload),
  localTools:(action,payload)=>ipcRenderer.invoke('material:local-tools',action,payload),
