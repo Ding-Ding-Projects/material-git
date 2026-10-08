@@ -32,6 +32,8 @@ export interface AppSettings {
   englishVoice: string; cantoneseVoice: string; speechRate: number; speechPitch: number;
   focus: boolean; lowStimulation: boolean; timeAwareness: boolean;
   oneThing: boolean; momentum: boolean; currentTask: string;
+  screenReaderActive:boolean; quietNarration:boolean; logoPreset:'git'|'branches'|'merge'|'custom'; logoImage:string;
+  fontWeight:number; fontStyle:'normal'|'italic'; letterSpacing:number; lineHeight:number; borderRadius:number;
 }
 export interface Bootstrap {
   persistedSettingsKeys?:string[]; preferencesAdvanced?:import('./preferences-advanced').PreferenceStatus;
