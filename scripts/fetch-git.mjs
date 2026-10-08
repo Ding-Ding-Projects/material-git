@@ -5,6 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { prepareGitPayload, assertGitPayloadPolicy } from './git-payload-policy.mjs';
+import { runGitPostInstall, postInstallArguments } from './git-post-install.mjs';
 
 // Digest published by the official git-for-windows/git GitHub release asset API.
 export const gitRuntime = Object.freeze({
@@ -64,11 +65,13 @@ export async function fetchGit(platform = process.platform) {
    // Inspect scripts first, then run the official launcher in this owned stage.
    // The official batch script deletes itself when successful.
    const postFile=path.join(stage,'post-install.bat'), postDetails=await stat(postFile);
-   if (!postDetails.isFile() || postDetails.size>128*1024 || digest((await readFile(postFile,'utf8')).replace(/\r\n/g,'\n'))!==gitRuntime.postInstallSha256) throw new Error('PortableGit post-install program does not match its pinned official source');
+   if (!postDetails.isFile() || postDetails.size>128*1024) throw new Error('PortableGit post-install program must be a bounded regular file');
+   const postScript=(await readFile(postFile,'utf8')).replace(/\r\n/g,'\n');
+   if (digest(postScript)!==gitRuntime.postInstallSha256) throw new Error('PortableGit post-install program does not match its pinned official source');
+   if (!postScript.includes(`git-bash.exe ${postInstallArguments.join(' ')}`)) throw new Error('PortableGit launcher invocation differs from its reviewed official instructions');
    const postEnvironment={...process.env,GIT_CONFIG_GLOBAL:path.join(stage,'.verification-empty-global'),GIT_CONFIG_COUNT:'0',GIT_TERMINAL_PROMPT:'0'};
    for(const key of Object.keys(postEnvironment))if(/^(?:GIT_EXEC_PATH$|GIT_DIR$|GIT_WORK_TREE$|GIT_CONFIG_PARAMETERS$|GIT_CONFIG_KEY_|GIT_CONFIG_VALUE_)/.test(key))delete postEnvironment[key];
-   const postInstall = spawnSync(path.join(stage, 'git-bash.exe'), ['--needs-console', '--hide', '--no-cd', '--command=post-install.bat'], {encoding:'utf8',shell:false,windowsHide:true,cwd:stage,timeout:180000,maxBuffer:2*1024*1024,env:postEnvironment});
-   if (postInstall.error || postInstall.status !== 0) throw new Error(`PortableGit post-install failed: ${postInstall.error?.message ?? postInstall.stderr}`);
+   runGitPostInstall(stage, postEnvironment);
    try {await stat(path.join(stage,'post-install.bat'));throw new Error('PortableGit post-install did not complete its cleanup');} catch(error) {if(error.code!=='ENOENT')throw error;}
    const check = await verifyGitPayload(stage);
    try { await rename(destination, backup); backedUp = true; } catch (error) { if (error.code !== 'ENOENT') throw error; }
