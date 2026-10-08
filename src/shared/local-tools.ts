@@ -6,7 +6,7 @@ export type ConverterCategory = 'Documents/PDF'|'Images'|'Audio'|'Video'|'Archiv
 export interface ConverterAdapter {id:string;name:string;category:ConverterCategory;sourceTypes:string[];target:string;bundled:boolean;enabled:boolean;proof:string;reason?:string;disclosure:string;limitBytes:number;validator:string}
 export interface FileGrant {id:string;name:string;bytes:number;type:string;preview:string;compatible:string[]}
 export interface ConverterResult {id:string;source:string;adapter:string;status:'queued'|'paused'|'running'|'converted'|'cancelled'|'failed';outputName?:string;outputNames?:string[];bytes?:number;error?:string;details?:Record<string,unknown>;disclosures?:string[]}
-export interface CatalogVariant {tag:string;family:string;bytes?:number;context?:number;parameterCount?:number;quantization?:string;kvBytesPerToken?:number;capabilities:string[];digest?:string;source:string}
+export interface CatalogVariant {tag:string;family:string;bytes?:number;context?:number;parameterCount?:number;quantization?:string;kvBytesPerToken?:number;capabilities:string[];digest?:string;source:string;installed?:boolean;running?:boolean;localOnly?:boolean}
 export interface CatalogStatus {state:'empty'|'refreshing'|'ready'|'offline'|'failed';complete:boolean;at?:string;lastSuccess?:string;pages:number;families:number;variants:number;revision?:string;error?:string}
 export interface HardwareEvidence {at:string;ram:number;freeRam:number;cpu:string;cpuCores:number;architecture:string;diskFree?:number;gpu:{status:'unknown'|'verified';name?:string;vram?:number;backend?:string;reason:string}}
 export interface FitEvidence {verdict:'Runs well'|'Runs with limits'|'Unlikely'|'Unknown';at:string;evidence:string[]}
