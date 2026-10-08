@@ -34,7 +34,7 @@ import {createElectronFetch} from './electron-fetch';
 import {readBoundedFile} from './bounded-file';
 import {listChoices,runGh,ollamaRequest} from './services';
 import type {ExecutionRequest,AppSettings} from '../shared/types';
-import {nativeLockTargets,protectedLockIds} from '../shared/security';
+import {nativeLockTargets,protectedLockIds,cliWorkflowLockIds} from '../shared/security';
 
 app.setName('Material Git');
 const identity=process.env.MATERIAL_GIT_USER_DATA;
@@ -113,7 +113,7 @@ if(!installerLifecycle)app.whenReady().then(async()=>{
  });
  const cliConfiguration=new CliConfigService(binary,{chooseExecutable:async definition=>{const result=await dialog.showOpenDialog(window,{title:definition.filePicker?.title,properties:['openFile'],...(process.platform==='win32'?{filters:[{name:'Executable applications',extensions:['exe']}]}:{})});return result.canceled?null:result.filePaths[0]??null;}});
  handle('cli-config',async(action,payload)=>{const id=randomUUID();if(action==='apply')activeOperations.add(id);try{return await cliConfiguration.action(action,payload);}finally{activeOperations.delete(id);}});
- const cliWorkflows=new CliWorkflowsService(loadCatalog(path.join(__dirname,'gh-catalog.json')),engine(),workspace,binary,{resolveHost:hostname=>hostRegistry.resolveHost(hostname),authorize:async commandId=>{await security.assertUnlocked(protectedLockIds('execute',undefined,commandId.replaceAll(' ','.')));},completed:async commandId=>{for(const id of protectedLockIds('execute',undefined,commandId.replaceAll(' ','.')))security.consumeSurfaceUnlock(id);},chooseFile:async()=>{const result=await dialog.showOpenDialog(window,{title:'Choose GitHub CLI aliases',properties:['openFile'],filters:[{name:'YAML aliases',extensions:['yml','yaml']}]});return result.canceled?null:result.filePaths[0]??null;}});
+ const cliWorkflows=new CliWorkflowsService(loadCatalog(path.join(__dirname,'gh-catalog.json')),engine(),workspace,binary,{resolveHost:hostname=>hostRegistry.resolveHost(hostname),authorize:async commandId=>{await security.assertUnlocked(cliWorkflowLockIds(commandId));},completed:async commandId=>{for(const id of cliWorkflowLockIds(commandId))security.consumeSurfaceUnlock(id);},chooseFile:async()=>{const result=await dialog.showOpenDialog(window,{title:'Choose GitHub CLI aliases',properties:['openFile'],filters:[{name:'YAML aliases',extensions:['yml','yaml']}]});return result.canceled?null:result.filePaths[0]??null;}});
  app.once('will-quit',()=>cliWorkflows.cancelAll());
  const invalidateContextReviews=()=>{githubTasks.invalidateReviews();githubApi.invalidateReviews();cliWorkflows.invalidateReviews();apiFiles.clear();};
  handle('cli-workflows',async(action,payload)=>{if(action!=='cancel'&&accountChanging())throw new Error('Finish or cancel the current account change before starting a CLI task');const id=randomUUID();activeOperations.add(id);try{return await cliWorkflows.handle(action,payload);}finally{activeOperations.delete(id);}});
