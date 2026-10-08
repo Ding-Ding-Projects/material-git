@@ -7,6 +7,14 @@ function personalize(text:string){for(const[key,value]of Object.entries(personal
 function level(value:number){return Number.isFinite(value)?Math.max(1,Math.min(5,Math.round(value)))-1:4;}
 export function languageParts(key:string,settings:AppSettings=defaults):{primary:string;secondary?:string} {const pair=words[key]??[key,key];const render=(language:'en'|'yue')=>{let value=pair[language==='en'?0:1];if(['saved','ready','error'].includes(key)){const tail=messageStyles[language][level(language==='en'?settings.englishHumor:settings.cantoneseHumor)];if(tail)value+=' '+tail;}return Object.hasOwn(words,key)?personalize(value):value;};return settings.language==='yue'?{primary:render('yue')}:settings.language==='both'?{primary:render('en'),secondary:render('yue')}:{primary:render('en')};}
 export function t(key:string,settings:AppSettings=defaults):string {const value=languageParts(key,settings);return value.primary+(value.secondary?' · '+value.secondary:'');}
+/** Local text boundary for authored labels that supply both language resources.
+ * Callers keep provider records, paths, commands and identifiers outside this helper.
+ * No vocabulary data leaves the local replacement cache.
+ */
+export function localizePair(english:string,cantonese:string,settings:AppSettings=defaults):string {
+ const primary=personalize(settings.language==='yue'?cantonese:english);
+ return settings.language==='both'?primary+' · '+personalize(cantonese):primary;
+}
 /** Exact application-owned strings only. Never call on commands, paths, provider records, voice names or identifiers. */
 export function localizeText(text:string,settings:AppSettings=defaults):string {const key=Object.keys(words).find(key=>words[key][0]===text);return key?t(key,settings):text;}
 /** Keep external factual payloads exact; humor is a separate suffix in every category. */
