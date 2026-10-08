@@ -17,21 +17,21 @@ export async function verifiedDownload(item,directory,options={}){
  const expires=Date.now()+deadlineMs;let lastError=new Error('Verified download failed');
  for(let attempt=0;attempt<attempts&&Date.now()<expires;attempt++){
   const temporary=target+'.'+randomUUID()+'.tmp',remaining=expires-Date.now(),protocol=loopback?'=http':'=https';
-  const file=await open(temporary,'wx',0o600);let child,timer;
+  const file=await open(temporary,'wx',0o600);let child,timer,closed;
   try{
    // --disable prevents user curlrc behavior; argv never contains credentials or a shell command.
    child=spawn('curl',['--disable','--fail','--location','--max-redirs','5','--proto',protocol,'--proto-redir',protocol,'--tlsv1.2','--connect-timeout',String(Math.min(20,remaining/1000)),'--max-time',String(Math.min(60,remaining/1000)),'--max-filesize',String(maxBytes),'--silent','--show-error','--output','-',item.url],{shell:false,windowsHide:true,stdio:['ignore','pipe','pipe']});
    let failure,diagnosticBytes=0,bytes=0;const hash=createHash('sha256');
-   const closed=new Promise(resolve=>{child.once('error',()=>{failure=new Error('The required build-time curl transport could not start');});child.once('close',code=>resolve(code));});
+   closed=new Promise(resolve=>{child.once('error',()=>{failure=new Error('The required build-time curl transport could not start');});child.once('close',code=>resolve(code));});
    const stop=error=>{failure??=error;child.kill('SIGKILL');};
    timer=setTimeout(()=>stop(new Error('Pinned download exceeded its total deadline')),remaining);
    child.stderr.on('data',part=>{diagnosticBytes+=part.length;if(diagnosticBytes>16384)stop(new Error('Download diagnostics exceeded their byte bound'));});
-   for await(const chunk of child.stdout){bytes+=chunk.length;if(bytes>maxBytes){stop(new Error('Pinned download exceeded its byte bound'));break;}hash.update(chunk);await file.write(chunk);}
+   for await(const chunk of child.stdout){bytes+=chunk.length;if(bytes>maxBytes){stop(new Error('Pinned download exceeded its byte bound'));break;}hash.update(chunk);let position=0;while(position<chunk.length){const part=await file.write(chunk,position,chunk.length-position,null);if(!part.bytesWritten)throw new Error('Temporary download write made no progress');position+=part.bytesWritten;}}
    const code=await closed;clearTimeout(timer);
    if(failure)throw failure;if(code!==0)throw new Error(`Pinned download transport failed (${code})`);
    if(hash.digest('hex')!==item.sha256)throw new Error('Pinned download checksum mismatch');
-   await file.sync();await file.close();await rename(temporary,target);return target;
-  }catch(error){lastError=error instanceof Error?error:new Error('Pinned download failed');child?.kill('SIGKILL');await file.close().catch(()=>{});await rm(temporary,{force:true});}
+   await file.sync();await file.close();if(!await verified(temporary,item.sha256,maxBytes))throw new Error('Persisted download checksum mismatch');if(Date.now()>=expires)throw new Error('Pinned download exceeded its total deadline');await rename(temporary,target);return target;
+  }catch(error){lastError=error instanceof Error?error:new Error('Pinned download failed');child?.kill('SIGKILL');if(closed)await closed;await file.close().catch(()=>{});await rm(temporary,{force:true});}
   finally{clearTimeout(timer);}
   if(attempt+1<attempts&&Date.now()<expires)await new Promise(resolve=>setTimeout(resolve,Math.min(200*(attempt+1),expires-Date.now())));
  }

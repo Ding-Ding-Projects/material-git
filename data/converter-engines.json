@@ -19,7 +19,7 @@
       "license": "GPL-3.0-or-later",
       "source": "https://ffmpeg.org/releases/ffmpeg-9.0.2.tar.xz",
       "sourceManifest": "data/ffmpeg-source-build.json",
-      "sourceManifestSha256": "10507941373eaed640b28f7f7887cb3fb4880903ac81581ac2d726bc818ecf29",
+      "sourceManifestSha256": "d2f79f090845077125bf4231de8d4ae40ffa65a24849c2eba6088e2caee57736",
       "files": {
         "linux-x64": [
           "SOURCE_BUILD.json",
@@ -106,10 +106,10 @@
   ],
   "files": {
     "linux-x64": {
-      "SOURCE_BUILD.json": "acbbb85629a122163b269b2f59096128903b2770cf95d8cc28ab47169cd545c8",
+      "SOURCE_BUILD.json": "2bce5b1efbb12d5e6bc337a7162b4967362e51037c2f310e478cd86506a8981f",
       "build-toolchain-packages.txt": "bbcc9d32a9a3f6756bbf9644bfa8bc9af823164685d850dcdd4d4ac53d1f0959",
       "configure-output.txt": "dfdae20e329f5e1208ebd6b9634be78363f164e6c1a3fc804be50c83ff3d3d7c",
-      "corresponding-source.tar": "f8097b59601f1ed26bd5c99c3bc76f731ec3393643f6e9d0169356b98b2d0acc",
+      "corresponding-source.tar": "fa96b0c51c75565c7f1465dbd66055d44a2d247e6bfb88b8d46d625533e68683",
       "ffmpeg": "9aa849469555a8b27cc348b86ea40dd9d0141d2d4d9afc23c62842441001f5c2",
       "ffmpeg-config.h": "435575e28fae1af103c81a3bd2453b5e8cfb5d26976d00247a8f39a260b8ce03",
       "ffmpeg-config.mak": "bebcb47fd271fe3e48cdaff9a1920f58c9967ec483f880461054cdc8eb37bcca",
@@ -129,10 +129,10 @@
       "7zip.SOURCE.tar.xz": "9691944c0fe0d01bb49373a704fb983fd33bc98b1738695179dfbf99ac1734f6"
     },
     "win32-x64": {
-      "SOURCE_BUILD.json": "6f1f0e99d4cce088c8d8f017465ccebacba485c68dab1998912dac2391cabf23",
+      "SOURCE_BUILD.json": "f98d07f99e02eed415cbc529cd835c64415bbda7b8f6e697b30dd82946efb596",
       "build-toolchain-packages.txt": "bbcc9d32a9a3f6756bbf9644bfa8bc9af823164685d850dcdd4d4ac53d1f0959",
       "configure-output.txt": "150fb99da486be6da67a33f9540898b339502d4a9d50b551b788547b6e5f369b",
-      "corresponding-source.tar": "5160b43577877c1ba69461a6c5122655d68a6f1866acd0d76674540d6ecaf64a",
+      "corresponding-source.tar": "02e6385f75d6fc23bb9cd740aa8558b7b03617e577819c09f53c86a982f8f360",
       "ffmpeg-config.h": "f8e1547b124e8c8638cde61b54e14c05629b36187231b8b95fece75a121a421e",
       "ffmpeg-config.mak": "af9ad639b4fd820b81ccbd28f3c3a73d9dbd689db19f6413528dc7fc8772214b",
       "ffmpeg.LICENSE": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903",
