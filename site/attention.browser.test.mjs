@@ -41,7 +41,7 @@ try{
  await page.clock.fastForward(14*60_000);assert.equal(await page.locator('.momentum-bar').count(),0);await page.clock.fastForward(60_000);await page.waitForSelector('.momentum-bar');
  assert.match(await page.locator('.task-bar').innerText(),/Review the release notes/);await capture('changed-task-new-idle');
  await page.keyboard.press('Control+Shift+F');await page.waitForSelector('.palette');
- await page.locator('.palette .search-row md-outlined-text-field input').fill('Momentum');await page.waitForFunction(()=>document.querySelectorAll('.palette-setting').length===1);
+ await page.locator('.palette .search-row md-outlined-text-field input').first().fill('Momentum');await page.waitForFunction(()=>document.querySelectorAll('.palette-setting').length===1);
  assert.equal(await page.locator('.palette-setting md-switch').count(),1,'palette reuses the actual mode switch');
  await page.locator('.palette-setting md-switch').click();await page.keyboard.press('Escape');await page.waitForFunction(()=>!document.querySelector('.momentum-bar'));
  assert.equal(await page.locator('.attention-time').count(),1,'independent time-awareness remains enabled');

@@ -1,6 +1,7 @@
 import {contextBridge,ipcRenderer} from 'electron';
 import type {MaterialBridge,Operation} from '../shared/types';
 const api:MaterialBridge={
+ exportAppearance:payload=>ipcRenderer.invoke('material:appearance-export',payload),
  downloads:request=>ipcRenderer.invoke('material:downloads',request),
  onDownload:callback=>{const listener=(_event:unknown,job:Parameters<typeof callback>[0])=>callback(job);ipcRenderer.on('material:download-update',listener);return()=>ipcRenderer.removeListener('material:download-update',listener);},
  startupPersonalization:()=>ipcRenderer.invoke('material:startup-personalization'),

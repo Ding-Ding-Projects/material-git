@@ -1,12 +1,12 @@
 # Reachable Git command coverage
 
-This map compares implementation checkpoint `9a0f91c + structured message and pull drafts` with all 173 names in the source-derived Git 2.56 inventory. It counts command names, not reviewed task identifiers. The supplemental contrib/subtree helper is recorded separately.
+This map compares implementation checkpoint `3a0c1b8 + reachable pack export and redundant-copy cleanup` with all 173 names in the source-derived Git 2.56 inventory. It counts command names, not reviewed task identifiers. The supplemental contrib/subtree helper is recorded separately.
 
 | Fully covered | Partial reachable forms | Missing command contracts |
 | --- | --- | --- |
-| 0 | 93 | 80 |
+| 0 | 98 | 75 |
 
-Of the partial forms, 91 directly invoke the named command, one delegates GC through `maintenance --task=gc`, and one shows current-branch state derived from `symbolic-ref`. Six missing command contracts have equivalent natural workflows using another native command. Internal helper execution, help text, executable presence and proposed destinations are not direct coverage.
+Of the partial forms, 96 directly invoke the named command, one delegates GC through `maintenance --task=gc`, and one shows current-branch state derived from `symbolic-ref`. Six missing command contracts have equivalent natural workflows using another native command. Internal helper execution, help text, executable presence and proposed destinations are not direct coverage.
 
 No command is fully covered: the complete form, option and per-control execution audits remain open. Representative native fixtures and selected browser interactions prove narrower behavior. The [machine-readable map](git-command-coverage.json) preserves every audited option mention, exact native form, reachable route, evidence limit and remaining work. Official option mentions include cross-references and are not an argument grammar.
 
@@ -86,7 +86,7 @@ No command is fully covered: the complete form, option and per-control execution
 | `http-fetch` | missing | Git-owned internal/helper/protocol command. Its parent workflow does not establish a separately reachable command contract; add explicit inspection/lifecycle or typed transfer controls before claiming coverage. |
 | `http-push` | missing | Git-owned internal/helper/protocol command. Its parent workflow does not establish a separately reachable command contract; add explicit inspection/lifecycle or typed transfer controls before claiming coverage. |
 | `imap-send` | missing | Patches > Review selected mailbox messages, account and destination before explicit external communication. |
-| `index-pack` | missing | Object storage > Import/verify an approved pack with explicit storage and retention policies. |
+| `index-pack` | partial | Maintenance > Object storage > Inspect and import object packs > Review importing object pack |
 | `init` | partial | Source control > Create repository |
 | `init-db` | missing | Equivalent natural workflow uses init; this command spelling/output/option contract is not exposed or verified directly. |
 | `instaweb` | missing | Integrations > Explicitly start/stop a local read-only repository viewer with network binding disclosure. |
@@ -118,13 +118,13 @@ No command is fully covered: the complete form, option and per-control execution
 | `name-rev` | partial | History > Reference names |
 | `notes` | partial | History > Add note; Maintenance > Commit notes; Conflicts > note resolution |
 | `p4` | missing | External/integration workflow is not implemented. Needs approved native program/account/file grants, dependency discovery and task-specific reviewed effects. |
-| `pack-objects` | missing | Object storage > Select verified object IDs and review a fresh pack output and compression policy. |
+| `pack-objects` | partial | Maintenance > Object storage > Object packs and loose copies > Export reachable objects |
 | `pack-redundant` | missing | Object storage > Inspect redundant packs with an explicit preservation plan. |
 | `pack-refs` | partial | Maintenance > Reference maintenance > Pack references |
 | `patch-id` | partial | History > Identify patch |
 | `pickaxe` | missing | No dedicated reachable native task or inspector exists. Implement the proposed natural destination with typed controls and isolated execution evidence. |
 | `prune` | partial | Maintenance > Object storage > Prune unreachable objects |
-| `prune-packed` | missing | Object storage > Review removal of redundant loose objects already retained in packs. |
+| `prune-packed` | partial | Maintenance > Object storage > Object packs and loose copies > Inspect / Review removing redundant loose copies |
 | `pull` | partial | Remotes > Pull |
 | `push` | partial | Remotes > Push |
 | `quiltimport` | missing | Patches > Import an approved quilt series directory with authorship and commit preview. |
@@ -157,7 +157,7 @@ No command is fully covered: the complete form, option and per-control execution
 | `shortlog` | partial | History > Contributors |
 | `show` | partial | History > Commit details; Conflicts > three-way views |
 | `show-branch` | partial | Maintenance > Inspect repository > Branch ancestry summary |
-| `show-index` | missing | Object storage > Inspect an approved pack index without arbitrary file paths. |
+| `show-index` | partial | Maintenance > Object storage > Inspect and import object packs > Inspect selected index |
 | `show-ref` | partial | Maintenance > Reference maintenance > References |
 | `sparse-checkout` | partial | Maintenance > Sparse checkout |
 | `stage` | missing | Equivalent natural workflow uses add; this command spelling/output/option contract is not exposed or verified directly. |
@@ -181,7 +181,7 @@ No command is fully covered: the complete form, option and per-control execution
 | `url-parse` | missing | Remotes > Explain a selected URL after detecting Git 2.56 support, with credential redaction. |
 | `var` | partial | Maintenance > Inspect repository > Resolved identity and settings |
 | `verify-commit` | partial | History > Verify signature |
-| `verify-pack` | missing | Object storage > Inspect/verify selected approved pack indexes. |
+| `verify-pack` | partial | Maintenance > Object storage > Inspect and import object packs > Verify selected pack |
 | `verify-tag` | partial | Tags and stashes > Verify signature |
 | `version` | partial | Source control toolbar > actual Git runtime version |
 | `whatchanged` | missing | Equivalent natural workflow uses log/show; this command spelling/output/option contract is not exposed or verified directly. |
@@ -192,11 +192,11 @@ No command is fully covered: the complete form, option and per-control execution
 
 1. Explicit multi-ref/delete/lease remote policies after the advertised reference chooser.
 2. Interactive rebase todo controls with owned native editors and recovery.
-3. Dedicated object-pack inspections, imports and verifications.
-4. Pack inspection/import/verification and symbolic/ref transaction tools.
+3. Quarantined loose-object import and source-bound binary streaming.
+4. Symbolic references and reviewed multi-reference transactions.
 5. Explicit trusted regression test/program orchestration and integration/protocol lifecycles.
 6. Git 2.56-only workflows must remain gated until the actual runtime is proved.
 
 ## Cantonese coverage note
 
-呢個表逐個比較 173 個已審核 Git 指令名稱。93 個指令有部分可到達嘅原生操作，80 個仲未有獨立介面契約，冇任何指令已驗證全部形式同選項。工作流程數目、程式存在或者內部程序執行，唔等於完整指令覆蓋。
+呢個表逐個比較 173 個已審核 Git 指令名稱。98 個指令有部分可到達嘅原生操作，75 個仲未有獨立介面契約，冇任何指令已驗證全部形式同選項。工作流程數目、程式存在或者內部程序執行，唔等於完整指令覆蓋。

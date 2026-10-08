@@ -45,19 +45,21 @@ export interface Bootstrap {
   account: string | null; repository: string | null; operations: Operation[];
 }
 export interface HistoryEntry { id: string; at: string; action: string; snapshot?: AppSettings }
-export type AuthAction = 'status' | 'login' | 'refresh' | 'setup-git' | 'cancel' | 'switch' | 'logout' | 'copy-token' | 'register-host' | 'select-host';
+export type AuthAction = 'status' | 'login' | 'refresh' | 'setup-git' | 'cancel' | 'switch' | 'logout' | 'copy-token' | 'register-host' | 'select-host' | 'ssh-key-review' | 'ssh-key-apply' | 'ssh-key-discard';
 export interface AuthAccount {
   host: string; login: string; active: boolean; state: string;
   scopes: string[]; gitProtocol: string; tokenSource: 'environment' | 'credential-store' | 'config-file' | 'unknown';
 }
-export interface AuthPayload { hostname?: string; login?: string; scopes?: string[]; removeScopes?: string[]; resetScopes?: boolean; confirmed?: boolean; reviewedHostname?: string; clipboardConsent?: boolean }
+export interface AuthPayload { hostname?: string; login?: string; scopes?: string[]; removeScopes?: string[]; resetScopes?: boolean; confirmed?: boolean; reviewedHostname?: string; clipboardConsent?: boolean; gitProtocol?:'https'|'ssh'; skipSshKey?:boolean; force?:boolean; title?:string; reviewId?:string }
+export interface AuthSshKeyReview {reviewId:string;hostname:string;login:string;title:string;algorithm:string;fingerprint:string;expiresAt:string}
 export interface AuthState {
   status: 'idle' | 'checking' | 'starting' | 'waiting' | 'authenticated' | 'failed' | 'cancelled';
   accounts: AuthAccount[]; allowedHosts: string[]; allowedScopes: string[];
   selectedHostname?:string; hostSelectionAvailable?:boolean;
-  hostname?: string; deviceCode?: string; verificationUrl?: string; message?: string; error?: string; tokenCopyAvailable?: boolean; hostRegistrationAvailable?: boolean;
+  sshKeyUploading?:boolean;sshKeyAvailable?:boolean;sshKeyReview?:AuthSshKeyReview;pendingSshKey?:{hostname:string;login:string}; hostname?: string; deviceCode?: string; verificationUrl?: string; message?: string; error?: string; tokenCopyAvailable?: boolean; hostRegistrationAvailable?: boolean;
 }
 export interface MaterialBridge extends StartupBridge {
+  exportAppearance?(payload:{document:unknown;format:'svg'|'png';png?:string}):Promise<{saved:boolean;name?:string}>;
   downloads(request:import('./downloads').DownloadRequest):Promise<import('./downloads').DownloadPage>;
   onDownload(callback:(job:import('./downloads').DownloadJob)=>void):()=>void;
   git(action:import('./git').GitAction,payload?:import('./git').GitPayload):Promise<import('./git').GitResponse>;

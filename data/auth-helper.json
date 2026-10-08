@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "cliVersion": "2.102.0",
+  "goVersion": "go1.27.1",
+  "keyring": "github.com/zalando/go-keyring v0.2.8",
+  "config": "github.com/cli/go-gh/v2 v2.16.1",
+  "sourceSha256": "e696e6d0792c9e7ab07a6049e294dd8faa8ea2efb5c06467034d4465c8030b4b",
+  "files": {
+    "linux-x64": "1936265c75ccedc5e94143bf544558d65fcd4630be5daa181c0c7b5fd85ea285",
+    "linux-arm64": "8e9573a6c3aa798f32914e8971931d86be2686c07bbee9865b053dedd06e0316",
+    "win32-x64": "be3b1fbca8577a7c987b0a7de68882e6843b467f13cc7fedb66f7de0d0d6b386",
+    "win32-arm64": "8c1a529e173db35da930dd389e6ee18ddba904d84147c42829c305286298e567"
+  }
+}
