@@ -1,3 +1,4 @@
+import {validateAuthHost} from './auth-hosts';
 import {spawn, type SpawnOptions} from 'node:child_process';
 import {randomUUID,createHash} from 'node:crypto';
 import {stat} from 'node:fs/promises';
@@ -10,6 +11,8 @@ export interface CliConfigServiceOptions {
  environment?:NodeJS.ProcessEnv;
  chooseExecutable?:(definition:CliConfigDefinition)=>Promise<string|null>;
  now?:()=>number;
+ resolveHost?:(hostname?:string)=>{hostname:string};
+ approvedHosts?:()=>readonly {hostname:string}[];
 }
 type RawValues=Record<CliConfigKey,string>;
 interface PendingReview {review:CliConfigReview;changes:{key:CliConfigKey;value:string}[];fingerprint:string;}
@@ -31,6 +34,7 @@ export class CliConfigService {
  private selectedExecutables=new Map<string,string>();
  private versionChecked=false;
  private applying=false;
+ private contextGeneration=0;
  constructor(private readonly binary:string,private readonly options:CliConfigServiceOptions={}) {
   this.environment={...(options.environment??process.env)};this.now=options.now??Date.now;
   this.runner=options.run??((binary,args,options)=>new Promise((resolve,reject)=>{
@@ -49,8 +53,12 @@ export class CliConfigService {
   return result;
  }
  private async version() {if(this.versionChecked)return;const result=await this.run(['--version']);if(result.code!==0||!result.stdout.startsWith('gh version 2.102.0 '))throw new Error('Configuration requires the bundled GitHub CLI 2.102.0.');this.versionChecked=true;}
- private scope(value:unknown):CliConfigScope {if(value===undefined)return 'global';if(value!=='global'&&value!=='github.com')throw new Error('Choose Global or the approved github.com host.');return value;}
- private scoped(args:string[],scope:CliConfigScope) {return scope==='global'?args:[...args,'--host=github.com'];}
+ private scopes():CliConfigScope[]{const hosts=this.options.approvedHosts?.()||[{hostname:'github.com'}];if(!Array.isArray(hosts)||hosts.length>32)throw new Error('Approved configuration hosts are unavailable.');const scopes=['global',...hosts.map(host=>validateAuthHost(host.hostname).hostname)];if(scopes.some(scope=>typeof scope!=='string'||scope.length>253||!/^[a-z0-9][a-z0-9.-]*$/.test(scope))||new Set(scopes).size!==scopes.length)throw new Error('Approved configuration hosts are invalid.');return scopes;}
+ private hostname(value?:string):string {const hostname=this.options.resolveHost?this.options.resolveHost(value).hostname:value||'github.com';if(!this.scopes().includes(hostname)||hostname==='global'||value&&value!==hostname)throw new Error('Choose an exact approved configuration host.');return hostname;}
+ private scope(value:unknown):CliConfigScope {if(value===undefined||value==='global')return 'global';if(typeof value!=='string'||!this.scopes().includes(value))throw new Error('Choose Global or an approved configuration host.');return this.hostname(value);}
+ private scoped(args:string[],scope:CliConfigScope) {const checked=this.scope(scope);return checked==='global'?args:[...args,`--host=${checked}`];}
+ invalidateReviews(){this.contextGeneration++;this.reviews.clear();}
+
  private async raw(scope:CliConfigScope):Promise<RawValues> {
   // config list defaults to the active host; get with no --host is the actual global scope.
   const entries: [CliConfigKey,string][]=[];
@@ -77,8 +85,8 @@ export class CliConfigService {
   });
  }
  private async snapshot(scope:CliConfigScope):Promise<CliConfigSnapshot> {
-  const global=await this.raw('global');const host=await this.raw('github.com');
-  return {kind:'snapshot',version:REFERENCE.version,scope,definitions:structuredClone(CLI_CONFIG_DEFINITIONS),values:CLI_CONFIG_DEFINITIONS.map(definition=>({key:definition.key,value:this.safeValue(definition.key,(scope==='global'?global:host)[definition.key]),globalValue:this.safeValue(definition.key,global[definition.key]),hostValue:this.safeValue(definition.key,host[definition.key]),origin:'cli-resolved',hostRelation:host[definition.key]===global[definition.key]?'same-as-global':'different-from-global',...(this.source(definition)?{environmentSource:this.source(definition)}:{}),...(definition.kind==='executable'&&(scope==='global'?global:host)[definition.key]?{configuredCommandHidden:!this.selectedExecutables.has(`${definition.key}:${(scope==='global'?global:host)[definition.key]}`)}:{})})),environment:this.environmentReference(),notes:[...NOTES],reset:{supported:false,reason:'This CLI has no config unset/reset command. Removing a host override requires a separate storage adapter; config clear-cache only removes cached responses.'}};
+  const hostname=this.hostname(scope==='global'?undefined:scope);const global=await this.raw('global');const host=await this.raw(hostname);
+  return {kind:'snapshot',version:REFERENCE.version,scope,hostname,scopes:this.scopes(),definitions:structuredClone(CLI_CONFIG_DEFINITIONS),values:CLI_CONFIG_DEFINITIONS.map(definition=>({key:definition.key,value:this.safeValue(definition.key,(scope==='global'?global:host)[definition.key]),globalValue:this.safeValue(definition.key,global[definition.key]),hostValue:this.safeValue(definition.key,host[definition.key]),origin:'cli-resolved',hostRelation:host[definition.key]===global[definition.key]?'same-as-global':'different-from-global',...(this.source(definition)?{environmentSource:this.source(definition)}:{}),...(definition.kind==='executable'&&(scope==='global'?global:host)[definition.key]?{configuredCommandHidden:!this.selectedExecutables.has(`${definition.key}:${(scope==='global'?global:host)[definition.key]}`)}:{})})),environment:this.environmentReference(),notes:[...NOTES],reset:{supported:false,reason:'This CLI has no config unset/reset command. Removing a host override requires a separate storage adapter; config clear-cache only removes cached responses.'}};
  }
  private fingerprint(global:RawValues,host:RawValues,keys:CliConfigKey[]) {return createHash('sha256').update(JSON.stringify(keys.map(key=>[key,global[key],host[key]]))).digest('hex');}
  private validateChanges(changes:unknown,scope:CliConfigScope):{key:CliConfigKey;value:string}[] {
@@ -118,20 +126,20 @@ export class CliConfigService {
   if(action==='review') {
    if(this.applying)throw new Error('Wait for the current configuration change to finish.');
    const scope=this.scope(payload.scope);const changes=this.validateChanges(payload.changes,scope);
-   const global=await this.raw('global');const host=await this.raw('github.com');
-   const review:CliConfigReview={kind:'review',reviewId:randomUUID(),scope,expiresAt:new Date(this.now()+5*60*1000).toISOString(),changes:changes.map(change=>({key:change.key,label:DEFINITIONS.get(change.key)!.label,before:this.safeValue(change.key,(scope==='global'?global:host)[change.key]),after:this.safeValue(change.key,change.value),...(this.source(DEFINITIONS.get(change.key)!)?{environmentSource:this.source(DEFINITIONS.get(change.key)!)}:{})})),notes:[...NOTES]};
+   const generation=this.contextGeneration,hostname=this.hostname(scope==='global'?undefined:scope);const global=await this.raw('global');const host=await this.raw(hostname);if(generation!==this.contextGeneration)throw new Error('Configuration context changed while preparing this review. Refresh and review again.');
+   const review:CliConfigReview={kind:'review',reviewId:randomUUID(),scope,hostname,expiresAt:new Date(this.now()+5*60*1000).toISOString(),changes:changes.map(change=>({key:change.key,label:DEFINITIONS.get(change.key)!.label,before:this.safeValue(change.key,(scope==='global'?global:host)[change.key]),after:this.safeValue(change.key,change.value),...(this.source(DEFINITIONS.get(change.key)!)?{environmentSource:this.source(DEFINITIONS.get(change.key)!)}:{})})),notes:[...NOTES]};
    this.reviews.set(review.reviewId,{review,changes,fingerprint:this.fingerprint(global,host,changes.map(change=>change.key))});return structuredClone(review);
   }
   if(this.applying)throw new Error('Wait for the current configuration change to finish.');
   if(typeof payload.reviewId!=='string'||payload.confirmed!==true)throw new Error('Review and confirm the configuration changes first.');
   const pending=this.reviews.get(payload.reviewId);if(!pending)throw new Error('This review expired or was already applied. Review the changes again.');
   this.reviews.delete(payload.reviewId);this.applying=true;
-  let written=0;
+  let written=0;const generation=this.contextGeneration;
   try {
-   const global=await this.raw('global');const host=await this.raw('github.com');
+   const hostname=this.hostname(pending.review.hostname);this.scope(pending.review.scope);if(pending.review.scope==='global'&&this.hostname()!==hostname)throw new Error('The selected comparison host changed. Refresh and review again.');const global=await this.raw('global');const host=await this.raw(hostname);
    if(this.fingerprint(global,host,pending.changes.map(change=>change.key))!==pending.fingerprint)throw new Error('Configuration changed since this review. Refresh and review again.');
-   for(const change of pending.changes){const result=await this.run(this.scoped(['config','set',change.key,change.value],pending.review.scope));if(result.code!==0)throw new Error('GitHub CLI could not write a reviewed setting.');written++;const check=await this.run(this.scoped(['config','get',change.key],pending.review.scope));if(check.code!==0||check.stdout.replace(/\r?\n$/,'')!==change.value)throw new Error('A setting was written but its native readback did not match.');}
-   this.reviews.clear();return {kind:'mutation',snapshot:await this.snapshot(pending.review.scope),message:`Applied ${written} reviewed ${written===1?'setting':'settings'} to ${pending.review.scope==='global'?'Global':'github.com'}. Native CLI readback matched.`};
+   for(const change of pending.changes){if(Date.parse(pending.review.expiresAt)<=this.now())throw new Error('Configuration review expired before the write. Review again.');if(pending.review.scope==='global'&&this.hostname()!==pending.review.hostname)throw new Error('The selected comparison host changed before the write. Review again.');if(generation!==this.contextGeneration)throw new Error('Configuration context changed before the write. Refresh and review again.');this.hostname(pending.review.hostname);const result=await this.run(this.scoped(['config','set',change.key,change.value],pending.review.scope));if(result.code!==0)throw new Error('GitHub CLI could not write a reviewed setting.');written++;const check=await this.run(this.scoped(['config','get',change.key],pending.review.scope));if(check.code!==0||check.stdout.replace(/\r?\n$/,'')!==change.value)throw new Error('A setting was written but its native readback did not match.');}
+   this.reviews.clear();return {kind:'mutation',snapshot:await this.snapshot(pending.review.scope),message:`Applied ${written} reviewed ${written===1?'setting':'settings'} to ${pending.review.scope==='global'?'Global':pending.review.scope}. Native CLI readback matched.`};
   }catch(error){this.reviews.clear();if(written)throw new Error(`${written} ${written===1?'setting was':'settings were'} written before the operation stopped. Refresh configuration before continuing. No automatic rollback was attempted.`);throw error;}finally{this.applying=false;}
  }
 }
