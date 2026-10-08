@@ -1,7 +1,7 @@
 import {spawn, type ChildProcess} from 'node:child_process';
 import {randomUUID,createHash} from 'node:crypto';
 import type {GitResult} from '../shared/git';
-export function redactGit(value:string):string {let output=value.replace(/https?:\/\/[^\s/@]+:[^\s/@]+@/g,'https://[REDACTED]@').replace(/(?:gh[pousr]_|github_pat_)[A-Za-z0-9_]+/g,'[REDACTED]');for(const [key,secret] of Object.entries(process.env))if(/TOKEN|SECRET|PASSWORD/i.test(key)&&secret&&secret.length>3)output=output.split(secret).join('[REDACTED]');return output;}
+export function redactGit(value:string):string {let output=value.replace(/(?:https?|ssh):\/\/[^\s/@]+:[^\s/@]+@/g,'https://[REDACTED]@').replace(/(?:gh[pousr]_|github_pat_)[A-Za-z0-9_]+/g,'[REDACTED]');for(const [key,secret] of Object.entries(process.env))if(/TOKEN|SECRET|PASSWORD/i.test(key)&&secret&&secret.length>3)output=output.split(secret).join('[REDACTED]');return output;}
 export interface NativeGitResult extends GitResult {nativeHash:string;}
 export class GitProcesses {
  private active=new Map<string,{child:ChildProcess;cancelled:boolean}>();
