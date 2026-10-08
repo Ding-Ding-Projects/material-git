@@ -38,14 +38,14 @@ test('native opaque image grants normalize actual PNG bytes and gate chat on rep
   if(String(input).endsWith('/api/chat')){sent.push(JSON.parse(String(init?.body)));return new Response(new ReadableStream({start(controller){controller.enqueue(new TextEncoder().encode(JSON.stringify({message:{content:'Synthetic partial'}})+'\n'));release=()=>{controller.enqueue(new TextEncoder().encode(JSON.stringify({message:{content:' reply'},done:true})+'\n'));controller.close();};}}));}
   throw new Error('Unexpected synthetic vision fixture route');
  };
- const service=new LocalToolsService({storageDirectory:dir,engines,fetcher,pickSources:async()=>[source],pickDestination:async()=>null});
+ const service=new LocalToolsService({storageDirectory:dir,engines,fetcher,pickSources:async purpose=>{assert.equal(purpose,'chat-images');return [source];},pickDestination:async()=>null});
  try{
   const session=await service.request('session-create',{model:'synthetic:vision'})as{id:string};
-  const selected=await service.request('converter-pick')as Array<{id:string}>;
+  const selected=await service.request('converter-pick',{purpose:'chat-images'})as Array<{id:string}>;
   await assert.rejects(service.request('chat-start',{session:session.id,prompt:'Synthetic image prompt',attachments:[selected[0].id]}),/vision support/);assert.equal(sent.length,0);
   vision=true;await writeFile(source,Buffer.from('changed source'));
   await assert.rejects(service.request('chat-start',{session:session.id,prompt:'Synthetic image prompt',attachments:[selected[0].id]}),/source changed/);
-  await writeFile(source,PNG.sync.write(png));const granted=await service.request('converter-pick')as Array<{id:string}>;
+  await writeFile(source,PNG.sync.write(png));const granted=await service.request('converter-pick',{purpose:'chat-images'})as Array<{id:string}>;
   await assert.rejects(service.request('chat-start',{session:session.id,prompt:'Synthetic image prompt',attachments:['/tmp/ungranted.png']}),/opaque/);
   const run=await service.request('chat-start',{session:session.id,prompt:'Synthetic image prompt',attachments:[granted[0].id]})as{id:string};
   await eventually(async()=>sent.length===1);
