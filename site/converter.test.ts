@@ -22,5 +22,5 @@ test('bounded byte inspection rejects unsupported binaries and checks raster siz
 });
 test('receipt validation accepts only bounded outcome facts, excluding names, paths and file contents',()=>{
  const receipt={id:'conversion-1',at:new Date().toISOString(),source:'json',target:'yaml',inputBytes:10,outputBytes:20,state:'done'};
- assert.deepEqual(validateConverterReceipts([receipt]),[receipt]);assert.throws(()=>validateConverterReceipts([{...receipt,name:'private.json'}]));assert.throws(()=>validateConverterReceipts([{...receipt,state:'running'}]));assert.throws(()=>validateConverterReceipts([{...receipt,outputBytes:converterLimits.fileBytes+1}]));
+ assert.deepEqual(validateConverterReceipts([receipt]),[receipt]);assert.throws(()=>validateConverterReceipts([receipt,receipt]));assert.throws(()=>validateConverterReceipts([{...receipt,at:0}]));assert.throws(()=>validateConverterReceipts([{...receipt,name:'private.json'}]));assert.throws(()=>validateConverterReceipts([{...receipt,state:'running'}]));assert.throws(()=>validateConverterReceipts([{...receipt,outputBytes:converterLimits.fileBytes+1}]));
 });
