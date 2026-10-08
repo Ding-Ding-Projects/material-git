@@ -30,14 +30,14 @@ const strongETag=(value:string|null)=>value&&/^"[^"\r\n]{1,512}"$/.test(value)?v
 const identity=(stat:{dev:number;ino:number})=>({dev:String(stat.dev),ino:String(stat.ino)});
 const sameIdentity=(a:{dev:string;ino:string}|undefined,stat:{dev:number;ino:number})=>!!a&&a.dev===String(stat.dev)&&a.ino===String(stat.ino);
 async function fileHash(file:FileHandle,bytes:number){const hash=createHash('sha256');if(bytes)for await(const chunk of file.createReadStream({start:0,end:bytes-1,autoClose:false}))hash.update(chunk);return hash;}
-const sourceKey=(source:DownloadSource)=>JSON.stringify([source.selection,source.apiOrigin,source.endpoint,source.size??null,source.sha256??null]);
+const sourceKey=(source:DownloadSource)=>JSON.stringify([source.selection,source.apiOrigin,source.endpoint,source.name,source.size??null,source.sha256??null]);
 const validSize=(n:unknown):n is number=>typeof n==='number'&&Number.isSafeInteger(n)&&n>=0;
 /** Real streaming queue. Success follows fsync, integrity verification and atomic no-overwrite publication. */
 export class DownloadQueue {
  private jobs=new Map<string,Internal>();private listeners=new Set<(job:DownloadJob)=>void>();
  private mutations:Promise<unknown>=Promise.resolve();private saved:Promise<void>=Promise.resolve();private lastSave=0;private running=false;private closed=false;
  private ready:Promise<void>;
- constructor(private deps:DownloadDependencies){this.ready=this.restore();}
+ constructor(private deps:DownloadDependencies){this.ready=this.restore();void this.ready.catch(()=>{});}
  get activeOperations():ReadonlySet<string>{return new Set([...this.jobs.values()].filter(record=>active.has(record.job.state)).map(record=>record.job.id));}
  activeJobs():number{return this.activeOperations.size;}
  async pauseAll(){await this.stopAll('paused');}
@@ -71,7 +71,7 @@ export class DownloadQueue {
   if(request.action==='remove'){if(active.has(record.job.state))throw new DownloadRequestError('Stop the download before removing it.');await this.removePartial(record);this.jobs.delete(record.job.id);await this.persist();return this.page();}
   if(active.has(record.job.state)||record.job.state==='completed')throw new DownloadRequestError('This download cannot be restarted.');
   if(request.action==='resume'&&!record.job.resumable)throw new DownloadRequestError('Resume is unavailable. Retry starts a fresh transfer.');
-  if(request.action==='retry'){const source=await this.resolve(record.job.selection);if(await this.deps.accountFingerprint(record.job.selection.hostname)!==record.account)throw new DownloadFailure('authentication');await this.removePartial(record);record.sourceKey=sourceKey(source);record.job.total=source.size??null;record.job.bytes=0;record.etag=undefined;record.identity=undefined;record.checkpointHash=undefined;record.finalized=undefined;record.range=false;record.fresh=true;}
+  if(request.action==='retry'){const source=await this.resolve(record.job.selection);if(await this.deps.accountFingerprint(record.job.selection.hostname)!==record.account)throw new DownloadFailure('authentication');await this.removePartial(record);record.sourceKey=sourceKey(source);record.job.name=safeName(source.name);record.job.total=source.size??null;record.job.bytes=0;record.etag=undefined;record.identity=undefined;record.checkpointHash=undefined;record.finalized=undefined;record.range=false;record.fresh=true;}
   record.stop=undefined;record.job.state='queued';record.job.issue=undefined;record.job.bytesPerSecond=0;record.job.etaSeconds=null;await this.persist();this.publish(record);void this.pump();return this.page();
  }
  private async resolve(selection:DownloadSelection){const source=await this.deps.resolveSource(selection);if(JSON.stringify(validateDownloadSelection(source.selection))!==JSON.stringify(selection)||!source.name||source.name.length>512||source.size!==undefined&&!validSize(source.size)||source.sha256!==undefined&&!/^[a-f0-9]{64}$/i.test(source.sha256))throw new DownloadFailure('source-changed');const origin=new URL(source.apiOrigin);if(origin.origin!==source.apiOrigin||origin.username||origin.password||!this.safeProtocol(origin)||!source.endpoint.startsWith('/'))throw new DownloadFailure('source-changed');const expected=selection.kind==='release-asset'?`/repos/${selection.repository}/releases/assets/${selection.id}`:`/repos/${selection.repository}/actions/artifacts/${selection.id}/zip`;if(source.endpoint!==expected)throw new DownloadFailure('source-changed');return source;}
