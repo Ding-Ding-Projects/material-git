@@ -2,7 +2,7 @@
 
 All 104 canonical obligations are represented using public-neutral identifiers. This is a complete inventory of required rows, not a claim of complete implementation. App, documentation site and repository applicability are assessed separately; only genuine narrow clauses are marked not applicable. Open/unknown/blocked states remain release obligations.
 
-Source support, built GUI integration, live API permission and installed Windows behavior are separate evidence dimensions. A source file, schema count, mocked test or old screenshot does not close a live workflow. Cantonese articles are labelled drafts and full translation/localization proof remains open.
+Source support, built GUI integration, live API permission and installed Windows behavior are separate evidence dimensions. A source file, schema count, mocked test or old screenshot does not close a live workflow. All 104 Cantonese articles now translate their own requirement, current support and remaining work. Article review does not establish complete desktop/site localization or live feature support.
 
 Run `node scripts/check-feature-coverage.mjs` to validate rows and links while reporting unresolved obligations. `--require-complete` must fail until every applicable obligation is independently verified. Negative tests remove rows/evidence to prove failure boundaries.
 
@@ -128,28 +128,28 @@ Run `node scripts/check-feature-coverage.mjs` to validate rows and links while r
 
 ## repository
 
-- [A tabbed README, not a scroll](repository/tabbed-readme.md) · [粵語草稿](repository/tabbed-readme.yue.md) — `tabbed-readme`
-- [How long a human would have taken](repository/human-time-estimate.md) · [粵語草稿](repository/human-time-estimate.yue.md) — `human-time-estimate`
-- [Sanitized instruction mirror](repository/sanitized-instruction-copy.md) · [粵語草稿](repository/sanitized-instruction-copy.yue.md) — `sanitized-instruction-copy`
-- [Sanitized vocabulary-discipline block in `AGENTS.md`](repository/agents-md-vocabulary-block.md) · [粵語草稿](repository/agents-md-vocabulary-block.yue.md) — `agents-md-vocabulary-block`
-- [Vocabulary hash lock](repository/vocabulary-hash-lock.md) · [粵語草稿](repository/vocabulary-hash-lock.yue.md) — `vocabulary-hash-lock`
-- [`ROADMAP.md` checklist](repository/roadmap-checklist.md) · [粵語草稿](repository/roadmap-checklist.yue.md) — `roadmap-checklist`
-- [One Markdown file per feature](repository/feature-docs.md) · [粵語草稿](repository/feature-docs.yue.md) — `feature-docs`
-- [Postman collections for HTTP APIs](repository/postman-collections.md) · [粵語草稿](repository/postman-collections.yue.md) — `postman-collections`
-- [Wiki and GitHub Pages source kept current](repository/wiki-and-site-sync.md) · [粵語草稿](repository/wiki-and-site-sync.yue.md) — `wiki-and-site-sync`
-- [`HANDOFF.md` and the GitHub handoff section](repository/handoff-record.md) · [粵語草稿](repository/handoff-record.yue.md) — `handoff-record`
-- [pushed `CLOSEOUT_PROMPT.md`](repository/closeout-prompt.md) · [粵語草稿](repository/closeout-prompt.yue.md) — `closeout-prompt`
-- [Discussions as the running record](repository/discussion-records.md) · [粵語草稿](repository/discussion-records.yue.md) — `discussion-records`
-- [GitHub Project linked to the repository](repository/project-board.md) · [粵語草稿](repository/project-board.yue.md) — `project-board`
-- [repository operational skill](repository/operational-skill.md) · [粵語草稿](repository/operational-skill.yue.md) — `operational-skill`
+- [A tabbed README, not a scroll](repository/tabbed-readme.md) · [粵語文章](repository/tabbed-readme.yue.md) — `tabbed-readme`
+- [How long a human would have taken](repository/human-time-estimate.md) · [粵語文章](repository/human-time-estimate.yue.md) — `human-time-estimate`
+- [Sanitized instruction mirror](repository/sanitized-instruction-copy.md) · [粵語文章](repository/sanitized-instruction-copy.yue.md) — `sanitized-instruction-copy`
+- [Sanitized vocabulary-discipline block in `AGENTS.md`](repository/agents-md-vocabulary-block.md) · [粵語文章](repository/agents-md-vocabulary-block.yue.md) — `agents-md-vocabulary-block`
+- [Vocabulary hash lock](repository/vocabulary-hash-lock.md) · [粵語文章](repository/vocabulary-hash-lock.yue.md) — `vocabulary-hash-lock`
+- [`ROADMAP.md` checklist](repository/roadmap-checklist.md) · [粵語文章](repository/roadmap-checklist.yue.md) — `roadmap-checklist`
+- [One Markdown file per feature](repository/feature-docs.md) · [粵語文章](repository/feature-docs.yue.md) — `feature-docs`
+- [Postman collections for HTTP APIs](repository/postman-collections.md) · [粵語文章](repository/postman-collections.yue.md) — `postman-collections`
+- [Wiki and GitHub Pages source kept current](repository/wiki-and-site-sync.md) · [粵語文章](repository/wiki-and-site-sync.yue.md) — `wiki-and-site-sync`
+- [`HANDOFF.md` and the GitHub handoff section](repository/handoff-record.md) · [粵語文章](repository/handoff-record.yue.md) — `handoff-record`
+- [pushed `CLOSEOUT_PROMPT.md`](repository/closeout-prompt.md) · [粵語文章](repository/closeout-prompt.yue.md) — `closeout-prompt`
+- [Discussions as the running record](repository/discussion-records.md) · [粵語文章](repository/discussion-records.yue.md) — `discussion-records`
+- [GitHub Project linked to the repository](repository/project-board.md) · [粵語文章](repository/project-board.yue.md) — `project-board`
+- [repository operational skill](repository/operational-skill.md) · [粵語文章](repository/operational-skill.yue.md) — `operational-skill`
 
 ## instruction-records
 
-- [README opens with the prompt banner](instruction-records/instruction-prompt-banner.md) · [粵語草稿](instruction-records/instruction-prompt-banner.yue.md) — `instruction-prompt-banner`
-- [Single-file editions of the canonical instruction repository](instruction-records/portable-instruction-editions.md) · [粵語草稿](instruction-records/portable-instruction-editions.yue.md) — `portable-instruction-editions`
-- [Project memory folders](instruction-records/project-profile.md) · [粵語草稿](instruction-records/project-profile.yue.md) — `project-profile`
+- [README opens with the prompt banner](instruction-records/instruction-prompt-banner.md) · [粵語文章](instruction-records/instruction-prompt-banner.yue.md) — `instruction-prompt-banner`
+- [Single-file editions of the canonical instruction repository](instruction-records/portable-instruction-editions.md) · [粵語文章](instruction-records/portable-instruction-editions.yue.md) — `portable-instruction-editions`
+- [Project memory folders](instruction-records/project-profile.md) · [粵語文章](instruction-records/project-profile.yue.md) — `project-profile`
 
 ## games
 
-- [Every shared Roblox model, meaningfully used](games/roblox-model-catalogue.md) · [粵語草稿](games/roblox-model-catalogue.yue.md) — `roblox-model-catalogue`
-- [Roblox visual realism](games/roblox-visual-realism.md) · [粵語草稿](games/roblox-visual-realism.yue.md) — `roblox-visual-realism`
+- [Every shared Roblox model, meaningfully used](games/roblox-model-catalogue.md) · [粵語文章](games/roblox-model-catalogue.yue.md) — `roblox-model-catalogue`
+- [Roblox visual realism](games/roblox-visual-realism.md) · [粵語文章](games/roblox-visual-realism.yue.md) — `roblox-visual-realism`
