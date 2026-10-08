@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 export async function writeThirdPartyNotices(outputPath, projectRoot = fileURLToPath(new URL('..', import.meta.url))) {
  const lock = JSON.parse(await readFile(path.join(projectRoot, 'package-lock.json'), 'utf8'));
  if (!lock.packages) throw new Error('A modern reviewed package-lock.json is required for license collection.');
- const sections = ['Material Git third-party notices', 'Bundled GitHub CLI and MinGit retain their upstream license files in vendor.', 'Electron runtime license and Chromium notices are shipped beside the application executable.'];
+ const sections = ['Material Git third-party notices', 'Bundled GitHub CLI and PortableGit retain their upstream license files in vendor.', 'Electron runtime license and Chromium notices are shipped beside the application executable.'];
  const catalogue=JSON.parse(await readFile(path.join(projectRoot,'data/github-api-catalog.json'),'utf8'));
  for(const [name,filename] of [['rest','github-rest-api-description.txt'],['graphql','github-docs-cc-by-4.0.txt']]) {
   const source=catalogue.sources[name];
@@ -31,9 +31,15 @@ export async function writeThirdPartyNotices(outputPath, projectRoot = fileURLTo
     if (!copyrightHeader?.includes('@license')) throw new Error('Lit shim upstream copyright header is missing.');
     sharedLicense = `${copyrightHeader}\n\n${await readFile(path.join(litDirectory, 'LICENSE'), 'utf8')}`;
   }
+  if(!files.length && pkg.name==='@nodable/entities' && pkg.version==='3.1.0' && pkg.license==='MIT' && pkg.repository?.url==='git+https://github.com/nodable/val-parsers.git'){
+    sharedLicense=await readFile(path.join(projectRoot,'data/licenses/nodable-val-parsers-MIT.txt'),'utf8');
+    const {createHash}=await import('node:crypto');
+    if(createHash('sha256').update(sharedLicense).digest('hex')!=='750cb3fb6362804957ef52caaf9b5c824015be44d494637330d7cd8834d31d40')throw new Error('Vendored upstream entities license checksum mismatch');
+    sharedLicense='Upstream monorepo license, commit ac48e7ea591da372be023a481875c747535812b3: https://github.com/nodable/val-parsers/blob/ac48e7ea591da372be023a481875c747535812b3/LICENSE\n\n'+sharedLicense;
+  }
   if (!files.length && !sharedLicense) throw new Error(`No upstream license or notice file found for production dependency ${pkg.name}@${pkg.version}.`);
   sections.push(`\n===== ${pkg.name}@${pkg.version} =====\nDeclared license: ${typeof pkg.license === 'string' ? pkg.license : JSON.stringify(pkg.license ?? 'unspecified')}\nUpstream: ${typeof pkg.repository === 'string' ? pkg.repository : pkg.repository?.url ?? pkg.homepage ?? 'See package metadata'}`);
-  if (sharedLicense) sections.push(`\n--- Upstream copyright header and shared Lit LICENSE ---\n${sharedLicense}`);
+  if (sharedLicense) sections.push(`\n--- Verified upstream shared license ---\n${sharedLicense}`);
   for (const file of files.sort((a, b) => a.name.localeCompare(b.name))) {
     sections.push(`\n--- ${file.name} ---\n${await readFile(path.join(directory, file.name), 'utf8')}`);
   }

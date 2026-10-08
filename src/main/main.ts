@@ -1,4 +1,4 @@
-import {app,BrowserWindow,ipcMain,dialog,shell,safeStorage,clipboard,nativeImage,type IpcMainInvokeEvent} from 'electron';
+import {app,BrowserWindow,ipcMain,dialog,shell,safeStorage,clipboard,nativeImage,net,type IpcMainInvokeEvent} from 'electron';
 import {existsSync,readFileSync,writeFileSync,statSync} from 'node:fs';
 import {randomUUID} from 'node:crypto';
 import {execFile} from 'node:child_process';
@@ -14,6 +14,8 @@ import {CliWorkflowsService} from './cli-workflows';
 import {WorkspaceStore} from './workspace';
 import {PreferencesAdvancedService} from './preferences-advanced';
 import {LocalToolsService} from './local-tools';
+import {createBundledEngines} from './bundled-engines';
+import {serializeExport,type ExportFormat} from '../shared/exports';
 import {createAuthHostRegistry} from './auth-hosts';
 import {GitHubService} from './github';
 import {GitService} from './git';
@@ -23,6 +25,8 @@ import {createSecurityService} from './security';
 import {startUpdater,getUpdateState,checkForUpdates,restartToInstallUpdate,updateEvents} from './updater';
 import {loadCatalog} from './catalog';
 import {LocalStore} from './store';
+import {StartupPersonalizationService,recordStartupLaunch} from './startup-personalization';
+import {createElectronFetch} from './electron-fetch';
 import {readBoundedFile} from './bounded-file';
 import {listChoices,runGh,ollamaRequest} from './services';
 import type {ExecutionRequest,AppSettings} from '../shared/types';
@@ -60,26 +64,18 @@ function engine(root=workspace){if(!approvedRoots.has(root))throw new Error('Cho
 function validateSender(event:IpcMainInvokeEvent){if(!window||event.sender!==window.webContents||event.senderFrame!==window.webContents.mainFrame||!event.senderFrame.url.startsWith(pathToFileURL(entry).href))throw new Error('Untrusted application frame');}
 function handle(name:string,fn:(...args:any[])=>unknown){ipcMain.handle('material:'+name,async(event,...args)=>{validateSender(event);const consume=await actionGuard?.(name,args);const result=await fn(...args);consume?.();return result;});}
 function sizeBound(data:unknown){const encoded=JSON.stringify(data);if(!encoded||encoded.length>8*1024*1024)throw new Error('Export exceeds the 8 MiB limit');return encoded;}
-function exportText(data:unknown,format:string):string {
- const encoded=sizeBound(data);
- if(format==='json')return JSON.stringify(data,null,2);
- if(format==='txt'||format==='md')return typeof data==='string'?data:JSON.stringify(data,null,2);
- if(format!=='csv')throw new Error('Unknown export format');
- const rows=Array.isArray(data)?data:[data];if(rows.some(row=>!row||typeof row!=='object'||Array.isArray(row)))throw new Error('CSV needs a collection of records');
- const keys=[...new Set(rows.flatMap(row=>Object.keys(row)))];
- const cell=(value:unknown)=>{let text=value===undefined?'':typeof value==='object'?JSON.stringify(value):String(value);if(/^[=+\-@\t\r]/.test(text))text="'"+text;return '"'+text.replaceAll('"','""')+'"';};
- return [keys.map(cell).join(','),...rows.map(row=>keys.map(key=>cell(row[key])).join(','))].join('\r\n');
-}
 if(!installerLifecycle)app.whenReady().then(async()=>{
+ let startupFirstRun=true;
+ try{startupFirstRun=recordStartupLaunch(app.getPath('userData'));}catch{/* Unreadable launch state suppresses decoration without blocking the workspace. */}
  if(!existsSync(binary)){dialog.showErrorBox('Bundled GitHub CLI is missing','Run npm run fetch-dependencies for a source checkout, or reinstall Material Git.');app.quit();return;}
  const workspaceRecords=new WorkspaceStore(app.getPath('userData'),(kind,_id,snapshot)=>{if(kind!=='settings')throw new Error('This record contains review-only metadata. Restore it through its original feature.');return store.update(snapshot);});
  store=new LocalStore(app.getPath('userData'),(action,snapshot)=>{workspaceRecords.recordExternal(snapshot?'settings':'activity',snapshot?'base':'events',action,snapshot??{action});});
  handle('workspace',(action,payload)=>workspaceRecords.dispatch(action,payload));
  const security=createSecurityService({directory:path.join(process.env.MATERIAL_GIT_TEST==='1'?app.getPath('userData'):app.getPath('appData'),'shared-ui-state'),authenticatorDirectory:path.join(app.getPath('userData'),'authenticator'),vault:safeStorage,openRecoveryDirectory:async directory=>{const error=await shell.openPath(directory);if(error)throw new Error(error);},recordMutation:async(action,metadata)=>{workspaceRecords.recordExternal('security','local',action,metadata);}});
- await security.start();
+ let startupSecurity=await security.start();
  security.registerTargets(nativeLockTargets(loadCatalog(path.join(__dirname,'gh-catalog.json')).commands));
- actionGuard=async(channel,args)=>{if(['bootstrap','security','window','operation','cancel','pick','external','workspace'].includes(channel))return()=>{};const mapped=channel==='cli-config'?'cliConfig':channel==='preferences-advanced'?'settings':channel==='local-tools'||channel==='ollama'?'tools':channel==='cli-workflows'?'execute':channel;const action=typeof args[0]==='string'?args[0]:undefined;const command=channel==='execute'?(args[0] as ExecutionRequest)?.commandId:channel==='cli-workflows'?(args[1] as {commandId?:string})?.commandId:undefined;const ids=protectedLockIds(mapped,action,command);await security.assertUnlocked(ids);return()=>{for(const id of ids)security.consumeSurfaceUnlock(id);};};
- security.subscribe(state=>{if(window&&!window.isDestroyed())window.webContents.send('material:security-update',state);});
+ actionGuard=async(channel,args)=>{if(['bootstrap','security','window','operation','cancel','pick','external','workspace'].includes(channel)||(channel==='github'&&args[0]==='actions.watch-cancel'))return()=>{};const mapped=channel==='cli-config'?'cliConfig':channel==='preferences-advanced'?'settings':channel==='local-tools'||channel==='ollama'?'tools':channel==='cli-workflows'?'execute':channel;const action=typeof args[0]==='string'?args[0]:undefined;const command=channel==='execute'?(args[0] as ExecutionRequest)?.commandId:channel==='cli-workflows'?(args[1] as {commandId?:string})?.commandId:undefined;const ids=protectedLockIds(mapped,action,command);await security.assertUnlocked(ids);return()=>{for(const id of ids)security.consumeSurfaceUnlock(id);};};
+ security.subscribe(state=>{startupSecurity=state;if(window&&!window.isDestroyed())window.webContents.send('material:security-update',state);});
  handle('security',(action,payload)=>security.handle(action,payload));
  app.once('will-quit',()=>security.close());
  const hostRegistry=createAuthHostRegistry(app.getPath('userData'));
@@ -87,16 +83,16 @@ if(!installerLifecycle)app.whenReady().then(async()=>{
  security.registerTargets([...githubDomains,'git','extensions','aliases','repository-security'].map(domain=>({id:`destination:${domain}`,label:domain})));
  const githubLockIds=(action:string,payload?:{action?:string})=>{if(action==='apply')return ['github:apply'];const effective=['review','task-definition'].includes(action)?payload?.action||action:action;const domain=effective.split('.')[0],route=nativeGitHubTaskRoutes.find(task=>task.action===effective);return [`destination:${domain==='security'?'repository-security':githubDomains.includes(domain as typeof githubDomains[number])?domain:'repositories'}`,`github:${effective}`,...(route?[`command:${route.commandId.replaceAll(' ','.')}`,`tab:${route.commandId.replaceAll(' ','.')}`]:[])];};
  security.registerTargets(nativeGitHubTaskRoutes.map(task=>({id:`github:${task.action}`,label:task.title,ancestors:githubLockIds(task.action).filter(id=>id!==`github:${task.action}`)})));
- const githubTasks=new GitHubService(binary,workspace,engine(),{resolveHost:hostname=>hostRegistry.resolveHost(hostname).hostname,authorize:async(action,payload)=>security.assertUnlocked(githubLockIds(action,payload)),completed:async(action,payload)=>{for(const id of githubLockIds(action,payload))security.consumeSurfaceUnlock(id);}});
+ const githubTasks=new GitHubService(binary,workspace,engine(),{resolveHost:hostname=>hostRegistry.resolveHost(hostname).hostname,authorize:async(action,payload)=>{if(action!=='actions.watch-cancel')await security.assertUnlocked(githubLockIds(action,payload));},completed:async(action,payload)=>{for(const id of githubLockIds(action,payload))security.consumeSurfaceUnlock(id);}});
  app.once('will-quit',()=>githubTasks.close());
- handle('github',async(action,payload)=>{if(payload!==undefined&&sizeBound(payload).length>128000)throw new Error('GitHub task exceeds the request limit');if(accountChanging())throw new Error('Finish or cancel the current account change before starting a GitHub task');const id=randomUUID();activeOperations.add(id);try{return await githubTasks.handle(action,payload);}finally{activeOperations.delete(id);}});
+ handle('github',async(action,payload)=>{if(payload!==undefined&&sizeBound(payload).length>128000)throw new Error('GitHub task exceeds the request limit');if(action!=='actions.watch-cancel'&&accountChanging())throw new Error('Finish or cancel the current account change before starting a GitHub task');const id=randomUUID();activeOperations.add(id);try{return await githubTasks.handle(action,payload);}finally{activeOperations.delete(id);}});
  const auth=new AuthService(binary,workspace,{allowedHosts:hostRegistry.list().map(host=>host.hostname),registerHost:async hostname=>{await hostRegistry.register(hostname);},copyToken:token=>{clipboard.writeText(token);}});
  let accountMutation=false;
  const accountChanging=()=>accountMutation||['starting','waiting'].includes(auth.snapshot().status);
  app.once('will-quit',()=>{void auth.action('cancel');});
  let accountSnapshot='';
  auth.subscribe(state=>{if(state.status==='authenticated'||state.status==='idle'){const snapshot=JSON.stringify(state.accounts);if(snapshot!==accountSnapshot){workspaceRecords.recordExternal('accounts','github','GitHub account status changed',{accounts:state.accounts,credentialsOmitted:true});accountSnapshot=snapshot;}}if(window&&!window.isDestroyed())window.webContents.send('material:auth-update',state);});
- handle('auth',async(action,payload)=>{const changing=['login','switch','logout','refresh','setup-git','register-host'].includes(action);if(changing&&activeOperations.size)throw new Error('Wait for current GitHub operations to finish before changing accounts');if(changing&&accountMutation)throw new Error('An account change is already running');if(changing)accountMutation=true;try{return await auth.action(action,payload);}finally{if(changing)accountMutation=false;}});
+ handle('auth',async(action,payload)=>{const changing=['login','switch','logout','refresh','setup-git','register-host'].includes(action);if(changing&&(activeOperations.size||githubTasks.activeOperations.size))throw new Error('Wait for current GitHub operations to finish before changing accounts');if(changing&&accountMutation)throw new Error('An account change is already running');if(changing)accountMutation=true;try{return await auth.action(action,payload);}finally{if(changing)accountMutation=false;}});
  const apiFiles=new Map<string,{file:string;size:number;modified:number}>();
  const githubApi=createApiService({binary,cwd:workspace,resolveHost:hostname=>hostRegistry.resolveHost(hostname),
   readBodyFile:async handle=>{const grant=apiFiles.get(handle);if(!grant)throw new Error('Choose the upload file again');const current=statSync(grant.file);if(current.size!==grant.size||current.mtimeMs!==grant.modified)throw new Error('The upload file changed. Choose it again before reviewing this request.');return {bytes:readBoundedFile(grant.file,64*1024*1024),filename:path.basename(grant.file)};},
@@ -121,18 +117,21 @@ if(!installerLifecycle)app.whenReady().then(async()=>{
  preferencesAdvanced.subscribe(status=>{if(window&&!window.isDestroyed()){window.setTitle(status.effective.displayName);window.webContents.send('material:preferences-advanced-update',status);}});
  handle('preferences-advanced',(action,payload)=>preferencesAdvanced.handle(action,payload));
  app.once('will-quit',()=>preferencesAdvanced.close());
- const localTools=new LocalToolsService({storageDirectory:path.join(app.getPath('userData'),'local-tools'),pickSources:async()=>{const result=await dialog.showOpenDialog(window,{title:'Choose files to convert',properties:['openFile','multiSelections']});return result.canceled?[]:result.filePaths;},pickDestination:async suggestedName=>{const result=await dialog.showSaveDialog(window,{title:'Save converted file',defaultPath:suggestedName});return result.canceled?null:result.filePath??null;},imageEngine:async(bytes,target)=>{const image=nativeImage.createFromBuffer(Buffer.from(bytes));if(image.isEmpty())throw new Error('This image could not be decoded');return target==='png'?image.toPNG():image.toJPEG(90);},imageEngineProof:`Electron ${process.versions.electron} native image codec`});
+ const bundledEngines=createBundledEngines({vendorDirectory:path.join(app.getAppPath(),'vendor','converters').replace('app.asar'+path.sep,'app.asar.unpacked'+path.sep),workerPath:path.join(__dirname,'bundled-engines-worker.cjs')});
+ const localTools=new LocalToolsService({engines:bundledEngines,storageDirectory:path.join(app.getPath('userData'),'local-tools'),pickSources:async()=>{const result=await dialog.showOpenDialog(window,{title:'Choose files to convert',properties:['openFile','multiSelections']});return result.canceled?[]:result.filePaths;},pickDestination:async suggestedName=>{const result=await dialog.showSaveDialog(window,{title:'Save converted file',defaultPath:suggestedName});return result.canceled?null:result.filePath??null;},imageEngine:async(bytes,target)=>{const image=nativeImage.createFromBuffer(Buffer.from(bytes));if(image.isEmpty())throw new Error('This image could not be decoded');return target==='png'?image.toPNG():image.toJPEG(90);},imageEngineProof:`Electron ${process.versions.electron} native image codec`});
  handle('local-tools',(action,payload)=>localTools.request(action,payload));
  app.once('will-quit',()=>localTools.dispose());
- const gitTasks=new GitService({binary:process.platform==='win32'?path.join(gitDirectory,'git.exe'):'git',directory:app.getPath('userData'),pickWorktree:async()=>{const result=await dialog.showOpenDialog(window,{title:'Choose a Git working tree',properties:['openDirectory']});return result.canceled?null:result.filePaths[0]??null;},pickFile:async()=>{const result=await dialog.showOpenDialog(window,{title:'Choose a Git patch file',properties:['openFile'],filters:[{name:'Git patches',extensions:['patch','diff','mbox']}]});return result.canceled?null:result.filePaths[0]??null;}});
+ const gitTasks=new GitService({binary:process.platform==='win32'?path.join(gitDirectory,'git.exe'):'git',directory:app.getPath('userData'),...(process.platform==='linux'?{helperDirectory:path.join(app.getAppPath(),'vendor','git-linux')}:{}),pickWorktree:async()=>{const result=await dialog.showOpenDialog(window,{title:'Choose a Git working tree',properties:['openDirectory']});return result.canceled?null:result.filePaths[0]??null;},pickFile:async()=>{const result=await dialog.showOpenDialog(window,{title:'Choose a Git input file',properties:['openFile'],filters:[{name:'Git patches and bundles',extensions:['patch','diff','mbox','bundle']},{name:'All files',extensions:['*']}]});return result.canceled?null:result.filePaths[0]??null;}});
  handle('git',async(action,payload)=>{if(payload!==undefined&&sizeBound(payload).length>1024*1024)throw new Error('Git request exceeds the input limit');const id=payload?.reviewId??randomUUID();if(action!=='cancel')activeOperations.add(id);try{return await gitTasks.handle(action,payload);}finally{activeOperations.delete(id);}});
  app.once('will-quit',()=>gitTasks.close());
- handle('updates',(action:string)=>{if(action==='check')return checkForUpdates();if(action==='restart'){if(activeOperations.size||localTools.activeJobs())throw new Error('Wait for running operations or cancel them before restarting');const previous=quitApproved;quitApproved=true;try{restartToInstallUpdate();}catch(error){quitApproved=previous;throw error;}}else if(action!=='status')throw new Error('Unknown update action');return getUpdateState();});
+ const startupPersonalization=new StartupPersonalizationService({directory:path.join(app.getPath('userData'),'startup-personalization'),fetch:createElectronFetch(net),context:()=>{const effective=preferencesAdvanced.status().effective,phase=getUpdateState().phase;return {firstRun:startupFirstRun,busy:activeOperations.size>0||githubTasks.activeOperations.size>0||localTools.activeJobs()||accountChanging(),error:!startupSecurity.available||Boolean(startupSecurity.error)||phase==='failed',updating:!['idle','unsupported'].includes(phase),schoolMode:startupSecurity.schoolMode.active,quiet:effective.lowStimulation||effective.quietNarration};}});
+ handle('startup-personalization',(...args:unknown[])=>{if(args.length)throw new Error('Startup personalization takes no arguments');return startupPersonalization.startup();});
+ handle('updates',(action:string)=>{if(action==='check')return checkForUpdates();if(action==='restart'){if(activeOperations.size||githubTasks.activeOperations.size||localTools.activeJobs())throw new Error('Wait for running operations or cancel them before restarting');const previous=quitApproved;quitApproved=true;try{restartToInstallUpdate();}catch(error){quitApproved=previous;throw error;}}else if(action!=='status')throw new Error('Unknown update action');return getUpdateState();});
  handle('bootstrap',async()=>{
   const settled=await Promise.allSettled([runGh(binary,['--version'],workspace),runGh(binary,['api','user'],workspace),runGh(binary,['repo','view','--json','nameWithOwner'],workspace)]);
   const output=(i:number)=>settled[i].status==='fulfilled'?(settled[i] as PromiseFulfilledResult<string>).value:null;
   let provenance:{version:string;builtAt:string|null}={version:app.getVersion(),builtAt:null};try{provenance=JSON.parse(readFileSync(path.join(__dirname,'provenance.json'),'utf8'));}catch{}
-  return {catalog:loadCatalog(path.join(__dirname,'gh-catalog.json')),settings:store.settings(),persistedSettingsKeys:store.persistedSettingsKeys(),preferencesAdvanced:preferencesAdvanced.status(),...provenance,platform:process.platform,ghVersion:output(0)?.split('\n')[0]??null,authenticated:!!output(1),account:output(1)?JSON.parse(output(1)!).login:null,repository:output(2)?JSON.parse(output(2)!).nameWithOwner:null,operations:[]};
+  return {startupFirstRun,catalog:loadCatalog(path.join(__dirname,'gh-catalog.json')),settings:store.settings(),persistedSettingsKeys:store.persistedSettingsKeys(),preferencesAdvanced:preferencesAdvanced.status(),...provenance,platform:process.platform,ghVersion:output(0)?.split('\n')[0]??null,authenticated:!!output(1),account:output(1)?JSON.parse(output(1)!).login:null,repository:output(2)?JSON.parse(output(2)!).nameWithOwner:null,operations:[]};
  });
  handle('execute',(request:ExecutionRequest)=>{if(sizeBound(request).length>256000)throw new Error('Request too large');const selected=request.cwd?path.resolve(request.cwd):workspace;const op=engine(selected).execute(request);store.record(`Started ${op.commandId}`);return op;});
  handle('operation',(id:string)=>{for(const e of engineByRoot.values()){try{return e.operation(id);}catch{}}throw new Error('Unknown operation');});
@@ -142,7 +141,7 @@ if(!installerLifecycle)app.whenReady().then(async()=>{
  handle('settings',async(patch:Partial<AppSettings>)=>{const result=store.update(patch);await preferencesAdvanced.refresh(false);return result;});
  handle('history',()=>store.history());
  handle('vocabulary',async(action:string)=>{if(action==='clear')store.clearVocabulary();else if(action==='import'){const result=await dialog.showOpenDialog(window,{properties:['openFile'],filters:[{name:'Personal vocabulary',extensions:['json']}]});if(!result.canceled&&result.filePaths[0])store.setVocabulary(readBoundedFile(result.filePaths[0],65536));}else if(action!=='status')throw new Error('Unknown vocabulary operation');const current=store.vocabulary();return {loaded:!!current,...(current?{entries:current.entries}:{})};});
- handle('export',async(data:unknown,format:string)=>{const text=exportText(data,format);const result=await dialog.showSaveDialog(window,{defaultPath:`material-git-export.${format}`,filters:[{name:format.toUpperCase(),extensions:[format]}]});if(result.canceled||!result.filePath)return false;writeFileSync(result.filePath,text,{mode:0o600});store.record('Data exported; personal vocabulary omitted');return true;});
+ handle('export',async(data:unknown,format:string)=>{sizeBound(data);const exported=serializeExport(data,format as ExportFormat);const result=await dialog.showSaveDialog(window,{defaultPath:`material-git-export.${exported.extension}`,filters:[{name:format.toUpperCase(),extensions:[exported.extension]}]});if(result.canceled||!result.filePath)return false;writeFileSync(result.filePath,exported.text,{mode:0o600});store.record('Requested data exported');return true;});
  handle('external',async(value:string)=>{const url=new URL(value);if(url.protocol!=='https:'||url.username||url.password)throw new Error('Only HTTPS links can open externally');await shell.openExternal(url.href);});
  handle('window',(action:string)=>{if(action==='minimize')window.minimize();else if(action==='maximize')window.isMaximized()?window.unmaximize():window.maximize();else if(action==='close')window.close();else if(action==='confirm-close'){quitApproved=true;localTools.cancelAll();gitTasks.cancelAll();githubTasks.cancelAll();for(const e of engineByRoot.values())for(const id of activeOperations){try{e.cancel(id);}catch{}}window.close();}else throw new Error('Unknown window action');});
  handle('ollama',ollamaRequest);

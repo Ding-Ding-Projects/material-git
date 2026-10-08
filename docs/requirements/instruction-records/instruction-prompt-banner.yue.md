@@ -1,25 +1,29 @@
-# README opens with the prompt banner — 粵語說明草稿
+# 規範指引 README 提示橫幅
 
-功能識別碼：`instruction-prompt-banner`。分類：**instruction-records**。
+公開功能識別碼：`instruction-prompt-banner`。分類：**指引記錄**。
 
-## 功能同目前狀態
+## 要求嘅行為
 
-呢份係有明確範圍嘅功能及證據記錄，唔代表整個功能已經完成。桌面、網站同儲存庫要分開驗證：**app: not-applicable; site: not-applicable; repository: not-applicable**。完整功能細節同設定限制請睇[英文文章](instruction-prompt-banner.md)；呢份粵語草稿仍然需要逐項翻譯覆核，唔可以當成所有介面已經完成本地化。
+規範指引儲存庫 `README.md` 第一個內容必須係連到 `memory/UH_PROMPT.md` 嘅 H1，喺詞彙紀律區塊上方，唔可以喺前面加任何嘢。`node scripts/private-markdown-vocabulary.mjs apply` 保持區塊喺橫幅下面。
 
-## 設定同未完成項目
+## 目前支援同設定
 
-控制項應該放喺實際工作目的地，唔可以用指令清單代替可以操作嘅功能。每個設定要講清楚實際預設值、資料來源、驗證限制同儲存方式。呢個功能嘅具體實作記錄同未完成清單保留喺[功能清單](../../coverage/features.json)入面，識別碼係 `instruction-prompt-banner`。
+呢項只屬規範指引儲存庫，唔係 Material Git。
 
-## 失敗處理
+呢份係有明確範圍嘅實作評估，唔代表整項要求已經完成。各個表面嘅狀態分開記錄：**桌面：`not-applicable`；網站：`not-applicable`；儲存庫：`not-applicable`**。請睇[實作參考](../../../AGENTS.md)同[完整清單](../../coverage/features.json)。控制項應該放喺擁有相關資料嘅工作目的地；主要介面必須係可以實際處理工作嘅空間。
 
-缺少本機依賴、作業系統功能、遠端權限同未有測試證據要分開講。失敗時保留原有資料，唔可以顯示假成功或者虛構範例資料。無法復原嘅操作要喺執行前講清楚。
+## 失敗情況同剩餘工作
+
+唔將指引儲存庫橫幅加到產品 README。
+
+缺少本機依賴、作業系統功能、遠端權限同未有驗證證據要分開報告。無法使用嘅控制項要解釋真正原因，同時保留原有資料；唔可以用虛構範例或者假成功填補空狀態。
 
 ## 私隱
 
-個人詞彙、密碼、權杖、認證標頭、私鑰同環境變數內容唔會放入普通匯出、歷史、日誌、截圖或者公開文件。涉及敏感資料嘅匯出要使用專用確認流程。
+個人詞彙對照、認證資料、認證標頭、私鑰同環境變數原始內容，唔會放入普通匯出、歷史、日誌、截圖或者公開文件。本機記錄使用有版本同大小上限嘅結構；敏感匯出必須經專用檢查流程。涉及外部服務嘅要求，只記錄是否存在同狀態證據。
 
 ## 驗證
 
-文章或者原始碼存在唔等於功能已經正常運作。要有針對功能嘅驗證、重新啟動後嘅儲存測試、會先失敗再成功嘅回歸檢查，以及同一版本實際應用程式嘅操作同截圖。Linux 測試唔可以當成 Windows 安裝同安全儲存測試。
+清單完整性同功能行為要分開測試。只有完成呢個功能嘅原始碼及驗證覆核、需要嘅儲存／重啟檢查、反向回歸檢查，以及同一版本實際建置介面嘅操作同真實截圖，先可以將呢項要求標示為完成。Linux 證據唔代表 Windows 安裝或者認證資料儲存正常。文章翻譯亦唔代表桌面同網站每個畫面都完成本機化。
 
-延伸閱讀：[分類索引](../README.md) · [英文詳細說明](instruction-prompt-banner.md) · [Git 安全及功能稽核](../../coverage/git-actions-audit.md)。
+延伸閱讀：[要求索引](../README.md) · [GitHub 操作稽核](../../coverage/github-actions-audit.md) · [Git 操作稽核](../../coverage/git-actions-audit.md) · [英文對照](instruction-prompt-banner.md)。

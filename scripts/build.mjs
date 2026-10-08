@@ -10,7 +10,7 @@ const pkg = JSON.parse(await readFile('package.json', 'utf8'));
 pkg.version = resolveBuildVersion(pkg.version);
 await rm('dist', { recursive: true, force: true });
 await mkdir('dist/main', { recursive: true });
-await build({ entryPoints: ['src/main/main.ts', 'src/main/preload.ts'], outdir: 'dist/main', outExtension: { '.js': '.cjs' }, bundle: true, platform: 'node', format: 'cjs', target: 'node22', external: ['electron'], sourcemap: false });
+await build({ entryPoints: ['src/main/main.ts', 'src/main/preload.ts','src/main/bundled-engines-worker.ts'], outdir: 'dist/main', outExtension: { '.js': '.cjs' }, bundle: true, platform: 'node', format: 'cjs', target: 'node22', external: ['electron'], sourcemap: false });
 await buildRenderer({ root: 'src/renderer', base: './', build: { outDir: '../../dist/renderer', emptyOutDir: true }, logLevel: 'info' });
 await verifyDocumentationBundle();
 await copyFile('data/gh-catalog.json', 'dist/main/gh-catalog.json');

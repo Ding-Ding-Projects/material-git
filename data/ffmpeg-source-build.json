@@ -1,0 +1,70 @@
+{
+  "schema": 1,
+  "version": "9.0.2-material-git-1",
+  "sourceDateEpoch": 1791417600,
+  "builderImage": "debian:bullseye-slim@sha256:e5b6442dd2e9684cf5e87d8338b5968f3b348636fc0be6d7850a381e3731a2bd",
+  "debianSnapshot": "20250101T000000Z",
+  "sources": [
+    {
+      "name": "ffmpeg",
+      "version": "9.0.2",
+      "asset": "ffmpeg-9.0.2.tar.xz",
+      "url": "https://ffmpeg.org/releases/ffmpeg-9.0.2.tar.xz",
+      "license": "GPL-3.0-or-later",
+      "sha256": "8c3850283eb25fa026482078a04051e0be17347b09ef81a0849bec15a96e002e"
+    },
+    {
+      "name": "x264",
+      "version": "31e19f92f00c7003fa115047ce50978bc98c3a0d",
+      "asset": "x264-31e19f92.tar.gz",
+      "url": "https://codeload.github.com/mirror/x264/tar.gz/31e19f92f00c7003fa115047ce50978bc98c3a0d",
+      "license": "GPL-2.0-or-later",
+      "sha256": "d053c9d86988d6bc78237ca5205865c5ddf99c98ef4cd9927eec8f6d388f6dd9"
+    },
+    {
+      "name": "libvpx",
+      "version": "1.17.0@6df3ec34557879fff673706f4a1d9fbd0f3a6f0e",
+      "asset": "libvpx-1.17.0.tar.gz",
+      "url": "https://codeload.github.com/webmproject/libvpx/tar.gz/6df3ec34557879fff673706f4a1d9fbd0f3a6f0e",
+      "license": "BSD-3-Clause",
+      "sha256": "073bd6202e4c55c8cb759abbb123aecd4cc8d99f52ba27af790178cfb1108423"
+    },
+    {
+      "name": "libmp3lame",
+      "version": "3.100",
+      "asset": "lame-3.100.tar.gz",
+      "url": "https://downloads.sourceforge.net/project/lame/lame/3.100/lame-3.100.tar.gz",
+      "license": "LGPL-2.0-or-later",
+      "sha256": "ddfe36cab873794038ae2c1210557ad34857a4b6bdc515785d1da9e175b1da1e"
+    },
+    {
+      "name": "libopus",
+      "version": "1.5.2",
+      "asset": "opus-1.5.2.tar.gz",
+      "url": "https://downloads.xiph.org/releases/opus/opus-1.5.2.tar.gz",
+      "license": "BSD-3-Clause",
+      "sha256": "65c1d2f78b9f2fb20082c38cbe47c951ad5839345876e46941612ee87f9a7ce1"
+    },
+    {
+      "name": "libogg",
+      "version": "1.3.6",
+      "asset": "libogg-1.3.6.tar.xz",
+      "url": "https://downloads.xiph.org/releases/ogg/libogg-1.3.6.tar.xz",
+      "license": "BSD-3-Clause",
+      "sha256": "5c8253428e181840cd20d41f3ca16557a9cc04bad4a3d04cce84808677fa1061"
+    },
+    {
+      "name": "libvorbis",
+      "version": "1.3.7",
+      "asset": "libvorbis-1.3.7.tar.xz",
+      "url": "https://downloads.xiph.org/releases/vorbis/libvorbis-1.3.7.tar.xz",
+      "license": "BSD-3-Clause",
+      "sha256": "b33cc4934322bcbf6efcbacf49e3ca01aadbea4114ec9589d1b1e9d20f72954b"
+    }
+  ],
+  "recipe": {
+    "Dockerfile": "b3b2e4e745411bcd44c8e04b3bbe1c9e5c59c36dbc77dc4b76afc482f44d4597",
+    "build.sh": "a0134d821ba657741573a9b0e1e8b74d2ea6b4445f0bfd9e8c5fcc1e6bfafd55"
+  },
+  "outputHashes": {}
+}
