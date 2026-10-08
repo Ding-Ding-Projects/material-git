@@ -15,6 +15,9 @@ import {WorkspaceStore} from './workspace';
 import {PreferencesAdvancedService} from './preferences-advanced';
 import {LocalToolsService} from './local-tools';
 import {createAuthHostRegistry} from './auth-hosts';
+import {GitHubService} from './github';
+import {GitService} from './git';
+import {githubDomains} from '../shared/github';
 import {createSecurityService} from './security';
 import {startUpdater,getUpdateState,checkForUpdates,restartToInstallUpdate,updateEvents} from './updater';
 import {loadCatalog} from './catalog';
@@ -80,11 +83,18 @@ if(!installerLifecycle)app.whenReady().then(async()=>{
  app.once('will-quit',()=>security.close());
  const hostRegistry=createAuthHostRegistry(app.getPath('userData'));
  await hostRegistry.load();
+ security.registerTargets([...githubDomains,'git','extensions','aliases','repository-security'].map(domain=>({id:`destination:${domain}`,label:domain})));
+ const githubLockIds=(action:string)=>{const domain=action.split('.')[0];return [`destination:${domain==='security'?'repository-security':githubDomains.includes(domain as typeof githubDomains[number])?domain:'repositories'}`,`github:${action}`];};
+ const githubTasks=new GitHubService(binary,workspace,engine(),{resolveHost:hostname=>hostRegistry.resolveHost(hostname).hostname,authorize:async action=>security.assertUnlocked(githubLockIds(action)),completed:async action=>{for(const id of githubLockIds(action))security.consumeSurfaceUnlock(id);}});
+ app.once('will-quit',()=>githubTasks.close());
+ handle('github',async(action,payload)=>{if(payload!==undefined&&sizeBound(payload).length>128000)throw new Error('GitHub task exceeds the request limit');if(accountChanging())throw new Error('Finish or cancel the current account change before starting a GitHub task');const id=randomUUID();activeOperations.add(id);try{return await githubTasks.handle(action,payload);}finally{activeOperations.delete(id);}});
  const auth=new AuthService(binary,workspace,{allowedHosts:hostRegistry.list().map(host=>host.hostname),registerHost:async hostname=>{await hostRegistry.register(hostname);},copyToken:token=>{clipboard.writeText(token);}});
+ let accountMutation=false;
+ const accountChanging=()=>accountMutation||['starting','waiting'].includes(auth.snapshot().status);
  app.once('will-quit',()=>{void auth.action('cancel');});
  let accountSnapshot='';
  auth.subscribe(state=>{if(state.status==='authenticated'||state.status==='idle'){const snapshot=JSON.stringify(state.accounts);if(snapshot!==accountSnapshot){workspaceRecords.recordExternal('accounts','github','GitHub account status changed',{accounts:state.accounts,credentialsOmitted:true});accountSnapshot=snapshot;}}if(window&&!window.isDestroyed())window.webContents.send('material:auth-update',state);});
- handle('auth',(action,payload)=>auth.action(action,payload));
+ handle('auth',async(action,payload)=>{const changing=['login','switch','logout','refresh','setup-git','register-host'].includes(action);if(changing&&activeOperations.size)throw new Error('Wait for current GitHub operations to finish before changing accounts');if(changing&&accountMutation)throw new Error('An account change is already running');if(changing)accountMutation=true;try{return await auth.action(action,payload);}finally{if(changing)accountMutation=false;}});
  const apiFiles=new Map<string,{file:string;size:number;modified:number}>();
  const githubApi=createApiService({binary,cwd:workspace,resolveHost:hostname=>hostRegistry.resolveHost(hostname),
   readBodyFile:async handle=>{const grant=apiFiles.get(handle);if(!grant)throw new Error('Choose the upload file again');const current=statSync(grant.file);if(current.size!==grant.size||current.mtimeMs!==grant.modified)throw new Error('The upload file changed. Choose it again before reviewing this request.');return {bytes:readBoundedFile(grant.file,64*1024*1024),filename:path.basename(grant.file)};},
@@ -93,9 +103,10 @@ if(!installerLifecycle)app.whenReady().then(async()=>{
  handle('api',async(action:string,payload:unknown)=>{
   if(action==='hosts')return hostRegistry.list().map(({hostname,label})=>({hostname,label}));
   if(action==='pick-body-file'){const result=await dialog.showOpenDialog(window,{title:'Choose a file to upload to GitHub',properties:['openFile']});if(result.canceled||!result.filePaths[0])return null;const file=result.filePaths[0],stats=statSync(file);if(!stats.isFile()||stats.size>64*1024*1024)throw new Error('Choose a regular file smaller than 64 MiB');if(apiFiles.size>=32)apiFiles.delete(apiFiles.keys().next().value!);const handle=randomUUID();apiFiles.set(handle,{file,size:stats.size,modified:stats.mtimeMs});return {handle,filename:path.basename(file),size:stats.size};}
-  if(!['catalogue','describe','execute','graphqlCatalogue','graphqlDescribe','graphqlBuild','graphqlExecute'].includes(action))throw new Error('Unknown GitHub API action');
+  if(!['catalogue','describe','execute','graphqlCatalogue','graphqlDescribe','graphqlBuild','graphqlExecute','review','graphqlReview','apply','cancelReview'].includes(action))throw new Error('Unknown GitHub API action');
   if(payload!==undefined&&sizeBound(payload).length>256000)throw new Error('API request exceeds 256 KB');
-  const id=randomUUID();if(action==='execute'||action==='graphqlExecute')activeOperations.add(id);
+  const bound=['execute','graphqlExecute','review','graphqlReview','apply'].includes(action);if(bound&&accountChanging())throw new Error('Finish or cancel the current account change before starting an API request');
+  const id=randomUUID();if(bound)activeOperations.add(id);
   try{return await (githubApi[action as keyof typeof githubApi] as (input:unknown)=>unknown)(payload);}finally{activeOperations.delete(id);}
  });
  const cliConfiguration=new CliConfigService(binary,{chooseExecutable:async definition=>{const result=await dialog.showOpenDialog(window,{title:definition.filePicker?.title,properties:['openFile'],...(process.platform==='win32'?{filters:[{name:'Executable applications',extensions:['exe']}]}:{})});return result.canceled?null:result.filePaths[0]??null;}});
@@ -111,6 +122,9 @@ if(!installerLifecycle)app.whenReady().then(async()=>{
  const localTools=new LocalToolsService({storageDirectory:path.join(app.getPath('userData'),'local-tools'),pickSources:async()=>{const result=await dialog.showOpenDialog(window,{title:'Choose files to convert',properties:['openFile','multiSelections']});return result.canceled?[]:result.filePaths;},pickDestination:async suggestedName=>{const result=await dialog.showSaveDialog(window,{title:'Save converted file',defaultPath:suggestedName});return result.canceled?null:result.filePath??null;},imageEngine:async(bytes,target)=>{const image=nativeImage.createFromBuffer(Buffer.from(bytes));if(image.isEmpty())throw new Error('This image could not be decoded');return target==='png'?image.toPNG():image.toJPEG(90);},imageEngineProof:`Electron ${process.versions.electron} native image codec`});
  handle('local-tools',(action,payload)=>localTools.request(action,payload));
  app.once('will-quit',()=>localTools.dispose());
+ const gitTasks=new GitService({binary:process.platform==='win32'?path.join(gitDirectory,'git.exe'):'git',directory:app.getPath('userData'),pickWorktree:async()=>{const result=await dialog.showOpenDialog(window,{title:'Choose a Git working tree',properties:['openDirectory']});return result.canceled?null:result.filePaths[0]??null;},pickFile:async()=>{const result=await dialog.showOpenDialog(window,{title:'Choose a Git patch file',properties:['openFile'],filters:[{name:'Git patches',extensions:['patch','diff','mbox']}]});return result.canceled?null:result.filePaths[0]??null;}});
+ handle('git',async(action,payload)=>{if(payload!==undefined&&sizeBound(payload).length>1024*1024)throw new Error('Git request exceeds the input limit');const id=payload?.reviewId??randomUUID();if(action!=='cancel')activeOperations.add(id);try{return await gitTasks.handle(action,payload);}finally{activeOperations.delete(id);}});
+ app.once('will-quit',()=>gitTasks.close());
  handle('updates',(action:string)=>{if(action==='check')return checkForUpdates();if(action==='restart'){if(activeOperations.size||localTools.activeJobs())throw new Error('Wait for running operations or cancel them before restarting');const previous=quitApproved;quitApproved=true;try{restartToInstallUpdate();}catch(error){quitApproved=previous;throw error;}}else if(action!=='status')throw new Error('Unknown update action');return getUpdateState();});
  handle('bootstrap',async()=>{
   const settled=await Promise.allSettled([runGh(binary,['--version'],workspace),runGh(binary,['api','user'],workspace),runGh(binary,['repo','view','--json','nameWithOwner'],workspace)]);
@@ -128,7 +142,7 @@ if(!installerLifecycle)app.whenReady().then(async()=>{
  handle('vocabulary',async(action:string)=>{if(action==='clear')store.clearVocabulary();else if(action==='import'){const result=await dialog.showOpenDialog(window,{properties:['openFile'],filters:[{name:'Personal vocabulary',extensions:['json']}]});if(!result.canceled&&result.filePaths[0])store.setVocabulary(readBoundedFile(result.filePaths[0],65536));}else if(action!=='status')throw new Error('Unknown vocabulary operation');const current=store.vocabulary();return {loaded:!!current,...(current?{entries:current.entries}:{})};});
  handle('export',async(data:unknown,format:string)=>{const text=exportText(data,format);const result=await dialog.showSaveDialog(window,{defaultPath:`material-git-export.${format}`,filters:[{name:format.toUpperCase(),extensions:[format]}]});if(result.canceled||!result.filePath)return false;writeFileSync(result.filePath,text,{mode:0o600});store.record('Data exported; personal vocabulary omitted');return true;});
  handle('external',async(value:string)=>{const url=new URL(value);if(url.protocol!=='https:'||url.username||url.password)throw new Error('Only HTTPS links can open externally');await shell.openExternal(url.href);});
- handle('window',(action:string)=>{if(action==='minimize')window.minimize();else if(action==='maximize')window.isMaximized()?window.unmaximize():window.maximize();else if(action==='close')window.close();else if(action==='confirm-close'){quitApproved=true;localTools.cancelAll();for(const e of engineByRoot.values())for(const id of activeOperations){try{e.cancel(id);}catch{}}window.close();}else throw new Error('Unknown window action');});
+ handle('window',(action:string)=>{if(action==='minimize')window.minimize();else if(action==='maximize')window.isMaximized()?window.unmaximize():window.maximize();else if(action==='close')window.close();else if(action==='confirm-close'){quitApproved=true;localTools.cancelAll();gitTasks.cancelAll();githubTasks.cancelAll();for(const e of engineByRoot.values())for(const id of activeOperations){try{e.cancel(id);}catch{}}window.close();}else throw new Error('Unknown window action');});
  handle('ollama',ollamaRequest);
  window=new BrowserWindow({width:1420,height:940,minWidth:760,minHeight:600,frame:false,icon:path.join(app.getAppPath(),'assets/icon.png'),backgroundColor:'#101412',title:store.settings().displayName,webPreferences:{preload:path.join(__dirname,'preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true,webSecurity:true}});
  window.on('close',event=>{if(!quitApproved){event.preventDefault();window.webContents.send('material:close-request');}});

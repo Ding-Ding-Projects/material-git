@@ -54,12 +54,14 @@ export interface AuthState {
   hostname?: string; deviceCode?: string; verificationUrl?: string; message?: string; error?: string; tokenCopyAvailable?: boolean; hostRegistrationAvailable?: boolean;
 }
 export interface MaterialBridge {
+  git(action:import('./git').GitAction,payload?:import('./git').GitPayload):Promise<import('./git').GitResponse>;
+  github(action:import('./github').GitHubAction,payload?:import('./github').GitHubPayload):Promise<import('./github').GitHubResponse>;
   workspace(action:import('./workspace').WorkspaceAction,payload?:unknown):Promise<import('./workspace').WorkspaceResponse>;
   cliWorkflows(action:import('./cli-workflows').CliWorkflowAction,payload?:import('./cli-workflows').CliWorkflowPayload):Promise<import('./cli-workflows').CliWorkflowResponse>;
   localTools(action:import('./local-tools').LocalToolsAction,payload?:import('./local-tools').LocalToolsPayload):Promise<import('./local-tools').LocalToolsResponse>;
   preferencesAdvanced(action:import('./preferences-advanced').PreferenceAction,payload?:unknown):Promise<import('./preferences-advanced').PreferenceStatus>;
   onPreferencesAdvanced(callback:(status:import('./preferences-advanced').PreferenceStatus)=>void):()=>void;
-  api(action:'hosts'|'catalogue'|'describe'|'execute'|'graphqlCatalogue'|'graphqlDescribe'|'graphqlBuild'|'graphqlExecute'|'pick-body-file',payload?:unknown):Promise<unknown>;
+  api(action:'hosts'|'catalogue'|'describe'|'execute'|'graphqlCatalogue'|'graphqlDescribe'|'graphqlBuild'|'graphqlExecute'|'pick-body-file'|'review'|'graphqlReview'|'apply'|'cancelReview',payload?:unknown):Promise<unknown>;
   cliConfig(action:import('./cli-config').CliConfigAction,payload?:import('./cli-config').CliConfigPayload):Promise<import('./cli-config').CliConfigResponse>;
   onCloseRequested(callback:()=>void):()=>void;
   security(action:string,payload?:Record<string,unknown>):Promise<unknown>;
