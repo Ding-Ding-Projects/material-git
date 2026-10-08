@@ -5,6 +5,6 @@ export type GitHubAction=`${GitHubDomain}.list`|`${GitHubDomain}.detail`|typeof 
 export interface GitHubPayload {hostname?:string;repository?:string;page?:number;query?:string;state?:string;id?:string|number;tab?:string;values?:Record<string,unknown>;confirmed?:boolean;action?:GitHubAction;reviewId?:string;entity?:GitHubChoiceEntity}
 export interface GitHubItem extends Record<string,unknown> {id:string;title:string;subtitle?:string;url?:string;state?:string;number?:number;repository?:string}
 export type GitHubChoiceEntity='labels'|'assignees'|'collaborators'|'milestones'|'branches'|'reviewers'|'projects'|'tags'|'workflows'|'discussion-categories';
-export interface GitHubReview {reviewId:string;action:string;repository?:string;id?:string|number;values:Record<string,unknown>;expiresAt:string;warnings:string[]}
+export interface GitHubReview {reviewId:string;action:string;repository?:string;id?:string|number;values:Record<string,unknown>;prepared?:Record<string,unknown>;expiresAt:string;warnings:string[]}
 export interface GitHubResponse {items:GitHubItem[];hasNext:boolean;page:number;total?:number;detail?:Record<string,unknown>;notice?:string;review?:GitHubReview}
 export interface GitHubBridge {github(action:GitHubAction,payload?:GitHubPayload):Promise<GitHubResponse>}
