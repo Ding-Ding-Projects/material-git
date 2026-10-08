@@ -4,7 +4,7 @@ All 104 canonical obligations are represented using public-neutral identifiers. 
 
 Source support, built GUI integration, live API permission and installed Windows behavior are separate evidence dimensions. A source file, schema count, mocked test or old screenshot does not close a live workflow. All 104 Cantonese articles now translate their own requirement, current support and remaining work. Article review does not establish complete desktop/site localization or live feature support.
 
-Run `node scripts/check-feature-coverage.mjs` to validate rows and links while reporting unresolved obligations. `--require-complete` must fail until every applicable obligation is independently verified. Negative tests remove rows/evidence to prove failure boundaries.
+Run `node scripts/check-feature-coverage.mjs` to validate rows and links while reporting unresolved obligations. `--require-complete` must fail until every applicable obligation is independently verified. Negative tests remove rows/evidence to prove failure boundaries. Every article pair also requires feature-specific Cantonese sections, a unique requirement, exact technical literals, numeric facts and translated control limits. These structural checks support editorial review; they do not certify translation semantics or runtime localization.
 
 [Machine inventory](../../docs/coverage/features.json) · [GitHub action audit](../coverage/github-actions-audit.md) · [Git action audit](../coverage/git-actions-audit.md) · [Roadmap](../../ROADMAP.md) · [Handoff](../../HANDOFF.md)
 
