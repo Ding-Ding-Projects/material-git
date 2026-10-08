@@ -16,6 +16,9 @@ export interface GraphqlField extends GraphqlArgument {args:GraphqlArgument[]; d
 export interface GraphqlTypeSummary {name:string; kind:'OBJECT'|'INTERFACE'|'UNION'|'INPUT_OBJECT'|'ENUM'|'SCALAR'; description:string; fields?:GraphqlField[]; inputFields?:GraphqlArgument[]; enumValues?:{name:string;description:string;deprecated:boolean}[]; possibleTypes?:string[];}
 export interface GraphqlSelection {field?:string; alias?:string; args?:Record<string,ApiJson>; selections?:GraphqlSelection[]; onType?:string;}
 export interface GraphqlRequest {hostname?:string; operation:'query'|'mutation'; name?:string; selections:GraphqlSelection[]; confirmed?:boolean;}
+export interface ApiMutationReview {reviewId:string; expiresAt:string; hostname:string; account:{id:string;login:string}; protocol:'rest'|'graphql'; preview:ApiJson; document?:string; upload?:{filename?:string;size:number;sha256:string};}
+export interface ApiMutationApply {reviewId:string;confirmed:boolean;}
+/** Generated display preview; sensitive literals are redacted. Execution rebuilds privately. */
 export interface GraphqlBuildResult {document:string; operation:'query'|'mutation'; mutating:boolean;}
 export interface GraphqlCatalogRequest {query?:string; kind?:string; page?:number; pageSize?:number;}
 export interface GraphqlCatalogPage {types:GraphqlTypeSummary[]; total:number; page:number; pageSize:number; queryType:string; mutationType:string|null; sources:ApiCatalogFile['sources']; counts:ApiCatalogFile['counts'];}
@@ -23,6 +26,10 @@ export interface GitHubApiBridge {
  catalogue(request?:ApiCatalogRequest):ApiCatalogPage;
  describe(operationId:string):ApiOperationDescription;
  execute(request:ApiRestRequest):Promise<ApiResult>;
+ review(request:ApiRestRequest):Promise<ApiMutationReview>;
+ graphqlReview(request:GraphqlRequest):Promise<ApiMutationReview>;
+ apply(request:ApiMutationApply):Promise<ApiResult>;
+ cancelReview(request:{reviewId:string}):void;
  graphqlCatalogue(request?:GraphqlCatalogRequest):GraphqlCatalogPage;
  graphqlDescribe(name:string):GraphqlTypeSummary;
  graphqlBuild(request:GraphqlRequest):GraphqlBuildResult;
