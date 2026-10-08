@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtemp,rm} from 'node:fs/promises';
+import {mkdtemp,mkdir,readFile,readdir,rm} from 'node:fs/promises';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {randomUUID} from 'node:crypto';
@@ -103,4 +103,48 @@ test('owned Git cancellation remains reachable under locks and cannot cancel ano
   for(const action of ['apply','review','open','provider-checkout','cancel;apply',{}])assert.equal(isOwnedCancellation('git',action),false);
   assert.equal(isOwnedCancellation('github','actions.cancel'),false);assert.equal(isOwnedCancellation('downloads','resume'),false);
  }finally{release?.(null);service.close();await f.close();}
+});
+
+test('Git review cleanup through locked native guards revokes only the named review without selecting a write action',async()=>{
+ const f=await fixture(),parent=join(f.directory,'destinations');await mkdir(parent);
+ const service=new GitService({binary:'git',directory:parent,pickWorktree:async()=>parent});
+ const request=async(action:GitAction,payload:GitPayload)=>{if(!isOwnedCleanup('git',action))await f.locks.assertUnlocked(protectedLockIds('git',action));return service.handle(action,payload);};
+ try{
+  const discarded=await request('review',{task:'init',fields:{name:'discarded'}}),retained=await request('review',{task:'init',fields:{name:'retained'}});
+  if(discarded.kind!=='review'||retained.kind!=='review')throw Error('Expected native reviews');
+  await f.lock('destination:git');
+  await assert.rejects(request('discard-review',{reviewId:discarded.reviewId,task:'init',fields:{name:'injected'}}),/cleanup field/);
+  await assert.rejects(request('discard-review',{reviewId:'not-an-issued-uuid'}),/opaque UUID/);
+  await assert.rejects(request('discard-review',{reviewId:discarded.reviewId,operationId:'not-an-owned-uuid'}),/opaque UUID/);
+  assert.equal((await request('discard-review',{reviewId:randomUUID()})).kind,'text');
+  for(let count=0;count<2;count++)assert.equal((await request('discard-review',{reviewId:discarded.reviewId})).kind,'text');
+  assert.deepEqual(await request('cancel',{operationId:randomUUID(),task:'init',fields:{name:'injected'}}),{kind:'cancelled',partialEffects:false});
+  assert.deepEqual(await readdir(parent),[],'cleanup and cancellation create no repository or injected destination');
+  await assert.rejects(request('apply',{reviewId:retained.reviewId,confirmed:true}),/Element is locked/);
+  await f.unlock('destination:git');
+  await assert.rejects(request('apply',{reviewId:discarded.reviewId,confirmed:true}),/already used/);
+  const applied=await request('apply',{reviewId:retained.reviewId,confirmed:true});assert.equal(applied.kind,'result');if(applied.kind==='result')assert.equal(applied.ok,true,applied.error);
+  assert.deepEqual(await readdir(parent),['retained']);
+ }finally{service.close();await f.close();}
+});
+
+test('GitHub source cleanup through locked native guards validates issued IDs before host, account or provider reads',async()=>{
+ const f=await fixture();let blockedContext=false,hosts=0,authorized=0,reads=0;
+ const service=new GitHubService(process.execPath,f.directory,undefined,{
+  resolveHost:()=>{hosts++;if(blockedContext)throw Error('Changed fixture host');return 'github.com';},
+  authorize:async action=>{authorized++;await f.locks.assertUnlocked(providerGitLockIds(action));},
+  request:async(_method,endpoint)=>{reads++;const data=endpoint==='user'?{id:7}:endpoint==='repos/owner/repo'?{id:88,full_name:'owner/repo',clone_url:'https://github.com/owner/repo.git'}:endpoint==='gists/abcdef'?{id:'abcdef',git_pull_url:'https://gist.github.com/abcdef.git'}:undefined;if(!data)throw Error('Unexpected fixture provider path');return {data,hasNext:false};},
+ });
+ const request=async(action:GitHubLocalSourceAction|'provider-source-discard',payload:GitHubPayload)=>{if(!isOwnedCleanup('github',action))await f.locks.assertUnlocked(protectedLockIds('github',action));return service.handle(action,payload);};
+ try{
+  const first=await request('repositories.clone-source',{repository:'owner/repo',id:88}),second=await request('gists.clone-source',{id:'abcdef'}),id=String(first.detail?.providerTargetId),other=String(second.detail?.providerTargetId);
+  await f.lock('github:repositories.clone-source');blockedContext=true;
+  const before={hosts,authorized,reads},lockFile=join(f.directory,'locks','element-locks.json'),bytes=await readFile(lockFile);
+  for(const invalid of [{id:'not-an-issued-uuid'},{id:randomUUID()},{id:other,hostname:'forge.example'},{id:other,action:'repositories.delete'},{id:other,values:{url:'https://injected.example/repo.git'}}])await assert.rejects(request('provider-source-discard',invalid as GitHubPayload),/issued opaque|scope replacements/);
+  for(let count=0;count<2;count++)assert.deepEqual((await request('provider-source-discard',{id})).items,[]);
+  assert.deepEqual({hosts,authorized,reads},before);assert.deepEqual(await readFile(lockFile),bytes);
+  await assert.rejects(service.resolveProviderTarget(id),/expired/);assert.deepEqual({hosts,authorized,reads},before);
+  blockedContext=false;const retained=await service.resolveProviderTarget(other);assert.equal(retained.kind,'gist');
+  await assert.rejects(request('repositories.clone-source',{repository:'owner/repo',id:88}),/Element is locked/);
+ }finally{service.close();await f.close();}
 });
