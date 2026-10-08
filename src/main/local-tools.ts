@@ -10,14 +10,14 @@ import {ConverterQueue,type QueueRecord} from './converter-queue';
 import type {BundledEngineFacade,ConverterOptions,EngineOutput} from '../shared/bundled-engines';
 export interface LocalToolsOptions {
     storageDirectory: string;
-    pickSources: () => Promise<string[]>;
+    pickSources: (purpose?:'chat-images') => Promise<string[]>;
     pickDestination: (suggestedName: string) => Promise<string | null>;
     imageEngine?: (bytes: Uint8Array, target: 'png' | 'jpeg') => Promise<Uint8Array>;
     imageEngineProof?: string;
     fetcher?: typeof fetch;
     engines?:BundledEngineFacade;
 }
-const schemas: Record<LocalToolsAction, string[]> = { 'converter-catalog': [], 'converter-pick': [],'converter-inspect':['grant'], 'converter-start': ['grant', 'grants', 'adapter','options'], 'converter-status': ['page'], 'converter-cancel': ['id'],'converter-enqueue':['grant','grants','adapter','options'],'converter-queue':[],'converter-pause':[],'converter-resume':[], 'catalog-status': [], 'catalog-refresh': [], 'catalog-page': ['page', 'size', 'query', 'regex', 'pattern', 'flags', 'family', 'capability', 'sort', 'state', 'variant', 'quantization', 'maxBytes', 'fit'], 'hardware': [], 'pull-review': ['tags'], 'pull-start': ['tags', 'confirmed', 'parallel'], 'pull-status': [], 'pull-cancel': ['id'], 'pull-retry': ['id'], 'sessions': ['id'], 'session-create': ['model', 'name'], 'session-rename': ['id', 'name'], 'session-delete': ['id', 'confirmed'], 'session-export': ['id'], 'chat-start': ['session', 'prompt', 'system', 'temperature', 'tokens', 'context', 'regenerate', 'attachments'], 'chat-status': ['id'], 'chat-cancel': ['id'], 'harness-preflight': [], 'harness-launch': ['id', 'confirmed'], 'harness-status': ['id'], 'harness-restore': ['id'] };
+const schemas: Record<LocalToolsAction, string[]> = { 'converter-catalog': [], 'converter-pick': ['purpose'],'converter-inspect':['grant'], 'converter-start': ['grant', 'grants', 'adapter','options'], 'converter-status': ['page'], 'converter-cancel': ['id'],'converter-enqueue':['grant','grants','adapter','options'],'converter-queue':[],'converter-pause':[],'converter-resume':[], 'catalog-status': [], 'catalog-refresh': [], 'catalog-page': ['page', 'size', 'query', 'regex', 'pattern', 'flags', 'family', 'capability', 'sort', 'state', 'variant', 'quantization', 'maxBytes', 'fit'], 'hardware': [], 'pull-review': ['tags'], 'pull-start': ['tags', 'confirmed', 'parallel'], 'pull-status': [], 'pull-cancel': ['id'], 'pull-retry': ['id'], 'sessions': ['id'], 'session-create': ['model', 'name'], 'session-rename': ['id', 'name'], 'session-delete': ['id', 'confirmed'], 'session-export': ['id'], 'chat-start': ['session', 'prompt', 'system', 'temperature', 'tokens', 'context', 'regenerate', 'attachments'], 'chat-status': ['id'], 'chat-cancel': ['id'], 'harness-preflight': [], 'harness-launch': ['id', 'confirmed'], 'harness-status': ['id'], 'harness-restore': ['id'] };
 interface PrivateGrant extends FileGrant {
     path: string;
     mtime: number;
@@ -49,7 +49,7 @@ export class LocalToolsService {
                 throw new Error('Unsupported local tool field');
         switch (action) {
             case 'converter-catalog': return this.registry();
-            case 'converter-pick': return this.pick();
+            case 'converter-pick': if(payload.purpose!==undefined&&payload.purpose!=='chat-images')throw new Error('Unsupported native file picker purpose');return this.pick(payload.purpose as 'chat-images'|undefined);
             case 'converter-inspect':{const grant=await this.grant(payload.grant);if(grant.type!=='pdf')return {type:grant.type,bytes:grant.bytes};if(!this.options.engines)throw new Error('Bundled PDF worker is not configured');const bytes=await this.readBounded(grant.path);if(createHash('sha256').update(bytes).digest('hex')!==grant.digest)throw new Error('Source changed; select it again');return (await this.options.engines.convert({adapter:'pdf-inspect',inputs:[{name:grant.name,bytes}],options:{}},AbortSignal.timeout(45000))).details;}
             case 'converter-start': return this.convert(payload);
             case 'converter-enqueue':return this.convert(payload,true);
@@ -103,7 +103,7 @@ export class LocalToolsService {
     finally {
         await file.close();
     } }
-    private async pick() { const paths = await this.options.pickSources(); const registry = await this.registry(); const result: FileGrant[] = []; for (const path of paths) {
+    private async pick(purpose?:'chat-images') { const paths = await this.options.pickSources(purpose); const registry = await this.registry(); const result: FileGrant[] = []; for (const path of paths) {
         const bytes = await this.readBounded(path), s = await stat(path), type = inspectBytes(bytes);
         if (type === 'png' || type === 'jpeg')
             imageDimensions(bytes);
