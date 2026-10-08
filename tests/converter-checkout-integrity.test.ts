@@ -7,7 +7,7 @@ import {join,dirname,resolve} from 'node:path';
 import {createHash} from 'node:crypto';
 import {sourceHash,verifyFFmpegSourcePayload} from '../scripts/ffmpeg-source-build.mjs';
 
-const boundFiles=['data/converter-engines.json','data/ffmpeg-source-build.json','scripts/converter-build/Dockerfile','scripts/converter-build/build.sh','scripts/ffmpeg-source-build.mjs','LICENSE','data/licenses/nodable-val-parsers-MIT.txt'];
+const boundFiles=['data/converter-engines.json','data/ffmpeg-source-build.json','scripts/converter-build/Dockerfile','scripts/converter-build/build.sh','scripts/ffmpeg-source-build.mjs','scripts/verified-download.mjs','LICENSE','data/licenses/nodable-val-parsers-MIT.txt'];
 const digest=(bytes:Uint8Array)=>createHash('sha256').update(bytes).digest('hex');
 
 test('real autocrlf checkout reproduces artifact rejection and scoped LF attributes preserve every hash-bound input',async t=>{

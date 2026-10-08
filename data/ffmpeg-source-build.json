@@ -65,7 +65,8 @@
   "recipe": {
     "Dockerfile": "b3b2e4e745411bcd44c8e04b3bbe1c9e5c59c36dbc77dc4b76afc482f44d4597",
     "build.sh": "92437e6591260731e8722d1893213227b534663aebfec1065a9bd11c865cc7ce",
-    "ffmpeg-source-build.mjs": "466f4dd68e64015594207800f437200a6188faeaf9530a46b36889c6c0449cea"
+    "ffmpeg-source-build.mjs": "52465faf75446c0a880ec8036c88f6d51ef8c2e6bb5dda1fbb5e9b6eb6356d85",
+    "verified-download.mjs": "ccefb3d589ef0957d3971e94c1b23c1384f46816c3d732a250e1e5ec2677f1ab"
   },
   "outputHashes": {
     "linux-x64": {

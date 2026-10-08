@@ -1,3 +1,4 @@
+import {verifiedDownload} from './verified-download.mjs';
 import {createHash} from 'node:crypto';
 import {mkdir,open,readFile,copyFile,rename,rm,chmod,mkdtemp,writeFile} from 'node:fs/promises';
 import {spawnSync} from 'node:child_process';
@@ -7,7 +8,7 @@ import {verifyFFmpegSourcePayload,buildFFmpegSourcePayload} from './ffmpeg-sourc
 const projectRoot=fileURLToPath(new URL('..',import.meta.url));
 export const converterManifest=JSON.parse(await readFile(path.join(projectRoot,'data/converter-engines.json'),'utf8'));
 async function hashFile(file){const stream=await open(file,'r');try{const hash=createHash('sha256');for await(const part of stream.createReadStream())hash.update(part);return hash.digest('hex');}finally{await stream.close().catch(()=>{});}}
-async function download(item,cache){const target=path.join(cache,item.asset);try{if(await hashFile(target)===item.sha256)return target;}catch{}const response=await fetch(item.url,{redirect:'follow',signal:AbortSignal.timeout(180000)});if(!response.ok||!response.body)throw new Error(`Pinned converter download returned HTTP ${response.status}: ${item.asset}`);const temporary=target+'.tmp';const file=await open(temporary,'w',0o600);let bytes=0;const hash=createHash('sha256');try{for await(const part of response.body){bytes+=part.length;if(bytes>150*1024*1024)throw new Error('Converter download exceeded 150 MiB');hash.update(part);await file.write(part);}await file.sync();if(hash.digest('hex')!==item.sha256)throw new Error(`Converter checksum mismatch: ${item.asset}`);}catch(e){await file.close();await rm(temporary,{force:true});throw e;}await file.close();await rename(temporary,target);return target;}
+async function download(item,cache){return verifiedDownload(item,cache,{maxBytes:150*1024*1024});}
 function execute(binary,args){const result=spawnSync(binary,args,{timeout:60000,windowsHide:true,maxBuffer:2*1024*1024,encoding:'utf8'});if(result.error||result.status!==0)throw new Error(`Verified converter extraction/smoke failed: ${path.basename(binary)} (${result.error?.message??result.status})`);return result.stdout;}
 export async function fetchConverterEngines(platform=process.platform,arch=process.arch,root=projectRoot){
  if((process.env.HTTPS_PROXY||process.env.HTTP_PROXY)&&process.env.NODE_USE_ENV_PROXY!=='1'&&!process.execArgv.includes('--use-env-proxy')){
