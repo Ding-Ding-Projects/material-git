@@ -1,5 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {mkdtemp,rm,readFile,writeFile} from 'node:fs/promises';import {join} from 'node:path';import {tmpdir} from 'node:os';
+import {localRecordDay} from '../src/shared/record-filters';
 import {LocalToolsService} from '../src/main/local-tools';import type {ConverterResult} from '../src/shared/local-tools';
 const wait=async(test:()=>Promise<boolean>)=>{for(let i=0;i<100;i++){if(await test())return;await new Promise(r=>setTimeout(r,20));}throw new Error('Fixture timeout');};
 test('opaque converter result actions verify receipts, export faithful copies and reject changed outputs',async()=>{
@@ -7,7 +8,7 @@ test('opaque converter result actions verify receipts, export faithful copies an
  const service=new LocalToolsService({storageDirectory:directory,pickSources:async()=>[source],pickDestination:async()=>destination,openResult:async(path,operation)=>{opened.push(path+' '+operation);},resultActionAvailability:{open:true,reveal:true,editor:false}});
  try{const grants=await service.request('converter-pick')as Array<{id:string}>;const result=await service.request('converter-start',{grant:grants[0].id,adapter:'json-pretty'})as ConverterResult;
   await wait(async()=>(await service.request('converter-status')as{items:ConverterResult[]}).items.some(r=>r.id===result.id&&r.status==='converted'));
-  const history=await service.request('converter-status',{query:'source',status:'converted',date:new Date().toISOString().slice(0,10)})as{items:ConverterResult[]};assert.equal(history.items[0].hasOutputReceipt,true);assert.ok(!JSON.stringify(history).includes(directory));
+  const history=await service.request('converter-status',{query:'source',status:'converted',date:localRecordDay(new Date().toISOString())})as{items:ConverterResult[]};assert.equal(history.items[0].hasOutputReceipt,true);assert.ok(!JSON.stringify(history).includes(directory));
   await service.request('converter-result',{id:result.id,index:0,operation:'open'});assert.deepEqual(opened,[output+' open']);
   await assert.rejects(service.request('converter-result',{id:result.id,operation:'editor'}),/unavailable/);
   destination=copy;await service.request('converter-result',{id:result.id,index:0,operation:'export'});assert.deepEqual(await readFile(copy),await readFile(output));
@@ -25,6 +26,8 @@ test('history applies isolated regex before finite paging and bulk reports parti
   const last=await service.request('converter-status',{page:3})as{items:ConverterResult[]};assert.equal(last.items.length,5);
   const filtered=await service.request('converter-status',{regex:true,pattern:'^fixture84 ',flags:'i'})as{items:ConverterResult[]};assert.equal(filtered.items.length,1);assert.equal(filtered.items[0].source,'fixture84');
   await assert.rejects(service.request('converter-status',{regex:true,pattern:'['}),/Invalid regular/);
+  const day=localRecordDay(rows[0].at);assert.equal((await service.request('converter-status',{from:day,to:day})as{items:unknown[]}).items.length,40);assert.equal((await service.request('converter-status',{from:'2027-01-01'})as{items:unknown[]}).items.length,0);
+  await assert.rejects(service.request('converter-status',{from:'2026-02-30'}),/real calendar date/);await assert.rejects(service.request('converter-status',{from:'2026-10-09',to:'2026-10-01'}),/end date/);await assert.rejects(service.request('converter-status',{from:'8/10/2026'}),/canonical ISO/);
   const bulk=await service.request('converter-bulk',{ids:[rows[0].id,'ffffffff-ffff-ffff-ffff-ffffffffffff'],operation:'forget',confirmed:true})as{outcomes:Array<{status:string}>};assert.deepEqual(bulk.outcomes.map(o=>o.status),['forgotten','failed']);
  }finally{service.dispose();await rm(directory,{recursive:true,force:true});}
 });
