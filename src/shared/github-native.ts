@@ -1,6 +1,14 @@
 import type {CommandOption,CommandArgument} from './types';
 export interface NativeGitHubTask {action:string;title:string;commandId:string;mutation:boolean;destructive:boolean;description:string;options:CommandOption[];arguments:CommandArgument[];initialOptions?:Record<string,unknown>;initialArguments?:Record<string,unknown>}
 export const nativeGitHubTaskRoutes=[
+ {action:'pulls.merge-with-options',title:'Configure merge and automatic merging',commandId:'pr merge',mutation:true},
+ {action:'releases.create-with-options',title:'Prepare release notes and assets',commandId:'release create',mutation:true},
+ {action:'repositories.default-context',title:'Set the default CLI repository',commandId:'repo set-default',mutation:true},
+ {action:'repositories.account-status',title:'My GitHub work',commandId:'status',mutation:false},
+ {action:'repositories.license-notices',title:'Application license notices',commandId:'licenses',mutation:false},
+ {action:'repositories.clear-cli-cache',title:'Clear cached CLI configuration',commandId:'config clear-cache',mutation:true},
+ {action:'actions.watch',title:'Follow run progress',commandId:'run watch',mutation:false},
+
  {
   "action": "codespaces.configure",
   "title": "Configure cloud workspace",
