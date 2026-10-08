@@ -3,7 +3,7 @@ import {localizePair} from './localization';
 export type Domain='repositories'|'issues'|'pull-requests'|'actions'|'releases'|'projects'|'discussions'|'search'|'repository-security'|'organizations'|'gists'|'codespaces';
 export type RecordData=Record<string,unknown>;
 export interface DomainPage {items:RecordData[];page:number;hasNext:boolean;total?:number;detail?:RecordData;notice?:string}
-export interface DomainPayload {hostname?:string;repository?:string;page?:number;query?:string;state?:string;id?:string;tab?:string;values?:Record<string,unknown>;confirmed?:boolean;owner?:string;action?:string;reviewId?:string;entity?:string}
+export interface DomainPayload {hostname?:string;repository?:string;page?:number;query?:string;state?:string;id?:string;providerId?:string;providerKind?:'issue'|'pull-request';tab?:string;values?:Record<string,unknown>;confirmed?:boolean;owner?:string;action?:string;reviewId?:string;entity?:string}
 export interface DomainDefinition {id:Domain;name:[string,string];icon:string;scoped:boolean;states?:string[];tabs:string[];create?:string}
 export const domains:DomainDefinition[]=[
 {id:'repositories',name:['Repositories','儲存庫'],icon:'repo',scoped:false,tabs:['Overview','Branches','Collaborators'],create:'Create repository'},
@@ -26,6 +26,8 @@ export const str=(value:unknown):string=>typeof value==='string'?value:typeof va
 export const first=(data:RecordData,...keys:string[])=>keys.map(k=>data[k]).find(v=>v!==null&&v!==undefined&&v!=='');
 export const titleOf=(data:RecordData)=>str(first(data,'title','displayTitle','full_name','nameWithOwner','name','tag_name','tagName','description','login','path','id','number'))||'Untitled';
 export const idOf=(data:RecordData)=>str(first(data,'id','number','databaseId','name','full_name','nameWithOwner','tag_name','tagName','login'));
+/** Issue/PR endpoint numbers differ from immutable provider database identities. */
+export function selectedTarget(domain:Domain,data:RecordData):Pick<DomainPayload,'id'|'providerId'|'providerKind'>{if(domain!=='issues'&&domain!=='pull-requests')return {id:idOf(data)};const number=str(data.number);if(!/^[1-9][0-9]{0,15}$/.test(number))throw Error('The selected record has no valid issue or pull request number. Refresh its list.');const providerId=str(data.databaseId)||(/^[1-9][0-9]{0,15}$/.test(str(data.id))&&str(data.id)!==number?str(data.id):'');const providerKind=data.providerKind==='issue'?'issue':data.providerKind==='pull-request'?'pull-request':domain==='issues'?'issue':'pull-request';return {id:number,...(providerId?{providerId,providerKind}:{})};}
 export const stateOf=(data:RecordData)=>str(first(data,'conclusion','state','status','visibility'));
 export const authorOf=(data:RecordData)=>str(first(rec(first(data,'user','author','owner','actor')),'login','name'));
 export const dateOf=(data:RecordData)=>str(first(data,'updated_at','updatedAt','created_at','createdAt','published_at','publishedAt','started_at','startedAt'));
