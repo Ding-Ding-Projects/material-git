@@ -4,6 +4,7 @@ import './components';
 import './workbench';
 import './github-workspace';
 import './github-local-workspace';
+import './git-workspace';
 import './workspace-support';
 import './settings';
 import './tools';

@@ -54,6 +54,7 @@ export interface AuthState {
   hostname?: string; deviceCode?: string; verificationUrl?: string; message?: string; error?: string; tokenCopyAvailable?: boolean; hostRegistrationAvailable?: boolean;
 }
 export interface MaterialBridge {
+  git(action:import('./git').GitAction,payload?:import('./git').GitPayload):Promise<import('./git').GitResponse>;
   github(action:import('./github').GitHubAction,payload?:import('./github').GitHubPayload):Promise<import('./github').GitHubResponse>;
   workspace(action:import('./workspace').WorkspaceAction,payload?:unknown):Promise<import('./workspace').WorkspaceResponse>;
   cliWorkflows(action:import('./cli-workflows').CliWorkflowAction,payload?:import('./cli-workflows').CliWorkflowPayload):Promise<import('./cli-workflows').CliWorkflowResponse>;

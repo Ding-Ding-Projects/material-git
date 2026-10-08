@@ -16,6 +16,7 @@ import {PreferencesAdvancedService} from './preferences-advanced';
 import {LocalToolsService} from './local-tools';
 import {createAuthHostRegistry} from './auth-hosts';
 import {GitHubService} from './github';
+import {GitService} from './git';
 import {githubDomains} from '../shared/github';
 import {createSecurityService} from './security';
 import {startUpdater,getUpdateState,checkForUpdates,restartToInstallUpdate,updateEvents} from './updater';
@@ -82,8 +83,10 @@ if(!installerLifecycle)app.whenReady().then(async()=>{
  app.once('will-quit',()=>security.close());
  const hostRegistry=createAuthHostRegistry(app.getPath('userData'));
  await hostRegistry.load();
- security.registerTargets(githubDomains.map(domain=>({id:`destination:${domain}`,label:domain})));
- const githubTasks=new GitHubService(binary,workspace,engine(),{resolveHost:hostname=>hostRegistry.resolveHost(hostname).hostname});
+ security.registerTargets([...githubDomains,'git','extensions','aliases','repository-security'].map(domain=>({id:`destination:${domain}`,label:domain})));
+ const githubLockIds=(action:string)=>{const domain=action.split('.')[0];return [`destination:${domain==='security'?'repository-security':githubDomains.includes(domain as typeof githubDomains[number])?domain:'repositories'}`,`github:${action}`];};
+ const githubTasks=new GitHubService(binary,workspace,engine(),{resolveHost:hostname=>hostRegistry.resolveHost(hostname).hostname,authorize:async action=>security.assertUnlocked(githubLockIds(action)),completed:async action=>{for(const id of githubLockIds(action))security.consumeSurfaceUnlock(id);}});
+ app.once('will-quit',()=>githubTasks.close());
  handle('github',async(action,payload)=>{if(payload!==undefined&&sizeBound(payload).length>128000)throw new Error('GitHub task exceeds the request limit');if(accountChanging())throw new Error('Finish or cancel the current account change before starting a GitHub task');const id=randomUUID();activeOperations.add(id);try{return await githubTasks.handle(action,payload);}finally{activeOperations.delete(id);}});
  const auth=new AuthService(binary,workspace,{allowedHosts:hostRegistry.list().map(host=>host.hostname),registerHost:async hostname=>{await hostRegistry.register(hostname);},copyToken:token=>{clipboard.writeText(token);}});
  let accountMutation=false;
@@ -119,6 +122,10 @@ if(!installerLifecycle)app.whenReady().then(async()=>{
  const localTools=new LocalToolsService({storageDirectory:path.join(app.getPath('userData'),'local-tools'),pickSources:async()=>{const result=await dialog.showOpenDialog(window,{title:'Choose files to convert',properties:['openFile','multiSelections']});return result.canceled?[]:result.filePaths;},pickDestination:async suggestedName=>{const result=await dialog.showSaveDialog(window,{title:'Save converted file',defaultPath:suggestedName});return result.canceled?null:result.filePath??null;},imageEngine:async(bytes,target)=>{const image=nativeImage.createFromBuffer(Buffer.from(bytes));if(image.isEmpty())throw new Error('This image could not be decoded');return target==='png'?image.toPNG():image.toJPEG(90);},imageEngineProof:`Electron ${process.versions.electron} native image codec`});
  handle('local-tools',(action,payload)=>localTools.request(action,payload));
  app.once('will-quit',()=>localTools.dispose());
+ const gitTasks=new GitService({binary:process.platform==='win32'?path.join(gitDirectory,'git.exe'):'git',directory:app.getPath('userData'),pickWorktree:async()=>{const result=await dialog.showOpenDialog(window,{title:'Choose a Git working tree',properties:['openDirectory']});return result.canceled?null:result.filePaths[0]??null;},pickFile:async()=>{const result=await dialog.showOpenDialog(window,{title:'Choose a Git patch file',properties:['openFile'],filters:[{name:'Git patches',extensions:['patch','diff','mbox']}]});return result.canceled?null:result.filePaths[0]??null;}});
+ const gitOperationIds=new Set<string>();
+ handle('git',async(action,payload)=>{if(payload!==undefined&&sizeBound(payload).length>1024*1024)throw new Error('Git request exceeds the input limit');const id=payload?.reviewId??randomUUID();if(action!=='cancel'){activeOperations.add(id);if(action==='apply')gitOperationIds.add(id);}try{return await gitTasks.handle(action,payload);}finally{activeOperations.delete(id);gitOperationIds.delete(id);}});
+ app.once('will-quit',()=>{for(const operationId of gitOperationIds)void gitTasks.handle('cancel',{operationId});});
  handle('updates',(action:string)=>{if(action==='check')return checkForUpdates();if(action==='restart'){if(activeOperations.size||localTools.activeJobs())throw new Error('Wait for running operations or cancel them before restarting');const previous=quitApproved;quitApproved=true;try{restartToInstallUpdate();}catch(error){quitApproved=previous;throw error;}}else if(action!=='status')throw new Error('Unknown update action');return getUpdateState();});
  handle('bootstrap',async()=>{
   const settled=await Promise.allSettled([runGh(binary,['--version'],workspace),runGh(binary,['api','user'],workspace),runGh(binary,['repo','view','--json','nameWithOwner'],workspace)]);
