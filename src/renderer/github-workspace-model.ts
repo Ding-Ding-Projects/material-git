@@ -3,7 +3,7 @@ import {localizePair} from './localization';
 export type Domain='repositories'|'issues'|'pull-requests'|'actions'|'releases'|'projects'|'discussions'|'search'|'repository-security'|'organizations'|'gists'|'codespaces';
 export type RecordData=Record<string,unknown>;
 export interface DomainPage {items:RecordData[];page:number;hasNext:boolean;total?:number;detail?:RecordData;notice?:string}
-export interface DomainPayload {repository?:string;page?:number;query?:string;state?:string;id?:string;tab?:string;values?:Record<string,unknown>;confirmed?:boolean;owner?:string;action?:string;reviewId?:string;entity?:string}
+export interface DomainPayload {hostname?:string;repository?:string;page?:number;query?:string;state?:string;id?:string;tab?:string;values?:Record<string,unknown>;confirmed?:boolean;owner?:string;action?:string;reviewId?:string;entity?:string}
 export interface DomainDefinition {id:Domain;name:[string,string];icon:string;scoped:boolean;states?:string[];tabs:string[];create?:string}
 export const domains:DomainDefinition[]=[
 {id:'repositories',name:['Repositories','儲存庫'],icon:'repo',scoped:false,tabs:['Overview','Branches','Collaborators'],create:'Create repository'},
