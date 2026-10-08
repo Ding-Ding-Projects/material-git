@@ -68,34 +68,34 @@ Run `node scripts/check-feature-coverage.mjs` to validate rows and links while r
 
 ## tools
 
-- [Universal local file converter](tools/file-converter.md) · [粵語草稿](tools/file-converter.yue.md) — `file-converter`
-- [Universal local Ollama suite manager](tools/ollama-suite.md) · [粵語草稿](tools/ollama-suite.yue.md) — `ollama-suite`
-- [External editor and VS Code hand-off](tools/external-editor.md) · [粵語草稿](tools/external-editor.yue.md) — `external-editor`
-- [Browser-extension download hand-off surfaces](tools/download-handoff.md) · [粵語草稿](tools/download-handoff.yue.md) — `download-handoff`
-- [Publishing to a forge](tools/forge-publishing.md) · [粵語草稿](tools/forge-publishing.yue.md) — `forge-publishing`
-- [Progress where it started, recovery where it broke](tools/progress-recovery.md) · [粵語草稿](tools/progress-recovery.yue.md) — `progress-recovery`
+- [Universal local file converter](tools/file-converter.md) · [粵語文章](tools/file-converter.yue.md) — `file-converter`
+- [Universal local Ollama suite manager](tools/ollama-suite.md) · [粵語文章](tools/ollama-suite.yue.md) — `ollama-suite`
+- [External editor and VS Code hand-off](tools/external-editor.md) · [粵語文章](tools/external-editor.yue.md) — `external-editor`
+- [Browser-extension download hand-off surfaces](tools/download-handoff.md) · [粵語文章](tools/download-handoff.yue.md) — `download-handoff`
+- [Publishing to a forge](tools/forge-publishing.md) · [粵語文章](tools/forge-publishing.yue.md) — `forge-publishing`
+- [Progress where it started, recovery where it broke](tools/progress-recovery.md) · [粵語文章](tools/progress-recovery.yue.md) — `progress-recovery`
 
 ## verification
 
-- [Per-surface completeness inventory and parity](verification/completeness-parity.md) · [粵語草稿](verification/completeness-parity.yue.md) — `completeness-parity`
-- [Front-screen version and updated-at provenance](verification/front-provenance.md) · [粵語草稿](verification/front-provenance.yue.md) — `front-provenance`
-- [Real screenshots wherever a surface is described](verification/product-evidence.md) · [粵語草稿](verification/product-evidence.yue.md) — `product-evidence`
-- [committed screen recording](verification/screen-recording.md) · [粵語草稿](verification/screen-recording.yue.md) — `screen-recording`
-- [Checked-in design-reference parity](verification/design-reference-parity.md) · [粵語草稿](verification/design-reference-parity.yue.md) — `design-reference-parity`
-- [Design surfaces live in the repository](verification/design-folder.md) · [粵語草稿](verification/design-folder.yue.md) — `design-folder`
-- [layout clipping defect matrix for every built surface](verification/responsive-layout-matrix.md) · [粵語草稿](verification/responsive-layout-matrix.yue.md) — `responsive-layout-matrix`
-- [Public screenshot gallery at resource limit](verification/public-capture-gallery.md) · [粵語草稿](verification/public-capture-gallery.yue.md) — `public-capture-gallery`
+- [Per-surface completeness inventory and parity](verification/completeness-parity.md) · [粵語文章](verification/completeness-parity.yue.md) — `completeness-parity`
+- [Front-screen version and updated-at provenance](verification/front-provenance.md) · [粵語文章](verification/front-provenance.yue.md) — `front-provenance`
+- [Real screenshots wherever a surface is described](verification/product-evidence.md) · [粵語文章](verification/product-evidence.yue.md) — `product-evidence`
+- [committed screen recording](verification/screen-recording.md) · [粵語文章](verification/screen-recording.yue.md) — `screen-recording`
+- [Checked-in design-reference parity](verification/design-reference-parity.md) · [粵語文章](verification/design-reference-parity.yue.md) — `design-reference-parity`
+- [Design surfaces live in the repository](verification/design-folder.md) · [粵語文章](verification/design-folder.yue.md) — `design-folder`
+- [layout clipping defect matrix for every built surface](verification/responsive-layout-matrix.md) · [粵語文章](verification/responsive-layout-matrix.yue.md) — `responsive-layout-matrix`
+- [Public screenshot gallery at resource limit](verification/public-capture-gallery.md) · [粵語文章](verification/public-capture-gallery.yue.md) — `public-capture-gallery`
 
 ## documentation-site
 
-- [A Material Design 3 GitHub Pages carrying every feature](documentation-site/landing-site.md) · [粵語草稿](documentation-site/landing-site.yue.md) — `landing-site`
-- [A mobile-friendly GitHub Pages](documentation-site/responsive-documentation-site.md) · [粵語草稿](documentation-site/responsive-documentation-site.yue.md) — `responsive-documentation-site`
-- [Verified installer download on Home](documentation-site/installer-download-button.md) · [粵語草稿](documentation-site/installer-download-button.yue.md) — `installer-download-button`
-- [One detailed article per feature on the GitHub Pages](documentation-site/feature-articles.md) · [粵語草稿](documentation-site/feature-articles.yue.md) — `feature-articles`
-- [Complete, scripted font vendoring](documentation-site/vendored-fonts.md) · [粵語草稿](documentation-site/vendored-fonts.yue.md) — `vendored-fonts`
-- [A real picture when a link is pasted into Discord](documentation-site/shared-link-embed.md) · [粵語草稿](documentation-site/shared-link-embed.yue.md) — `shared-link-embed`
-- [The GitHub Pages linked from the repository](documentation-site/homepage-link.md) · [粵語草稿](documentation-site/homepage-link.yue.md) — `homepage-link`
-- [private vocabulary only after authentication](documentation-site/vocabulary-unlock-boundary.md) · [粵語草稿](documentation-site/vocabulary-unlock-boundary.yue.md) — `vocabulary-unlock-boundary`
+- [A Material Design 3 GitHub Pages carrying every feature](documentation-site/landing-site.md) · [粵語文章](documentation-site/landing-site.yue.md) — `landing-site`
+- [A mobile-friendly GitHub Pages](documentation-site/responsive-documentation-site.md) · [粵語文章](documentation-site/responsive-documentation-site.yue.md) — `responsive-documentation-site`
+- [Verified installer download on Home](documentation-site/installer-download-button.md) · [粵語文章](documentation-site/installer-download-button.yue.md) — `installer-download-button`
+- [One detailed article per feature on the GitHub Pages](documentation-site/feature-articles.md) · [粵語文章](documentation-site/feature-articles.yue.md) — `feature-articles`
+- [Complete, scripted font vendoring](documentation-site/vendored-fonts.md) · [粵語文章](documentation-site/vendored-fonts.yue.md) — `vendored-fonts`
+- [A real picture when a link is pasted into Discord](documentation-site/shared-link-embed.md) · [粵語文章](documentation-site/shared-link-embed.yue.md) — `shared-link-embed`
+- [The GitHub Pages linked from the repository](documentation-site/homepage-link.md) · [粵語文章](documentation-site/homepage-link.yue.md) — `homepage-link`
+- [private vocabulary only after authentication](documentation-site/vocabulary-unlock-boundary.md) · [粵語文章](documentation-site/vocabulary-unlock-boundary.yue.md) — `vocabulary-unlock-boundary`
 
 ## status
 
