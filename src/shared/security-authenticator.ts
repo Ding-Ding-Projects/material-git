@@ -1,0 +1,12 @@
+import type {AuthenticatorSummary,TotpParameters} from './security';
+export const authenticatorIcons=['shield','account','organization','code','cloud','tools','folder','book'] as const;
+export interface AuthenticatorMetadata{name:string;icon:typeof authenticatorIcons[number];groupId:string}
+export interface AuthenticatorEntry extends AuthenticatorSummary,AuthenticatorMetadata{}
+export interface AuthenticatorGroup{id:string;name:string;icon:typeof authenticatorIcons[number]}
+export interface AuthenticatorReview{id:string;operation:'remove'|'export';entries:AuthenticatorEntry[];expiresAt:number;secretsOmitted:true}
+export interface AuthenticatorCode extends AuthenticatorEntry{code:string;nextCode:string;remaining:number}
+export interface AuthenticatorBackupEnvelope{schema:'material-git-authenticator-backup';version:1;cipher:'AES-256-GCM';kdf:{name:'scrypt';N:16384;r:8;p:1};salt:string;iv:string;tag:string;ciphertext:string}
+export function validateAuthenticatorMetadata(value:unknown):AuthenticatorMetadata{if(!value||typeof value!=='object'||Array.isArray(value))throw Error('Choose valid authenticator labels and group.');const input=value as Record<string,unknown>;if(Object.keys(input).some(key=>!['name','icon','groupId'].includes(key))||typeof input.name!=='string'||!input.name.trim()||input.name.length>128||/[\u0000-\u001f]/.test(input.name)||!authenticatorIcons.includes(input.icon as typeof authenticatorIcons[number])||typeof input.groupId!=='string'||input.groupId!==''&&!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(input.groupId))throw Error('Choose valid authenticator labels and group.');return {name:input.name.trim(),icon:input.icon as typeof authenticatorIcons[number],groupId:input.groupId};}
+export function redactedAuthenticatorRows(entries:AuthenticatorEntry[]){return entries.map(entry=>({...entry,secretsOmitted:true,codesOmitted:true}));}
+export interface AuthenticatorQrCallbacks{requestCameraPermission?:()=>Promise<boolean>;chooseQrImage?:()=>Promise<Uint8Array|null>;clipboardQrImage?:()=>Promise<Uint8Array|null>;decodeQrImage?:(bytes:Uint8Array)=>Promise<string[]>;saveSensitiveExport?:(protectedEnvelope:string)=>Promise<boolean>}
+export interface AuthenticatorPendingPairing{uri:string;parameters:TotpParameters}
