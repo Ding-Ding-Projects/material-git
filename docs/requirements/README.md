@@ -99,32 +99,32 @@ Run `node scripts/check-feature-coverage.mjs` to validate rows and links while r
 
 ## status
 
-- [Status Hub registration and status surface](status/status-hub.md) · [粵語草稿](status/status-hub.yue.md) — `status-hub`
-- [Discord status bridge](status/discord-status-bridge.md) · [粵語草稿](status/discord-status-bridge.yue.md) — `discord-status-bridge`
-- [Verified panic dispatch](status/panic-webhooks.md) · [粵語草稿](status/panic-webhooks.yue.md) — `panic-webhooks`
-- [Tidbyt status frames](status/tidbyt-displays.md) · [粵語草稿](status/tidbyt-displays.yue.md) — `tidbyt-displays`
+- [Status Hub registration and status surface](status/status-hub.md) · [粵語文章](status/status-hub.yue.md) — `status-hub`
+- [Discord status bridge](status/discord-status-bridge.md) · [粵語文章](status/discord-status-bridge.yue.md) — `discord-status-bridge`
+- [Verified panic dispatch](status/panic-webhooks.md) · [粵語文章](status/panic-webhooks.yue.md) — `panic-webhooks`
+- [Tidbyt status frames](status/tidbyt-displays.md) · [粵語文章](status/tidbyt-displays.yue.md) — `tidbyt-displays`
 
 ## build
 
-- [Root `build.bat` and `build-installer.bat`](build/build-entrypoints.md) · [粵語草稿](build/build-entrypoints.yue.md) — `build-entrypoints`
-- [One fresh Microsoft Windows build-and-run command](build/fresh-build-run-command.md) · [粵語草稿](build/fresh-build-run-command.yue.md) — `fresh-build-run-command`
-- [One-click dependency or prerequisite fetcher](build/dependency-fetcher.md) · [粵語草稿](build/dependency-fetcher.yue.md) — `dependency-fetcher`
-- [Every application bundles its dependencies and prerequisites](build/bundled-dependencies.md) · [粵語草稿](build/bundled-dependencies.yue.md) — `bundled-dependencies`
-- [Genuine Squirrel.Windows installers](build/squirrel-installer.md) · [粵語草稿](build/squirrel-installer.yue.md) — `squirrel-installer`
-- [Required-format self-signing only](build/self-signing.md) · [粵語草稿](build/self-signing.yue.md) — `self-signing`
-- [Chrome-style automatic updates](build/auto-updates.md) · [粵語草稿](build/auto-updates.yue.md) — `auto-updates`
-- [Original logo and packaged icon](build/app-icon.md) · [粵語草稿](build/app-icon.yue.md) — `app-icon`
+- [Root `build.bat` and `build-installer.bat`](build/build-entrypoints.md) · [粵語文章](build/build-entrypoints.yue.md) — `build-entrypoints`
+- [One fresh Microsoft Windows build-and-run command](build/fresh-build-run-command.md) · [粵語文章](build/fresh-build-run-command.yue.md) — `fresh-build-run-command`
+- [One-click dependency or prerequisite fetcher](build/dependency-fetcher.md) · [粵語文章](build/dependency-fetcher.yue.md) — `dependency-fetcher`
+- [Every application bundles its dependencies and prerequisites](build/bundled-dependencies.md) · [粵語文章](build/bundled-dependencies.yue.md) — `bundled-dependencies`
+- [Genuine Squirrel.Windows installers](build/squirrel-installer.md) · [粵語文章](build/squirrel-installer.yue.md) — `squirrel-installer`
+- [Required-format self-signing only](build/self-signing.md) · [粵語文章](build/self-signing.yue.md) — `self-signing`
+- [Chrome-style automatic updates](build/auto-updates.md) · [粵語文章](build/auto-updates.yue.md) — `auto-updates`
+- [Original logo and packaged icon](build/app-icon.md) · [粵語文章](build/app-icon.yue.md) — `app-icon`
 
 ## release
 
-- [A real release on every push](release/release-workflow.md) · [粵語草稿](release/release-workflow.yue.md) — `release-workflow`
-- [End-to-end workflow timing in release notes](release/release-timing.md) · [粵語草稿](release/release-timing.yue.md) — `release-timing`
-- [Line counts counted by GitHub Actions](release/release-line-counts.md) · [粵語草稿](release/release-line-counts.yue.md) — `release-line-counts`
-- [A dim-sum photo on every release](release/release-dim-sum-photo.md) · [粵語草稿](release/release-dim-sum-photo.yue.md) — `release-dim-sum-photo`
-- [Dim sum release code names](release/dim-sum-code-names.md) · [粵語草稿](release/dim-sum-code-names.yue.md) — `dim-sum-code-names`
-- [GitHub Actions dependency or prerequisite bootstrap and safe outputs](release/ci-bootstrap.md) · [粵語草稿](release/ci-bootstrap.yue.md) — `ci-bootstrap`
-- [Live GitHub Actions runner selection](release/runner-selection.md) · [粵語草稿](release/runner-selection.yue.md) — `runner-selection`
-- [Encrypted public builder for private repositories](release/encrypted-public-builder.md) · [粵語草稿](release/encrypted-public-builder.yue.md) — `encrypted-public-builder`
+- [A real release on every push](release/release-workflow.md) · [粵語文章](release/release-workflow.yue.md) — `release-workflow`
+- [End-to-end workflow timing in release notes](release/release-timing.md) · [粵語文章](release/release-timing.yue.md) — `release-timing`
+- [Line counts counted by GitHub Actions](release/release-line-counts.md) · [粵語文章](release/release-line-counts.yue.md) — `release-line-counts`
+- [A dim-sum photo on every release](release/release-dim-sum-photo.md) · [粵語文章](release/release-dim-sum-photo.yue.md) — `release-dim-sum-photo`
+- [Dim sum release code names](release/dim-sum-code-names.md) · [粵語文章](release/dim-sum-code-names.yue.md) — `dim-sum-code-names`
+- [GitHub Actions dependency or prerequisite bootstrap and safe outputs](release/ci-bootstrap.md) · [粵語文章](release/ci-bootstrap.yue.md) — `ci-bootstrap`
+- [Live GitHub Actions runner selection](release/runner-selection.md) · [粵語文章](release/runner-selection.yue.md) — `runner-selection`
+- [Encrypted public builder for private repositories](release/encrypted-public-builder.md) · [粵語文章](release/encrypted-public-builder.yue.md) — `encrypted-public-builder`
 
 ## repository
 
