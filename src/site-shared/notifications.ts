@@ -22,9 +22,11 @@ export function validateNotifications(value:unknown):NotificationDocument {
  return result;
 }
 export function addNotification(document:NotificationDocument,record:SiteNotification):NotificationDocument {
- const records=[...document.records];
- if(records.length>=notificationLimit){const disposable=records.findIndex(value=>value.dismissed||!['warning','error'].includes(value.category));if(disposable<0)throw Error('Notification storage is full. Export records or dismiss an older message before retrying.');records.splice(disposable,1)}
- return validateNotifications({schemaVersion:1,revision:document.revision+1,records:[...records,record]});
+ validateNotifications({schemaVersion:1,revision:0,records:[record]});
+ if(document.records.some(value=>value.id===record.id))throw Error('Duplicate notification identifier');
+ const records=[...document.records,record];
+ while(records.length>notificationLimit||new TextEncoder().encode(JSON.stringify({schemaVersion:1,revision:document.revision+1,records})).byteLength>notificationBytes){const disposable=records.findIndex(value=>value.id!==record.id&&(value.dismissed||!['warning','error'].includes(value.category)));if(disposable<0)throw Error('Notification storage is full. Export records or dismiss an older message before retrying.');records.splice(disposable,1)}
+ return validateNotifications({schemaVersion:1,revision:document.revision+1,records});
 }
 export function changeNotifications(document:NotificationDocument,revision:number,ids:string[],dismissed:boolean):{document:NotificationDocument;changed:number;skipped:number} {
  if(document.revision!==revision)throw Error('Notification review is outdated. Review the current records again.');
