@@ -26,9 +26,11 @@ try{
  assert.match(await page.locator('.attention-time').innerText(),/15/);assert.match(await page.locator('.momentum-bar').innerText(),/15 分鐘/);
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'bilingual attention controls fit 320px with 200% text');
  assert.match(await page.locator('.task-bar').innerText(),/Read the setup guide/);await capture('idle-bilingual-320');
+ const beforePause=await page.evaluate(()=>Date.now());
  await page.locator('.momentum-bar md-text-button').filter({hasText:'Not now'}).click();await page.waitForFunction(()=>!document.querySelector('.momentum-bar'));
  const paused=await page.evaluate(()=>JSON.parse(localStorage.getItem('material-git-site.v2')).extras.attention);
- assert.equal(paused.pausedUntil-paused.changedAt,75*60_000);
+ const afterPause=await page.evaluate(()=>Date.now());
+ assert.ok(paused.pausedUntil>=beforePause+60*60_000&&paused.pausedUntil<=afterPause+60*60_000);
  await page.reload();await page.waitForSelector('.attention-time');assert.equal(await page.locator('.momentum-bar').count(),0,'pause survives reload');
  await page.clock.fastForward(59*60_000);assert.equal(await page.locator('.momentum-bar').count(),0,'pause lasts 59 minutes');
  await page.clock.fastForward(60_000);await page.waitForSelector('.momentum-bar');
