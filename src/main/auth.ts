@@ -83,7 +83,7 @@ export class AuthService {
    const host=this.host(payload);if(payload.confirmed!==true||payload.reviewedHostname!==host)throw new Error('Review and confirm the exact workspace hostname');
    if(!this.serviceOptions.selectHost)throw new Error('Workspace host selection is unavailable in this installation');
    if(this.child||this.changing)throw new Error('Finish the current account change first');
-   this.changing=true;try{const selected=await this.serviceOptions.selectHost(host);if(selected!==host||!this.hosts.includes(selected))throw new Error('The native workspace hostname could not be verified');this.update({selectedHostname:selected,error:undefined,message:`Workspace host selected: ${selected}. Choose a repository on this host; credentials and environment tokens are unchanged.`});return await this.refresh();}finally{this.changing=false;}
+   this.changing=true;try{const selected=await this.serviceOptions.selectHost(host);if(selected!==host||!this.hosts.includes(selected))throw new Error('The native workspace hostname could not be verified');this.state={...this.state,selectedHostname:selected,error:undefined,message:`Workspace host selected: ${selected}. Choose a repository on this host; credentials and environment tokens are unchanged.`};return await this.refresh();}finally{this.changing=false;}
   }
   if(action==='register-host'){
    const host=validateAuthHost(payload.hostname).hostname;
