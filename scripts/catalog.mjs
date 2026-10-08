@@ -12,7 +12,7 @@ function usageArguments(text){
  for(let i=0;i<text.length;i++){if(!pairs[text[i]])continue;const start=i;const stack=[pairs[text[i]]];
   while(stack.length&&++i<text.length){if(pairs[text[i]])stack.push(pairs[text[i]]);else if(text[i]===stack.at(-1))stack.pop();}
   if(stack.length)throw new Error(`Unbalanced command usage: ${text}`);
-  const repeat=text.slice(i+1,i+4)==='...';groups.push([text.slice(start,i+1),repeat]);if(repeat)i+=3;
+  const repeat=text.slice(i+1,i+4)==='...';groups.push([text.slice(start,i+1),repeat,start]);if(repeat)i+=3;
  }return groups;
 }
 function walk(path) {
@@ -27,19 +27,20 @@ function walk(path) {
  const options=[];
  for(const line of (section(h,'FLAGS')+'\n'+section(h,'INHERITED FLAGS')).split('\n')) {
  const m=line.match(/^\s*(?:-\w,\s*)?--([\w-]+)(?:\s+(\S+))?\s{2,}(.+)$/); if(!m || m[1]==='help')continue;
- const [,name,kind,description]=m; const choices=description.match(/\{([^}]+)\}/)?.[1]?.split('|');
- let type=kind ? 'text':'boolean'; if(kind==='int')type='number'; if(choices)type='choice';
- if(['body','notes','description'].includes(name))type='multiline'; if(/(?:file|filename|path)$/.test(name)||name==='attach')type='file'; if(/(?:dir|directory)$/.test(name))type='directory'; if(/(?:token|password|secret)$/.test(name))type='secret';
+ const [,name,kind,description]=m; const candidates=description.match(/\{([^}]+)\}/)?.[1]?.split(/[|,]/).map(value=>value.trim()); const choices=(candidates?.length>1||candidates?.length===1&&/:\s*\{/.test(description))&&candidates.every(value=>/^[a-z0-9_.-]+$/i.test(value))?candidates:undefined;
+ let type=kind ? 'text':'boolean'; if(/^u?int(?:32|64)?$/.test(kind||''))type='number'; if(choices)type='choice';
+ if(kind&&['body','notes','description'].includes(name))type='multiline'; if(kind&&(kind==='file'||/^(?:body-file|notes-file|from-file|env-file|input|attach)$/.test(name)))type='file'; if(kind&&/^(?:dir|directory|source)$/.test(name))type='directory'; if(kind&&/^(?:token|password|secret)$/.test(name))type='secret';
  const entity=({repo:'repository',assignee:'user',author:'user',reviewer:'user',label:'label',milestone:'milestone',project:'project',branch:'branch',base:'branch',head:'branch',workflow:'workflow',owner:'owner',organization:'organization',environment:'environment',team:'team',discussion:'discussion',org:'organization',env:'environment',repos:'repository'})[name]; if(entity && !choices)type='entity';
  const def=description.match(/\(default (?:(?:"([^"]*)")|([^)]*))\)/);
- options.push({name,description,type,...(choices?{choices}:{}),...(entity?{entity}:{}),...(['strings','stringArray','stringSlice'].includes(kind)?{multiple:true}:{}),...(def?{default:type==='number'?Number(def[1]??def[2]):def[1]??def[2]}:{}),...(type==='number'?{minimum:0}: {})});
+ const rawDefault=def?.[1]??def?.[2]; let defaultValue=rawDefault; if(type==='boolean')defaultValue=rawDefault==='true'?true:rawDefault==='false'?false:undefined;else if(type==='number')defaultValue=rawDefault!==undefined&&Number.isFinite(Number(rawDefault))?Number(rawDefault):undefined;else if(rawDefault?.startsWith('[')||choices&&!choices.includes(rawDefault))defaultValue=undefined;
+ options.push({name,description,type,...(choices?{choices}:{}),...(entity?{entity}:{}),...(['strings','stringArray','stringSlice'].includes(kind)?{multiple:true}:{}),...(defaultValue!==undefined?{default:defaultValue}:{}),...(type==='number'?{minimum:0}: {})});
  }
  const args=[]; const tail=usage.replace(/^gh\s+/,'').slice(path.join(' ').length).replace(/\[flags\]/g,'');
- for(const [raw,repeat] of usageArguments(tail)) { const contents=raw.slice(1,-1).replace(/[<>]/g,'').trim();
+ for(const [raw,repeat,start] of usageArguments(tail)) { if(raw.slice(1,-1).trim().startsWith('-')||/(?:^|\s)--?[a-z][\w-]*\s*$/i.test(tail.slice(0,start)))continue; const contents=raw.slice(1,-1).replace(/[<>]/g,'').trim().split('|').filter(value=>!value.trim().startsWith('--')).join('|');
  const name=contents.replace(/\s*\|\s*/g,'-').replace(/\[@version\]/g,'').replace(/[^a-zA-Z0-9-]+/g,'-').replace(/-+/g,'-').replace(/^-+|-+$/g,'').toLowerCase(); if(name==='flags')continue;
  const choices=contents.split('|').map(x=>x.trim());
  const entity=name==='repository'?'repository':name==='owner'?'owner':name==='workflow-id'?'workflow':name==='run-id'?'run':name==='gist'?'gist':/number/.test(name)?(path[0]==='pr'?'pull-request':path[0]==='issue'?'issue':path[0]==='project'?'project':undefined):undefined;
- const literalChoices=choices.length>1&&!/number|url|branch|id|path|sha/i.test(contents);
+ const literalChoices=choices.length>1&&!raw.includes('<')&&choices.every(choice=>/^[a-z0-9_.-]+$/i.test(choice));
  args.push({name,description:raw,position:args.length,type:literalChoices?'choice':entity?'entity':/directory/.test(name)?'directory':/file|path/.test(name)?'file':'text',required:raw.startsWith('<')||raw.startsWith('{'),...(literalChoices?{choices}:{}),...(entity?{entity}:{}),...(repeat||contents.includes('...')?{multiple:true}:{})});
  }
  const jsonFields=section(h,'JSON FIELDS').split(/[\s,]+/).filter(Boolean); const json=options.find(o=>o.name==='json'); if(json&&jsonFields.length){json.type='multi-choice';json.choices=jsonFields;json.multiple=true;}
@@ -49,10 +50,35 @@ function walk(path) {
  const enumOption=(name,choices)=>{const item=option(name);if(item){item.type=item.multiple?'multi-choice':'choice';item.choices=choices;}};
  if(id==='secret set'&&option('body'))option('body').type='secret';
  if(id==='skill install'){const agentValues=[...h.matchAll(/^  - .+ \(([a-z0-9.-]+)\)$/gm)].map(m=>m[1]);if(agentValues.length)enumOption('agent',agentValues);}
- if(id==='completion'&&argument('shell')){argument('shell').type='choice';argument('shell').choices=['bash','zsh','fish','powershell'];}
- if(id==='config set'&&argument('value')){argument('value').type='choice';argument('value').choices=['enabled','disabled','log','https','ssh'];}
- if(id==='api'){enumOption('method',['GET','POST','PUT','PATCH','DELETE','HEAD','OPTIONS']);enumOption('hostname',['github.com']);}
+ if(id==='completion'){args.length=0;enumOption('shell',['bash','zsh','fish','powershell']);option('shell').required=true;}
+ if(id==='config set'&&argument('value'))argument('value').type='text';
+ if(id==='api'){if(option('method'))delete option('method').default;enumOption('method',['GET','POST','PUT','PATCH','DELETE','HEAD','OPTIONS']);enumOption('hostname',['github.com']);}
  if(['issue create','pr create','pr revert'].includes(id)){for(const name of ['title','body'])if(option(name))option(name).required=true;}
+ if(id==='gist create'){args.splice(0,args.length,{name:'filename-pattern',description:'One or more local filenames or glob patterns. Standard input is unavailable in this runner.',position:0,type:'file',multiple:true,required:true});}
+ if(id==='release create'){const assets=argument('filename-pattern');if(assets){assets.type='file';delete assets.choices;assets.multiple=true;assets.description='Local release asset filenames or glob patterns; append #display label when needed.';}if(argument('tag'))argument('tag').required=true;}
+ if(id==='alias delete'){args.splice(0,args.length,{name:'alias',description:'Alias name; omit only when --all is selected',position:0,type:'text',required:false});}
+ if(id==='extension upgrade'){args.splice(0,args.length,{name:'name',description:'Extension name; omit only when --all is selected',position:0,type:'text',required:false});}
+ if(['attestation download','attestation verify'].includes(id)&&args[0])args[0].required=true;
+ if(id==='attestation verify')for(const name of ['bundle','custom-trusted-root'])if(option(name))option(name).type='file';
+ if(id==='attestation trusted-root'&&option('tuf-root'))option('tuf-root').type='file';
+ if(id==='repo read-file'&&option('output'))option('output').type='file';
+ if(id==='codespace cp'&&option('expand'))option('expand').description+=' Unavailable in the guided runner because it evaluates remote shell expressions.';
+ if(id==='codespace cp'){args.splice(0,args.length,{name:'sources',description:'Local or remote: source paths',position:0,type:'text',multiple:true,required:true},{name:'dest',description:'Local or remote: destination path',position:1,type:'text',required:true});}
+ if(id==='codespace ports forward'){args.splice(0,args.length,{name:'port-mappings',description:'Remote/local port pairs, such as 8080:8080. Each port must be 1–65535.',position:0,type:'text',multiple:true,required:true});}
+ if(id==='codespace ports visibility'){args.splice(0,args.length,{name:'port-visibility',description:'Port/visibility pairs, such as 8080:private. Visibility is public, private, or org.',position:0,type:'text',multiple:true,required:true});}
+ if(id==='issue edit'&&args[0])args[0].multiple=true;
+ if(/^workflow (disable|enable|run|view)$/.test(id)&&args[0]){args[0].type='entity';args[0].entity='workflow';args[0].required=true;}
+ if(path[0]==='project'&&id!=='project item-edit'&&argument('number'))argument('number').required=true;
+ if(['gist view','repo rename','run cancel','run delete','gpg-key add','ssh-key add'].includes(id)&&args[0])args[0].required=true;
+ if(id==='gist edit'&&option('add'))option('add').type='file';
+ if(['issue develop','pr checkout'].includes(id)&&option('worktree'))option('worktree').type='directory';
+ if(id==='codespace ssh'&&option('debug-file'))option('debug-file').type='file';
+ if(id==='gist rename'||id==='repo read-dir'||id==='repo read-file')for(const arg of args){arg.type='text';delete arg.choices;}
+ if(id==='repo create'&&option('template')){option('template').type='entity';option('template').entity='repository';}
+ if(id==='pr create'&&option('template'))option('template').type='file';
+ if(id==='issue create'&&option('template'))option('template').type='text';
+ for(const o of options){if(/Go template/.test(o.description))o.type='multiline';if(['profile','filename'].includes(o.name))o.type='text';if(/(?:[Pp]ath to (?:the )?.*(?:file|root\.json)|file on disk)/.test(o.description)&&o.name!=='devcontainer-path')o.type='file';}
+ if(/^(?:issue|pr) (?:create|edit)$/.test(id)){for(const o of options)if(['assignee','reviewer','label','project','attach','blocked-by','blocking'].includes(o.name))o.multiple=true;}
  if(id==='browse'){args.splice(0,args.length,{name:'location',description:'Optional issue/PR number, repository path, or commit SHA',position:0,type:'text'});if(option('no-browser'))option('no-browser').default=true;}
  if(id==='repo clone'){
   const passthrough=args.find(a=>a.name.startsWith('gitflags')||a.name.includes('gitflags'));if(passthrough)passthrough.description='Raw git flag forwarding is unavailable; use the guided git controls.';
@@ -61,7 +87,7 @@ function walk(path) {
  if(id==='config get'||id==='config set'){
   const key=argument('key');if(key){key.type='choice';key.choices=['git_protocol','prompt','prefer_editor_prompt','clipboard','color_labels','accessible_colors','accessible_prompter','spinner','telemetry','editor','pager','browser','api_host','http_unix_socket'];}
  }
- for(const o of options){if(o.type==='number'){o.minimum=['limit','interval','port','max-items','num-attempts','git-depth'].includes(o.name)?1:0;o.maximum=o.name==='port'?65535:2147483647;}if(['field','raw-field','header','repos'].includes(o.name)){o.multiple=true;o.description+=' Repeat this structured value for each item.';}if(['file','body-file','notes-file','from-file','input','attach','template'].includes(o.name)&& !(o.name==='template'&&jsonFields.length))o.type='file';}
+ for(const o of options){if(o.type==='number'){o.minimum=['limit','interval','port','max-items','num-attempts','git-depth'].includes(o.name)?1:0;o.maximum=o.name==='port'?65535:2147483647;}if((['api','workflow run'].includes(id)&&['field','raw-field','header'].includes(o.name))||o.name==='repos'){o.multiple=true;o.description+=' Repeat this structured value for each item.';}if(['body-file','notes-file','from-file','input','attach'].includes(o.name))o.type='file';}
  const blocked=/^auth (login|refresh|token|setup-git)|^codespace (ssh|code|jupyter)|^copilot$|^preview prompter$|^extension (exec|install|upgrade|create|browse)$|^alias import$/.test(id);
  const availability=blocked?(id.startsWith('auth ')?'Use the dedicated GitHub accounts panel; authentication output is excluded from command history.':'Requires a dedicated native terminal or external-code adapter; unavailable in the guided runner.'):undefined;
  const mutation=/\b(create|edit|delete|close|reopen|merge|upload|download|add|remove|set|import|fork|clone|rename|transfer|archive|unarchive|enable|disable|cancel|rerun|start|stop|restore|rebuild|publish|lock|unlock|comment|review|ready|develop|checkout|sync|install|uninstall|upgrade|refresh|login|logout|setup-git|mark-template|unmark-template|copy|pin|unpin|revert|update-branch|switch|run|link|unlink|clear-cache)\b/.test(path.at(-1))||id==='api';

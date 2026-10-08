@@ -1,6 +1,8 @@
 import {contextBridge,ipcRenderer} from 'electron';
 import type {MaterialBridge,Operation} from '../shared/types';
 const api:MaterialBridge={
+ api:(action,payload)=>ipcRenderer.invoke('material:api',action,payload),
+ cliConfig:(action,payload)=>ipcRenderer.invoke('material:cli-config',action,payload),
  onCloseRequested:callback=>{const listener=()=>callback();ipcRenderer.on('material:close-request',listener);return()=>ipcRenderer.removeListener('material:close-request',listener);},
  security:(action,payload)=>ipcRenderer.invoke('material:security',action,payload),
  onSecurity:callback=>{const listener=(_event:unknown,state:Parameters<typeof callback>[0])=>callback(state);ipcRenderer.on('material:security-update',listener);return()=>ipcRenderer.removeListener('material:security-update',listener);},

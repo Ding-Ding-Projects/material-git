@@ -7,6 +7,11 @@ export async function writeThirdPartyNotices(outputPath, projectRoot = fileURLTo
  const lock = JSON.parse(await readFile(path.join(projectRoot, 'package-lock.json'), 'utf8'));
  if (!lock.packages) throw new Error('A modern reviewed package-lock.json is required for license collection.');
  const sections = ['Material Git third-party notices', 'Bundled GitHub CLI and MinGit retain their upstream license files in vendor.', 'Electron runtime license and Chromium notices are shipped beside the application executable.'];
+ const catalogue=JSON.parse(await readFile(path.join(projectRoot,'data/github-api-catalog.json'),'utf8'));
+ for(const [name,filename] of [['rest','github-rest-api-description.txt'],['graphql','github-docs-cc-by-4.0.txt']]) {
+  const source=catalogue.sources[name];
+  sections.push(`\n===== GitHub ${name.toUpperCase()} schema =====\nSource: ${source.url}\nCommit: ${source.commit}\nLicense: ${source.license}\n${name==='rest'?'Adapted into a normalized operation catalogue; vendor extensions omitted.':'Official SDL retained unmodified; type metadata extracted into the catalogue.'}\n\n${await readFile(path.join(projectRoot,'data/licenses',filename),'utf8')}`);
+ }
  for (const [relative, metadata] of Object.entries(lock.packages).sort(([a], [b]) => a.localeCompare(b))) {
   if (!relative || metadata.dev === true || !relative.includes('node_modules/')) continue;
   const directory = path.resolve(projectRoot, relative);

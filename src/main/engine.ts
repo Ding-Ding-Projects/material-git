@@ -74,6 +74,7 @@ export class Engine {
  for(const key of ['web','editor','external','show-token'])if(values[key])throw new Error('Browser and editor actions require a dedicated workflow');
  if(command.id==='config set' && ['editor','browser','pager','api_host','http_unix_socket'].includes(String(args.key)))throw new Error('External helper configuration requires a dedicated workflow');
  if(['secret set','variable set'].includes(command.id)&& !values.body && !values['env-file'])throw new Error('Provide an explicit value or dotenv file instead of standard input');
+ if(command.id==='codespace cp'&&values.expand)throw new Error('Remote shell expansion requires a dedicated reviewed workflow');
  if(command.id==='alias set'&&(values.shell||String(args.expansion||'').trimStart().startsWith('!')))throw new Error('Shell aliases require a dedicated external-code workflow');
  if(command.id==='agent-task create'&&!args['task-description']&&!values['from-file'])throw new Error('Provide a task description or file to avoid opening an editor');
  if(command.id==='skill install'&&!args['skill-version']&&!args.skill&&!values.all)throw new Error('Select a skill or explicitly choose all skills for noninteractive installation');

@@ -17,3 +17,5 @@ The universal feature requirements remain broader than the implemented applicati
 A completeness claim requires a scoped inventory linking implementation, documentation, localization, persistence, focused tests, negative regression checks, and real built-artifact evidence for each applicable requirement.
 
 Focused subprocess regressions now cover split UTF-8 and credentials crossing an output limit. Bounded regular-file reads are applied before parsing both vocabulary imports and local caches. These checks do not replace a complete privacy or runtime audit.
+
+The public REST/GraphQL schema explorer and reviewed CLI configuration screen are now connected to the desktop. Arbitrary hosts, some request media types, recursive input limits, GraphQL automatic cursor controls, CLI output-transform flags within the dedicated API route, external-code/terminal workflows, and universal feature parity remain incomplete. Account switching, scope refresh, and Git setup have validated service workflows; live browser authorization and native credential mutations have not been exercised in this verification session.

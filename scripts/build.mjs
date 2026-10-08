@@ -12,6 +12,8 @@ await mkdir('dist/main', { recursive: true });
 await build({ entryPoints: ['src/main/main.ts', 'src/main/preload.ts'], outdir: 'dist/main', outExtension: { '.js': '.cjs' }, bundle: true, platform: 'node', format: 'cjs', target: 'node22', external: ['electron'], sourcemap: false });
 await buildRenderer({ root: 'src/renderer', base: './', build: { outDir: '../../dist/renderer', emptyOutDir: true }, logLevel: 'info' });
 await copyFile('data/gh-catalog.json', 'dist/main/gh-catalog.json');
+await copyFile('data/github-api-catalog.json', 'dist/main/github-api-catalog.json');
+await copyFile('data/github-graphql-schema.graphql', 'dist/main/github-graphql-schema.graphql');
 let commit = null;
 try { commit = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(); } catch {}
 await writeFile('dist/main/provenance.json', JSON.stringify({ version: pkg.version, commit, builtAt: new Date().toISOString(), platform: process.platform, architecture: process.arch }, null, 2));

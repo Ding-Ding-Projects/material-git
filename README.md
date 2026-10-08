@@ -4,7 +4,7 @@ A desktop workspace that turns GitHub CLI commands into guided Material Design c
 
 Material Git is an early implementation, **not complete GitHub CLI GUI parity**. The pinned GitHub CLI 2.102.0 catalog contains 196 command definitions: 181 have structured dispatch and 15 need dedicated workflows. These are coverage counts, not a claim that every command has passed live integration testing. See [command coverage](docs/command-coverage.md) and [remaining work](docs/verification-gaps.md).
 
-![Material Git desktop in dark mode](docs/images/desktop.png)
+![Material Git desktop workbench](docs/images/desktop.png)
 
 Captured from the Linux development build, with no account connected.
 
@@ -16,9 +16,11 @@ Download the latest unsigned Windows `Setup.exe` from [Releases](https://github.
 
 ## Included
 
-- Official Material Web controls, dynamic themes, animated transitions and reduced motion.
+- Compact desktop workbench with an explorer, task tabs, resizable result inspector, Material scrollbars, dynamic themes, and reduced motion.
 - Command catalog, entity pickers, structured flags, JSON-field chips, live operation output, cancellation, results and exports.
-- Device-flow account sign-in and reviewed account changes without displaying stored tokens.
+- Device-flow sign-in, verified account switching, reviewed permission refresh, and Git credential-helper setup without displaying stored tokens.
+- Official API explorer: 1,232 REST operations and 1,829 GraphQL types, with typed forms, a graphical selection tree, request review, pagination, and actual HTTP results. These are schema inventory counts, not full live API verification.
+- GitHub CLI configuration: 14 documented keys, 12 guided settings, global/host scope, environment precedence, and native executable selection.
 - English/Cantonese presentation settings, installed-voice narration, local vocabulary import, access preferences and encrypted local TOTP where supported by the operating system.
 - Isolated regex workbench, local text/colour/time/unit converters, and local Ollama models and chat.
 - Unsigned Windows Squirrel installation and update feed, with restart kept explicit.
@@ -43,4 +45,4 @@ The Windows workflow only builds, packages and publishes. Type checks and behavi
 
 The renderer has no Node integration. Validated IPC invokes pinned executables using argument arrays with `shell: false`. Operations retain bounded, redacted output. Personal vocabulary remains local and is omitted from history and exports. Reviewed local Git commands can use the hooks and helpers configured in the working folder you choose.
 
-See [Material provenance](design/material-provenance.md), [personalization](docs/personalization.md), [converters](docs/converters.md), [local models](docs/ollama.md), and [verification gaps](docs/verification-gaps.md).
+See [authentication](docs/authentication.md), [API explorer](docs/api-explorer.md), [API coverage](docs/api-coverage.md), [CLI reference](docs/cli-reference.md), [Material provenance](design/material-provenance.md), [personalization](docs/personalization.md), [converters](docs/converters.md), [local models](docs/ollama.md), and [verification gaps](docs/verification-gaps.md).

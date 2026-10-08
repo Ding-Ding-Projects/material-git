@@ -1,0 +1,1909 @@
+{
+  "version": "2.102.0",
+  "source": "https://github.com/cli/cli/releases/tag/v2.102.0",
+  "rootHelp": "Work seamlessly with GitHub from the command line.\n\nUSAGE\n  gh <command> <subcommand> [flags]\n\nCORE COMMANDS\n  auth:          Authenticate gh and git with GitHub\n  browse:        Open repositories, issues, pull requests, and more in the browser\n  codespace:     Connect to and manage codespaces\n  discussion:    Work with GitHub Discussions (preview)\n  gist:          Manage gists\n  issue:         Manage issues\n  org:           Manage organizations\n  pr:            Manage pull requests\n  project:       Work with GitHub Projects.\n  release:       Manage releases\n  repo:          Manage repositories\n  skill:         Install and manage agent skills (preview)\n\nGITHUB ACTIONS COMMANDS\n  cache:         Manage GitHub Actions caches\n  run:           View details about workflow runs\n  workflow:      View details about GitHub Actions workflows\n\nALIAS COMMANDS\n  co:            Alias for \"pr checkout\"\n\nADDITIONAL COMMANDS\n  agent-task:    Work with agent tasks (preview)\n  alias:         Create command shortcuts\n  api:           Make an authenticated GitHub API request\n  attestation:   Work with artifact attestations\n  completion:    Generate shell completion scripts\n  config:        Manage configuration for gh\n  copilot:       Run the GitHub Copilot CLI (preview)\n  extension:     Manage gh extensions\n  gpg-key:       Manage GPG keys\n  label:         Manage labels\n  licenses:      View third-party license information\n  preview:       Execute previews for gh features\n  ruleset:       View info about repo rulesets\n  search:        Search for repositories, issues, and pull requests\n  secret:        Manage GitHub secrets\n  ssh-key:       Manage SSH keys\n  status:        Print information about relevant issues, pull requests, and notifications across repositories\n  variable:      Manage GitHub Actions variables\n\nHELP TOPICS\n  accessibility: Learn about GitHub CLI's accessibility experiences\n  actions:       Learn about working with GitHub Actions\n  environment:   Environment variables that can be used with gh\n  exit-codes:    Exit codes used by gh\n  formatting:    Formatting options for JSON data exported from gh\n  mintty:        Information about using gh with MinTTY\n  reference:     A comprehensive reference of all gh commands\n  telemetry:     Information about telemetry in gh\n\nFLAGS\n  --help      Show help for command\n  --version   Show gh version\n\nEXAMPLES\n  $ gh issue create\n  $ gh repo clone cli/cli\n  $ gh pr checkout 321\n\nLEARN MORE\n  Use `gh <command> <subcommand> --help` for more information about a command.\n  Read the manual at https://cli.github.com/manual\n  Learn about exit codes using `gh help exit-codes`\n  Learn about accessibility experiences using `gh help accessibility`\n\n",
+  "globalFlags": [
+    {
+      "name": "--help",
+      "description": "Show help for command"
+    },
+    {
+      "name": "--version",
+      "description": "Show gh version"
+    }
+  ],
+  "helpTopics": [
+    {
+      "id": "accessibility",
+      "summary": "Learn about GitHub CLI's accessibility experiences",
+      "help": "Learn about GitHub CLI's accessibility experiences\n\nAs the home for all developers, we want every developer to feel welcome in our\ncommunity and be empowered to contribute to the future of global software\ndevelopment with everything GitHub has to offer including the GitHub CLI.\n\nCustomizable and contrasting colors\n\nText interfaces often use color for various purposes, but insufficient contrast\nor customizability can leave some users unable to benefit.\n\nFor a more accessible experience, the GitHub CLI can use color palettes\nbased on terminal background appearance and limit colors to 4-bit ANSI color\npalettes, which users can customize within terminal preferences.\n\nWith this new experience, the GitHub CLI provides multiple options to address\ncolor usage:\n\n1. The GitHub CLI will use 4-bit color palette for increased color contrast based\n   on dark and light backgrounds including rendering Markdown based on the\n   GitHub Primer design system.\n\n   To enable this experience, use one of the following methods:\n   - Run `gh config set accessible_colors enabled`\n   - Set `GH_ACCESSIBLE_COLORS=enabled` environment variable\n\n2. The GitHub CLI will display issue and pull request labels' custom RGB colors\n   in terminals with true color support.\n\n   To enable this experience, use one of the following methods:\n   - Run `gh config set color_labels enabled`\n   - Set `GH_COLOR_LABELS=enabled` environment variable\n\nNon-interactive user input prompting\n\nInteractive text user interfaces manipulate the terminal cursor to redraw parts\nof the screen, which can be difficult for speech synthesizers or braille displays\nto accurately detect and read.\n\nFor a more accessible experience, the GitHub CLI can provide a similar experience using\nnon-interactive prompts for user input.\n\nTo enable this experience, use one of the following methods:\n- Run `gh config set accessible_prompter enabled`\n- Set `GH_ACCESSIBLE_PROMPTER=enabled` environment variable\n\nText-based spinners\n\nMotion-based spinners communicate in-progress activity by manipulating the\nterminal cursor to create a spinning effect, which may cause discomfort to users\nwith motion sensitivity or miscommunicate information to speech synthesizers.\n\nFor a more accessible experience, this interactivity can be disabled in favor\nof text-based progress indicators.\n\nTo enable this experience, use one of the following methods:\n- Run `gh config set spinner disabled`\n- Set `GH_SPINNER_DISABLED=yes` environment variable\n\nJoin the conversation\n\nWe invite you to join us in improving GitHub CLI accessibility by sharing your\nfeedback and ideas through GitHub Accessibility feedback channels:\n\nhttps://github.com/orgs/community/discussions/categories/accessibility\n\n\nUSAGE\n  gh accessibility [flags]\n\nALIASES\n  gh a11y\n\nFLAGS\n  -w, --web   Open the GitHub Accessibility site in your browser\n\nINHERITED FLAGS\n  --help   Show help for command\n\nEXAMPLES\n  # Open the GitHub Accessibility site in your browser\n  $ gh accessibility --web\n  \n  # Display color using customizable, 4-bit accessible colors\n  $ gh config set accessible_colors enabled\n  \n  # Use input prompts without redrawing the screen\n  $ gh config set accessible_prompter enabled\n  \n  # Disable motion-based spinners for progress indicators in favor of text\n  $ gh config set spinner disabled\n\nLEARN MORE\n  Use `gh <command> <subcommand> --help` for more information about a command.\n  Read the manual at https://cli.github.com/manual\n  Learn about exit codes using `gh help exit-codes`\n  Learn about accessibility experiences using `gh help accessibility`\n\n"
+    },
+    {
+      "id": "actions",
+      "summary": "Learn about working with GitHub Actions",
+      "help": "Welcome to GitHub Actions on the command line.\n\nGitHub CLI integrates with GitHub Actions to help you manage runs and workflows.\n\nInteracting with workflow runs\ngh run list:      List recent workflow runs\ngh run view:      View details for a workflow run or one of its jobs\ngh run watch:     Watch a workflow run while it executes\ngh run rerun:     Rerun a failed workflow run\ngh run download:  Download artifacts generated by runs\n\nTo see more help, run `gh help run <subcommand>`\n\nInteracting with workflow files\ngh workflow list:     List workflow files in your repository\ngh workflow view:     View details for a workflow file\ngh workflow enable:   Enable a workflow file\ngh workflow disable:  Disable a workflow file\ngh workflow run:      Trigger a workflow_dispatch run for a workflow file\n\nTo see more help, run `gh help workflow <subcommand>`\n\nInteracting with the GitHub Actions cache\ngh cache list:    List all the caches saved in GitHub Actions for a repository\ngh cache delete:  Delete one or all saved caches in GitHub Actions for a repository\n\nTo see more help, run `gh help cache <subcommand>`\n\n\n\nUSAGE\n  gh actions [flags]\n\nINHERITED FLAGS\n  --help   Show help for command\n\nLEARN MORE\n  Use `gh <command> <subcommand> --help` for more information about a command.\n  Read the manual at https://cli.github.com/manual\n  Learn about exit codes using `gh help exit-codes`\n  Learn about accessibility experiences using `gh help accessibility`\n\n"
+    },
+    {
+      "id": "environment",
+      "summary": "Environment variables that can be used with gh",
+      "help": "`GH_TOKEN`, `GITHUB_TOKEN` (in order of precedence): an authentication token that will be used when\na command targets either `github.com` or a subdomain of `ghe.com`. Setting this avoids being prompted to\nauthenticate and takes precedence over previously stored credentials.\n\n`GH_ENTERPRISE_TOKEN`, `GITHUB_ENTERPRISE_TOKEN` (in order of precedence): an authentication\ntoken that will be used when a command targets a GitHub Enterprise Server host.\n\n`GH_HOST`: specify the GitHub hostname for commands where a hostname has not been provided, or\ncannot be inferred from the context of a local Git repository. If this host was previously\nauthenticated with, the stored credentials will be used. Otherwise, setting `GH_TOKEN` or\n`GH_ENTERPRISE_TOKEN` is required, depending on the targeted host.\n\n`GH_REPO`: specify the GitHub repository in the `[HOST/]OWNER/REPO` format for commands\nthat otherwise operate on a local repository.\n\n`GH_EDITOR`, `GIT_EDITOR`, `VISUAL`, `EDITOR` (in order of precedence): the editor tool to use\nfor authoring text.\n\n`GH_BROWSER`, `BROWSER` (in order of precedence): the web browser to use for opening links.\n\n`GH_DEBUG`: set to a truthy value to enable verbose output on standard error. Set to `api`\nto additionally log details of HTTP traffic.\n\n`DEBUG` (deprecated): set to `1`, `true`, or `yes` to enable verbose output on standard\nerror.\n\n`GH_PAGER`, `PAGER` (in order of precedence): a terminal paging program to send standard output\nto, e.g. `less`.\n\n`GLAMOUR_STYLE`: the style to use for rendering Markdown. See\n<https://github.com/charmbracelet/glamour#styles>\n\n`NO_COLOR`: set to any value to avoid printing ANSI escape sequences for color output.\n\n`CLICOLOR`: set to `0` to disable printing ANSI colors in output.\n\n`CLICOLOR_FORCE`: set to a value other than `0` to keep ANSI colors in output\neven when the output is piped.\n\n`GH_COLOR_LABELS`: set to any value to display labels using their RGB hex color codes in terminals that\nsupport truecolor.\n\n`GH_ACCESSIBLE_COLORS` (preview): set to a truthy value to use customizable, 4-bit accessible colors.\n\n`GH_FORCE_TTY`: set to any value to force terminal-style output even when the output is\nredirected. When the value is a number, it is interpreted as the number of columns\navailable in the viewport. When the value is a percentage, it will be applied against\nthe number of columns available in the current viewport.\n\n`GH_NO_UPDATE_NOTIFIER`: set to any value to disable GitHub CLI update notifications.\nWhen any command is executed, gh checks for new versions once every 24 hours.\nIf a newer version was found, an upgrade notice is displayed on standard error.\n\n`GH_NO_EXTENSION_UPDATE_NOTIFIER`: set to any value to disable GitHub CLI extension update notifications.\nWhen an extension is executed, gh checks for new versions for the executed extension once every 24 hours.\nIf a newer version was found, an upgrade notice is displayed on standard error.\n\n`GH_EXTENSION`: set to `1` by gh when it invokes an extension, allowing an extension to\ntell whether it was run as `gh <extension>` or directly as a standalone program.\n\n`GH_CONFIG_DIR`: the directory where gh will store configuration files. If not specified,\nthe default value will be one of the following paths (in order of precedence):\n  - `$XDG_CONFIG_HOME/gh` (if `$XDG_CONFIG_HOME` is set),\n  - `$AppData/GitHub CLI` (on Windows if `$AppData` is set), or\n  - `$HOME/.config/gh`.\n\n`GH_PROMPT_DISABLED`: set to any value to disable interactive prompting in the terminal.\n\n`GH_PATH`: set the path to the gh executable, useful for when gh can not properly determine\nits own path such as in the cygwin terminal. gh also sets this when invoking extensions so they\ncan call back into the same gh executable.\n\n`GH_MDWIDTH`: default maximum width for markdown render wrapping.  The max width of lines\nwrapped on the terminal will be taken as the lesser of the terminal width, this value, or 120 if\nnot specified.  This value is used, for example, with `pr view` subcommand.\n\n`GH_ACCESSIBLE_PROMPTER` (preview): set to a truthy value to enable prompts that are\nmore compatible with speech synthesis and braille screen readers.\n\n`GH_TELEMETRY`: set to `log` to print telemetry data to standard error instead of sending it.\nSet to `false` or `0` to disable telemetry. Takes precedence over `DO_NOT_TRACK`.\n\n`DO_NOT_TRACK`: set to `true` or `1` to disable telemetry. Ignored when\n`GH_TELEMETRY` is set, which takes precedence.\n\n`GH_SPINNER_DISABLED`: set to a truthy value to replace the spinner animation with\na textual progress indicator.\n"
+    },
+    {
+      "id": "exit-codes",
+      "summary": "Exit codes used by gh",
+      "help": "gh follows normal conventions regarding exit codes.\n\n- If a command completes successfully, the exit code will be 0\n\n- If a command fails for any reason, the exit code will be 1\n\n- If a command is running but gets cancelled, the exit code will be 2\n\n- If a command requires authentication, the exit code will be 4\n\nNOTE: It is possible that a particular command may have more exit codes, so it is a good\npractice to check documentation for the command if you are relying on exit codes to\ncontrol some behavior.\n"
+    },
+    {
+      "id": "formatting",
+      "summary": "Formatting options for JSON data exported from gh",
+      "help": "By default, the result of `gh` commands are output in line-based plain text format.\nSome commands support passing the `--json` flag, which converts the output to JSON format.\nOnce in JSON, the output can be further formatted according to a required formatting string by\nadding either the `--jq` or `--template` flag. This is useful for selecting a subset of data,\ncreating new data structures, displaying the data in a different format, or as input to another\ncommand line script.\n\nThe `--json` flag requires a comma separated list of fields to fetch. To view the possible JSON\nfield names for a command omit the string argument to the `--json` flag when you run the command.\nNote that you must pass the `--json` flag and field names to use the `--jq` or `--template` flags.\n\nThe `--jq` flag requires a string argument in jq query syntax, and will only print\nthose JSON values which match the query. jq queries can be used to select elements from an\narray, fields from an object, create a new array, and more. The `jq` utility does not need\nto be installed on the system to use this formatting directive. When connected to a terminal,\nthe output is automatically pretty-printed. To learn about jq query syntax, see:\n<https://jqlang.github.io/jq/manual/>\n\nThe `--template` flag requires a string argument in Go template syntax, and will only print\nthose JSON values which match the query.\n\nIn addition to the Go template functions in the standard library, the following functions can be used\nwith this formatting directive:\n- `autocolor`: like `color`, but only emits color to terminals\n- `color <style> <input>`: colorize input using <https://github.com/mgutz/ansi>\n- `join <sep> <list>`: joins values in the list using a separator\n- `pluck <field> <list>`: collects values of a field from all items in the input\n- `tablerow <fields>...`: aligns fields in output vertically as a table\n- `tablerender`: renders fields added by tablerow in place\n- `timeago <time>`: renders a timestamp as relative to now\n- `timefmt <format> <time>`: formats a timestamp using Go's `Time.Format` function\n- `truncate <length> <input>`: ensures input fits within length\n- `hyperlink <url> <text>`: renders a terminal hyperlink\n\nThe following Sprig template library functions can also be used with this formatting directive:\n- `contains <arg> <string>`: checks if `string` contains `arg`\n- `hasPrefix <prefix> <string>`: checks if `string` starts with `prefix`\n- `hasSuffix <suffix> <string>`: checks if `string` ends with `suffix`\n- `regexMatch <regex> <string>`: checks if `string` has any matches for `regex`\n\nFor more information about the Sprig library, see <https://masterminds.github.io/sprig/>.\n\nTo learn more about Go templates, see: <https://golang.org/pkg/text/template/>.\n\n\nEXAMPLES\n  # Default output format\n  $ gh pr list\n  Showing 23 of 23 open pull requests in cli/cli\n  \n  #123  A helpful contribution          contribution-branch              about 1 day ago\n  #124  Improve the docs                docs-branch                      about 2 days ago\n  #125  An exciting new feature         feature-branch                   about 2 days ago\n  \n  \n  # Adding the --json flag with a list of field names\n  $ gh pr list --json number,title,author\n  [\n    {\n      \"author\": {\n        \"login\": \"monalisa\"\n      },\n      \"number\": 123,\n      \"title\": \"A helpful contribution\"\n    },\n    {\n      \"author\": {\n        \"login\": \"codercat\"\n      },\n      \"number\": 124,\n      \"title\": \"Improve the docs\"\n    },\n    {\n      \"author\": {\n        \"login\": \"cli-maintainer\"\n      },\n      \"number\": 125,\n      \"title\": \"An exciting new feature\"\n    }\n  ]\n  \n  \n  # Adding the --jq flag and selecting fields from the array\n  $ gh pr list --json author --jq '.[].author.login'\n  monalisa\n  codercat\n  cli-maintainer\n  \n  \n  # --jq can be used to implement more complex filtering and output changes\n  $ gh issue list --json number,title,labels --jq \\\n    'map(select((.labels | length) > 0))    # must have labels\n    | map(.labels = (.labels | map(.name))) # show only the label names\n    | .[:3]                                 # select the first 3 results'\n    [\n      {\n        \"labels\": [\n          \"enhancement\",\n          \"needs triage\"\n        ],\n        \"number\": 123,\n        \"title\": \"A helpful contribution\"\n      },\n      {\n        \"labels\": [\n          \"help wanted\",\n          \"docs\",\n          \"good first issue\"\n        ],\n        \"number\": 125,\n        \"title\": \"Improve the docs\"\n      },\n      {\n        \"labels\": [\n          \"enhancement\",\n        ],\n        \"number\": 7221,\n        \"title\": \"An exciting new feature\"\n      }\n    ]\n  \n  \n  # Using the --template flag with the hyperlink helper\n  $ gh issue list --json title,url --template '{{range .}}{{hyperlink .url .title}}{{\"\\n\"}}{{end}}'\n  \n  \n  # Adding the --template flag and modifying the display format\n  $ gh pr list --json number,title,headRefName,updatedAt --template \\\n  \t'{{range .}}{{tablerow (printf \"#%v\" .number | autocolor \"green\") .title .headRefName (timeago .updatedAt)}}{{end}}'\n  \n  #123  A helpful contribution      contribution-branch       about 1 day ago\n  #124  Improve the docs            docs-branch               about 2 days ago\n  #125  An exciting new feature     feature-branch            about 2 days ago\n  \n  \n  # A more complex example with the --template flag which formats a pull request using multiple tables with headers\n  $ gh pr view 3519 --json number,title,body,reviews,assignees --template \\\n  '{{printf \"#%v\" .number}} {{.title}}\n  \n  {{.body}}\n  \n  {{tablerow \"ASSIGNEE\" \"NAME\"}}{{range .assignees}}{{tablerow .login .name}}{{end}}{{tablerender}}\n  {{tablerow \"REVIEWER\" \"STATE\" \"COMMENT\"}}{{range .reviews}}{{tablerow .author.login .state .body}}{{end}}\n  '\n  \n  #3519 Add table and helper template functions\n  \n  Resolves #3488\n  \n  ASSIGNEE  NAME\n  mislav    Mislav Marohnić\n  \n  \n  REVIEWER  STATE              COMMENT\n  mislav    COMMENTED          This is going along great! Thanks for working on this ❤️\n  "
+    },
+    {
+      "id": "mintty",
+      "summary": "Information about using gh with MinTTY",
+      "help": "MinTTY is the terminal emulator that comes by default with Git\nfor Windows. It has known issues with gh's ability to prompt a\nuser for input.\n\nThere are a few workarounds to make gh work with MinTTY:\n\n- Reinstall Git for Windows, checking \"Enable experimental support for pseudo consoles\".\n\n- Use a different terminal emulator with Git for Windows like Windows Terminal.\n  You can run `C:\\Program Files\\Git\\bin\\bash.exe` from any terminal emulator to continue\n  using all of the tooling in Git For Windows without MinTTY.\n\n- Prefix invocations of gh with `winpty`, eg: `winpty gh auth login`.\n  NOTE: this can lead to some UI bugs.\n"
+    },
+    {
+      "id": "reference",
+      "summary": "A comprehensive reference of all gh commands",
+      "help": "\n# gh reference\n\n## gh agent-task <command>\n\nWork with agent tasks (preview)\n\nAliases\n\ngh agent-tasks, gh agent, gh agents\n\n### gh agent-task create [<task description>] [flags]\n\nCreate an agent task (preview)\n\n  -b, --base string           Base branch for the pull request (use default branch if not provided)\n  -a, --custom-agent string   Use a custom agent for the task. e.g., use 'my-agent' for the 'my-agent.md' agent\n      --follow                Follow agent session logs\n  -F, --from-file file        Read task description from file (use \"-\" to read from standard input)\n\n### gh agent-task list [flags]\n\nList agent tasks (preview)\n\n  -q, --jq expression     Filter JSON output using a jq expression\n      --json fields       Output JSON with the specified fields\n  -L, --limit int         Maximum number of agent tasks to fetch (default 30)\n  -t, --template string   Format JSON output using a Go template; see \"gh help formatting\"\n  -w, --web               Open agent tasks in the browser\n\n### gh agent-task view [<session-id> | <pr-number> | <pr-url> | <pr-branch>] [flags]\n\nView an agent task session (preview)\n\n      --follow            Follow agent session logs\n  -q, --jq expression     Filter JSON output using a jq expression\n      --json fields       Output JSON with the specified fields\n      --log               Show agent session logs\n  -t, --template string   Format JSON output using a Go template; see \"gh help formatting\"\n  -w, --web               Open agent task in the browser\n\n## gh alias <command>\n\nCreate command shortcuts\n\n### gh alias delete {<alias> | --all} [flags]\n\nDelete set aliases\n\n  --all   Delete all aliases\n\n### gh alias import [<filename> | -] [flags]\n\nImport aliases from a YAML file\n\n  --clobber   Overwrite existing aliases of the same name\n\n### gh alias list\n\nList your aliases\n\nAliases\n\ngh alias ls\n\n### gh alias set <alias> <expansion> [flags]\n\nCreate a shortcut for a gh command\n\n      --clobber   Overwrite existing aliases of the same name\n  -s, --shell     Declare an alias to be passed through a shell interpreter\n\n## gh api <endpoint> [flags]\n\nMake an authenticated GitHub API request\n\n      --allow-escape-sequences   Allow printing terminal escape sequences\n      --cache duration           Cache the response, e.g. \"3600s\", \"60m\", \"1h\"\n  -F, --field key=value          Add a typed parameter in key=value format (use \"@<path>\" or \"@-\" to read value from file or stdin)\n  -H, --header key:value         Add a HTTP request header in key:value format\n      --hostname string          The GitHub hostname for the request (default \"github.com\")\n  -i, --include                  Include HTTP response status line and headers in the output\n      --input file               The file to use as body for the HTTP request (use \"-\" to read from standard input)\n  -q, --jq string                Query to select values from the response using jq syntax\n  -X, --method string            The HTTP method for the request (default \"GET\")\n      --paginate                 Make additional HTTP requests to fetch all pages of results\n  -p, --preview strings          Opt into GitHub API previews (names should omit '-preview')\n  -f, --raw-field key=value      Add a string parameter in key=value format\n      --silent                   Do not print the response body\n      --slurp                    Use with \"--paginate\" to return an array of all pages of either JSON arrays or objects\n  -t, --template string          Format JSON output using a Go template; see \"gh help formatting\"\n      --verbose                  Include full HTTP request and response in the output\n\n## gh attestation [subcommand]\n\nWork with artifact attestations\n\nAliases\n\ngh at\n\n### gh attestation download [<file-path> | oci://<image-uri>] [--owner | --repo] [flags]\n\nDownload an artifact's attestations for offline use\n\n  -d, --digest-alg string       The algorithm used to compute a digest of the artifact: {sha256|sha512} (default \"sha256\")\n      --hostname string         Configure host to use\n  -L, --limit int               Maximum number of attestations to fetch (default 30)\n  -o, --owner string            GitHub organization to scope attestation lookup by\n      --predicate-type string   Filter attestations by provided predicate type\n  -R, --repo string             Repository name in the format <owner>/<repo>\n\n### gh attestation trusted-root [--tuf-url <url> --tuf-root <file-path>] [--verify-only] [flags]\n\nOutput trusted_root.jsonl contents, likely for offline verification\n\n  --hostname string   Configure host to use\n  --tuf-root string   Path to the TUF root.json file on disk\n  --tuf-url string    URL to the TUF repository mirror\n  --verify-only       Don't output trusted_root.jsonl contents\n\n### gh attestation verify [<file-path> | oci://<image-uri>] [--owner | --repo] [flags]\n\nVerify an artifact's integrity using attestations\n\n  -b, --bundle string                Path to bundle on disk, either a single bundle in a JSON file or a JSON lines file with multiple bundles\n      --bundle-from-oci              When verifying an OCI image, fetch the attestation bundle from the OCI registry instead of from GitHub\n      --cert-identity string         Enforce that the certificate's SubjectAlternativeName matches the provided value exactly\n  -i, --cert-identity-regex string   Enforce that the certificate's SubjectAlternativeName matches the provided regex\n      --cert-oidc-issuer string      Enforce that the issuer of the OIDC token matches the provided value (default \"https://token.actions.githubusercontent.com\")\n      --custom-trusted-root string   Path to a trusted_root.jsonl file; likely for offline verification\n      --deny-self-hosted-runners     Fail verification for attestations generated on self-hosted runners\n  -d, --digest-alg string            The algorithm used to compute a digest of the artifact: {sha256|sha512} (default \"sha256\")\n      --format string                Output format: {json}\n      --hostname string              Configure host to use\n  -q, --jq expression                Filter JSON output using a jq expression\n  -L, --limit int                    Maximum number of attestations to fetch (default 30)\n      --no-public-good               Do not verify attestations signed with Sigstore public good instance\n  -o, --owner string                 GitHub organization to scope attestation lookup by\n      --predicate-type string        Enforce that verified attestations' predicate type matches the provided value (default \"https://slsa.dev/provenance/v1\")\n  -R, --repo string                  Repository name in the format <owner>/<repo>\n      --signer-digest string         Enforce that the digest associated with the signer workflow matches the provided value\n      --signer-repo string           Enforce that the workflow that signed the attestation's repository matches the provided value (<owner>/<repo>)\n      --signer-workflow string       Enforce that the workflow that signed the attestation matches the provided value ([host/]<owner>/<repo>/<path>/<to>/<workflow>)\n      --source-digest string         Enforce that the digest associated with the source repository matches the provided value\n      --source-ref string            Enforce that the git ref associated with the source repository matches the provided value\n  -t, --template string              Format JSON output using a Go template; see \"gh help formatting\"\n\n## gh auth <command>\n\nAuthenticate gh and git with GitHub\n\n### gh auth login [flags]\n\nLog in to a GitHub account\n\n  -c, --clipboard             Copy one-time OAuth device code to clipboard\n  -p, --git-protocol string   The protocol to use for git operations on this host: {ssh|https}\n  -h, --hostname string       The hostname of the GitHub instance to authenticate with\n      --insecure-storage      Save authentication credentials in plain text instead of credential store\n  -s, --scopes strings        Additional authentication scopes to request\n      --skip-ssh-key          Skip generate/upload SSH key prompt\n  -w, --web                   Open a browser to authenticate\n      --with-token            Read token from standard input\n\n### gh auth logout [flags]\n\nLog out of a GitHub account\n\n  -h, --hostname string   The hostname of the GitHub instance to log out of\n  -u, --user string       The account to log out of\n\n### gh auth refresh [flags]\n\nRefresh stored authentication credentials\n\n  -c, --clipboard               Copy one-time OAuth device code to clipboard\n  -h, --hostname string         The GitHub host to use for authentication\n      --insecure-storage        Save authentication credentials in plain text instead of credential store\n  -r, --remove-scopes strings   Authentication scopes to remove from gh\n      --reset-scopes            Reset authentication scopes to the default minimum set of scopes\n  -s, --scopes strings          Additional authentication scopes for gh to have\n\n### gh auth setup-git [flags]\n\nSetup git with GitHub CLI\n\n  -f, --force --hostname   Force setup even if the host is not known. Must be used in conjunction with --hostname\n  -h, --hostname string    The hostname to configure git for\n\n### gh auth status [flags]\n\nDisplay active account and authentication state on each known GitHub host\n\n  -a, --active            Display the active account only\n  -h, --hostname string   Check only a specific hostname's auth status\n      --jq expression     Filter JSON output using a jq expression\n      --json fields       Output JSON with the specified fields\n  -t, --show-token        Display the auth token\n      --template string   Format JSON output using a Go template; see \"gh help formatting\"\n\n### gh auth switch [flags]\n\nSwitch active GitHub account\n\n  -h, --hostname string   The hostname of the GitHub instance to switch account for\n  -u, --user string       The account to switch to\n\n### gh auth token [flags]\n\nPrint the authentication token gh uses for a hostname and account\n\n  -h, --hostname string   The hostname of the GitHub instance authenticated with\n  -u, --user string       The account to output the token for\n\n## gh browse [<number> | <path> | <commit-sha>] [flags]\n\nOpen repositories, issues, pull requests, and more in the browser\n\n  -a, --actions                  Open repository actions\n      --blame                    Open blame view for a file\n  -b, --branch string            Select another branch by passing in the branch name\n  -c, --commit string[=\"last\"]   Select another commit by passing in the commit SHA, default is the last commit\n  -n, --no-browser               Print destination URL instead of opening the browser\n  -p, --projects                 Open repository projects\n  -r, --releases                 Open repository releases\n  -s, --settings                 Open repository settings\n  -w, --wiki                     Open repository wiki\n\n## gh cache <command>\n\nManage GitHub Actions caches\n\n### gh cache delete [<cache-id> | <cache-key> | --all] [flags]\n\nDelete GitHub Actions caches\n\n  -a, --all                          Delete all caches, can be used with --ref to delete all caches for a specific ref\n  -r, --ref string                   Delete by cache key and ref, formatted as refs/heads/<branch name> or refs/pull/<number>/merge\n      --succeed-on-no-caches --all   Return exit code 0 if no caches found. Must be used in conjunction with --all\n\n### gh cache list [flags]\n\nList GitHub Actions caches\n\n  -q, --jq expression     Filter JSON output using a jq expression\n      --json fields       Output JSON with the specified fields\n  -k, --key string        Filter by cache key prefix\n  -L, --limit int         Maximum number of caches to fetch (default 30)\n  -O, --order string      Order of caches returned: {asc|desc} (default \"desc\")\n  -r, --ref string        Filter by ref, formatted as refs/heads/<branch name> or refs/pull/<number>/merge\n  -S, --sort string       Sort fetched caches: {created_at|last_accessed_at|size_in_bytes} (default \"last_accessed_at\")\n  -t, --template string   Format JSON output using a Go template; see \"gh help formatting\"\n\nAliases\n\ngh cache ls\n\n## gh co\n\nAlias for \"pr checkout\"\n\n## gh codespace\n\nConnect to and manage codespaces\n\nAliases\n\ngh cs\n\n### gh codespace code [flags]\n\nOpen a codespace in Visual Studio Code\n\n  -c, --codespace string    Name of the codespace\n      --insiders            Use the insiders version of Visual Studio Code\n  -R, --repo string         Filter codespace selection by repository name (user/repo)\n      --repo-owner string   Filter codespace selection by repository owner (username or org)\n  -w, --web                 Use the web version of Visual Studio Code\n\n### gh codespace cp [-e] [-r] [-- [<scp flags>...]] <sources>... <dest>\n\nCopy files between local and remote file systems\n\n  -c, --codespace string    Name of the codespace\n  -e, --expand              Expand remote file names on remote shell\n  -p, --profile string      Name of the SSH profile to use\n  -r, --recursive           Recursively copy directories\n  -R, --repo string         Filter codespace selection by repository name (user/repo)\n      --repo-owner string   Filter codespace selection by repository owner (username or org)\n\n### gh codespace create [flags]\n\nCreate a codespace\n\n  -b, --branch string               Repository branch\n      --default-permissions         Do not prompt to accept additional permissions requested by the codespace\n      --devcontainer-path string    Path to the devcontainer.json file to use when creating codespace\n  -d, --display-name string         Display name for the codespace (48 characters or less)\n      --idle-timeout duration       Allowed inactivity before codespace is stopped, e.g. \"10m\", \"1h\"\n  -l, --location string             Location: {EastUs|SouthEastAsia|WestEurope|WestUs2} (determined automatically if not provided)\n  -m, --machine string              Hardware specifications for the VM\n  -R, --repo string                 Repository name with owner: user/repo\n      --retention-period duration   Allowed time after shutting down before the codespace is automatically deleted (maximum 30 days), e.g. \"1h\", \"72h\"\n  -s, --status                      Show status of post-create command and dotfiles\n  -w, --web                         Create codespace from browser, cannot be used with --display-name, --idle-timeout, or --retention-period\n\n### gh codespace delete [flags]\n\nDelete codespaces\n\n      --all                 Delete all codespaces\n  -c, --codespace string    Name of the codespace\n      --days N              Delete codespaces older than N days\n  -f, --force               Skip confirmation for codespaces that contain unsaved changes\n  -o, --org login           The login handle of the organization (admin-only)\n  -R, --repo string         Filter codespace selection by repository name (user/repo)\n      --repo-owner string   Filter codespace selection by repository owner (username or org)\n  -u, --user username       The username to delete codespaces for (used with --org)\n\n### gh codespace edit [flags]\n\nEdit a codespace\n\n  -c, --codespace string      Name of the codespace\n  -d, --display-name string   Set the display name\n  -m, --machine string        Set hardware specifications for the VM\n  -R, --repo string           Filter codespace selection by repository name (user/repo)\n      --repo-owner string     Filter codespace selection by repository owner (username or org)\n\n### gh codespace jupyter [flags]\n\nOpen a codespace in JupyterLab\n\n  -c, --codespace string    Name of the codespace\n  -R, --repo string         Filter codespace selection by repository name (user/repo)\n      --repo-owner string   Filter codespace selection by repository owner (username or org)\n\n### gh codespace list [flags]\n\nList codespaces\n\n  -q, --jq expression     Filter JSON output using a jq expression\n      --json fields       Output JSON with the specified fields\n  -L, --limit int         Maximum number of codespaces to list (default 30)\n  -o, --org login         The login handle of the organization to list codespaces for (admin-only)\n  -R, --repo string       Repository name with owner: user/repo\n  -t, --template string   Format JSON output using a Go template; see \"gh help formatting\"\n  -u, --user username     The username to list codespaces for (used with --org)\n  -w, --web               List codespaces in the web browser, cannot be used with --user or --org\n\nAliases\n\ngh codespace ls, gh cs ls\n\n### gh codespace logs [flags]\n\nAccess codespace logs\n\n  -c, --codespace string    Name of the codespace\n  -f, --follow              Tail and follow the logs\n  -R, --repo string         Filter codespace selection by repository name (user/repo)\n      --repo-owner string   Filter codespace selection by repository owner (username or org)\n\n### gh codespace ports [flags]\n\nList ports in a codespace\n\n  -c, --codespace string    Name of the codespace\n  -q, --jq expression       Filter JSON output using a jq expression\n      --json fields         Output JSON with the specified fields\n  -R, --repo string         Filter codespace selection by repository name (user/repo)\n      --repo-owner string   Filter codespace selection by repository owner (username or org)\n  -t, --template string     Format JSON output using a Go template; see \"gh help formatting\"\n\n#### gh codespace ports forward <remote-port>:<local-port>... [flags]\n\nForward ports\n\n  --all-interfaces   Listen on all network interfaces\n\n#### gh codespace ports visibility <port>:{public|private|org}...\n\nChange the visibility of the forwarded port\n\n### gh codespace rebuild [flags]\n\nRebuild a codespace\n\n  -c, --codespace string    Name of the codespace\n      --full                Perform a full rebuild\n  -R, --repo string         Filter codespace selection by repository name (user/repo)\n      --repo-owner string   Filter codespace selection by repository owner (username or org)\n\n### gh codespace ssh [<flags>...] [-- <ssh-flags>...] [<command>]\n\nSSH into a codespace\n\n  -c, --codespace string    Name of the codespace\n      --config              Write OpenSSH configuration to stdout\n  -d, --debug               Log debug data to a file\n      --debug-file string   Path of the file log to\n      --profile string      Name of the SSH profile to use\n  -R, --repo string         Filter codespace selection by repository name (user/repo)\n      --repo-owner string   Filter codespace selection by repository owner (username or org)\n      --server-port int     SSH server port number (0 => pick unused)\n\n### gh codespace stop [flags]\n\nStop a running codespace\n\n  -c, --codespace string    Name of the codespace\n  -o, --org login           The login handle of the organization (admin-only)\n  -R, --repo string         Filter codespace selection by repository name (user/repo)\n      --repo-owner string   Filter codespace selection by repository owner (username or org)\n  -u, --user username       The username to stop codespace for (used with --org)\n\n### gh codespace view [flags]\n\nView details about a codespace\n\n  -c, --codespace string    Name of the codespace\n  -q, --jq expression       Filter JSON output using a jq expression\n      --json fields         Output JSON with the specified fields\n  -R, --repo string         Filter codespace selection by repository name (user/repo)\n      --repo-owner string   Filter codespace selection by repository owner (username or org)\n  -t, --template string     Format JSON output using a Go template; see \"gh help formatting\"\n\n## gh completion -s <shell>\n\nGenerate shell completion scripts\n\n  -s, --shell string   Shell type: {bash|zsh|fish|powershell}\n\n## gh config <command>\n\nManage configuration for gh\n\n### gh config clear-cache\n\nClear the cli cache\n\n### gh config get <key> [flags]\n\nPrint the value of a given configuration key\n\n  -h, --host string   Get per-host setting\n\n### gh config list [flags]\n\nPrint a list of configuration keys and values\n\n  -h, --host string   Get per-host configuration\n\nAliases\n\ngh config ls\n\n### gh config set <key> <value> [flags]\n\nUpdate configuration with a value for the given key\n\n  -h, --host string   Set per-host setting\n\n## gh copilot [flags] [args]\n\nRun the GitHub Copilot CLI (preview)\n\n  --remove   Remove the downloaded Copilot CLI\n\n## gh discussion <command>\n\nWork with GitHub Discussions (preview)\n\n### gh discussion comment {<number> | <discussion-url> | <comment-id> | <comment-url>} [flags]\n\nAdd, edit, or delete a comment or a reply on a discussion (preview)\n\n  -b, --body string        Comment body text\n  -F, --body-file string   Read body text from file (use \"-\" to read from standard input)\n      --delete             Delete the specified comment\n      --edit               Edit the specified comment\n      --yes                Skip the delete confirmation prompt\n\n### gh discussion create [flags]\n\nCreate a new discussion (preview)\n\n  -b, --body string        Body for the discussion\n  -F, --body-file string   Read body text from file (use \"-\" to read from stdin)\n  -c, --category string    Category name or slug for the discussion\n  -l, --label strings      Labels to apply to the discussion\n  -t, --title string       Title for the discussion\n\n### gh discussion edit {<number> | <discussion-url>} [flags]\n\nEdit a discussion (preview)\n\n      --add-label name      Add labels by name\n  -b, --body string         New body for the discussion\n  -F, --body-file string    Read body text from file (use \"-\" to read from standard input)\n  -c, --category string     New category name or slug for the discussion\n      --remove-label name   Remove labels by name\n  -t, --title string        New title for the discussion\n\n### gh discussion list [flags]\n\nList discussions in a repository (preview)\n\n      --after string      Cursor for the next page of results\n      --answered          Filter by answered state\n  -A, --author string     Filter by author\n  -c, --category string   Filter by category name or slug\n  -q, --jq expression     Filter JSON output using a jq expression\n      --json fields       Output JSON with the specified fields\n  -l, --label strings     Filter by label\n  -L, --limit int         Maximum number of discussions to fetch (default 30)\n      --order string      Order of results: {asc|desc} (default \"desc\")\n  -S, --search query      Search discussions with query\n      --sort string       Sort by field: {created|updated} (default \"updated\")\n  -s, --state string      Filter by state: {open|closed|all} (default \"open\")\n  -t, --template string   Format JSON output using a Go template; see \"gh help formatting\"\n  -w, --web               List discussions in the web browser\n\nAliases\n\ngh discussion ls\n\n### gh discussion view {<number> | <discussion-url> | <comment-id> | <comment-url>} [flags]\n\nView a discussion (preview)\n\n      --after string      Cursor for the next page\n  -c, --comments          View discussion comments\n  -q, --jq expression     Filter JSON output using a jq expression\n      --json fields       Output JSON with the specified fields\n  -L, --limit int         Maximum number of comments or replies to fetch (default 30)\n      --order string      Order of comments or replies: {oldest|newest} (default \"newest\")\n  -t, --template string   Format JSON output using a Go template; see \"gh help formatting\"\n  -w, --web               Open a discussion in the browser\n\n## gh extension\n\nManage gh extensions\n\nAliases\n\ngh extensions, gh ext\n\n### gh extension browse [flags]\n\nEnter a UI for browsing, adding, and removing extensions\n\n      --debug           Log to /tmp/extBrowse-*\n  -s, --single-column   Render TUI with only one column of text\n\n### gh extension create [<name>] [flags]\n\nCreate a new extension\n\n  --precompiled string   Create a precompiled extension. Possible values: go, other\n\n### gh extension exec <name> [args]\n\nExecute an installed extension\n\n### gh extension install <repository> [flags]\n\nInstall a gh extension from a repository\n\n  --force        Force upgrade extension, or ignore if latest already installed\n  --pin string   Pin extension to a release tag or commit ref\n\n### gh extension list\n\nList installed extension commands\n\nAliases\n\ngh ext ls, gh extension ls, gh extensions ls\n\n### gh extension remove <name>\n\nRemove an installed extension\n\nAliases\n\ngh ext uninstall, gh extension uninstall, gh extensions uninstall\n\n### gh extension search [<query>] [flags]\n\nSearch extensions to the GitHub CLI\n\n  -q, --jq expression     Filter JSON output using a jq expression\n      --json fields       Output JSON with the specified fields\n      --license strings   Filter based on license type\n  -L, --limit int         Maximum number of extensions to fetch (default 30)\n      --order string      Order of repositories returned, ignored unless '--sort' flag is specified: {asc|desc} (default \"desc\")\n      --owner strings     Filter on owner\n      --sort string       Sort fetched repositories: {forks|help-wanted-issues|stars|updated} (default \"best-match\")\n  -t, --template string   Format JSON output using a Go template; see \"gh help formatting\"\n  -w, --web               Open the search query in the web browser\n\n### gh extension upgrade {<name> | --all} [flags]\n\nUpgrade installed extensions\n\n  --all       Upgrade all extensions\n  --dry-run   Only display upgrades\n  --force     Force upgrade extension\n\n## gh gist <command>\n\nManage gists\n\n### gh gist clone <gist> [<directory>] [-- <gitflags>...]\n\nClone a gist locally\n\n### gh gist create [<filename>... | <pattern>... | -] [flags]\n\nCreate a new gist\n\n  -d, --desc string       A description for this gist\n  -f, --filename string   Provide a filename to be used when reading from standard input\n  -p, --public            List the gist publicly (default \"secret\")\n  -w, --web               Open the web browser with created gist\n\nAliases\n\ngh gist new\n\n### gh gist delete {<id> | <url>} [flags]\n\nDelete a gist\n\n  --yes   Confirm deletion without prompting\n\n### gh gist edit {<id> | <url>} [<filename>] [flags]\n\nEdit one of your gists\n\n  -a, --add string        Add a new file to the gist\n  -d, --desc string       New description for the gist\n  -f, --filename string   Select a file to edit\n  -r, --remove string     Remove a file from the gist\n\n### gh gist list [flags]\n\nList your gists\n\n      --filter expression   Filter gists using a regular expression\n      --include-content     Include gists' file content when filtering\n  -L, --limit int           Maximum number of gists to fetch (default 10)\n      --public              Show only public gists\n      --secret              Show only secret gists\n\nAliases\n\ngh gist ls\n\n### gh gist rename {<id> | <url>} <old-filename> <new-filename>\n\nRename a file in a gist\n\n### gh gist view [<id> | <url>] [flags]\n\nView a gist\n\n      --allow-escape-sequences   Allow printing terminal escape sequences\n  -f, --filename string          Display a single file from the gist\n      --files                    List file names from the gist\n  -r, --raw                      Print raw instead of rendered gist contents\n  -w, --web                      Open gist in the browser\n\n## gh gpg-key <command>\n\nManage GPG keys\n\n### gh gpg-key add [<key-file>] [flags]\n\nAdd a GPG key to your GitHub account\n\n  -t, --title string   Title for the new key\n\n### gh gpg-key delete <key-id> [flags]\n\nDelete a GPG key from your GitHub account\n\n  -y, --yes   Skip the confirmation prompt\n\n### gh gpg-key list\n\nLists GPG keys in your GitHub account\n\nAliases\n\ngh gpg-key ls\n\n## gh issue <command>\n\nManage issues\n\n### gh issue close {<number> | <url>} [flags]\n\nClose issue\n\n  -c, --comment string        Leave a closing comment\n      --duplicate-of string   Mark as duplicate of another issue by number or URL\n  -r, --reason string         Reason for closing: {completed|not planned|duplicate}\n\n### gh issue comment {<number> | <url>} [flags]\n\nAdd a comment to an issue\n\n      --attach file      Attach an image or video file, in '<file>#<image alt text>' format\n  -b, --body text        The comment body text\n  -F, --body-file file   Read body text from file (use \"-\" to read from standard input)\n      --create-if-none   Create a new comment if no comments are found. Can be used only with --edit-last\n      --delete-last      Delete the last comment of the current user\n      --edit-last        Edit the last comment of the current user\n  -e, --editor           Skip prompts and open the text editor to write the body in\n  -w, --web              Open the web browser to write the comment\n      --yes              Skip the delete confirmation prompt when --delete-last is provided\n\n### gh issue create [flags]\n\nCreate a new issue\n\n  -a, --assignee login       Assign people by their login. Use \"@me\" to self-assign.\n      --attach file          Attach an image or video file, in '<file>#<image alt text>' format\n      --blocked-by numbers   Mark the new issue as blocked by these issue numbers or URLs\n      --blocking numbers     Mark the new issue as blocking these issue numbers or URLs\n  -b, --body string          Supply a body. Will prompt for one otherwise.\n  -F, --body-file file       Read body text from file (use \"-\" to read from standard input)\n  -e, --editor               Skip prompts and open the text editor to write the title and body in. The first line is the title and the remaining text is the body.\n  -l, --label name           Add labels by name\n  -m, --milestone name       Add the issue to a milestone by name\n      --parent number        Add the new issue as a sub-issue of the specified parent number or URL\n  -p, --project title        Add the issue to projects by title\n      --recover string       Recover input from a failed run of create\n  -T, --template name        Template name to use as starting body text\n  -t, --title string         Supply a title. Will prompt for one otherwise.\n      --type name            Set the issue type by name\n  -w, --web                  Open the browser to create an issue\n\nAliases\n\ngh issue new\n\n### gh issue delete {<number> | <url>} [flags]\n\nDelete issue\n\n  --yes   Confirm deletion without prompting\n\n### gh issue develop {<number> | <url>} [flags]\n\nManage linked branches for an issue\n\n  -b, --base string          Name of the remote branch you want to make your new branch from\n      --branch-repo string   Name or URL of the repository where you want to create your new branch\n  -c, --checkout             Checkout the branch after creating it\n  -l, --list                 List linked branches for the issue\n  -n, --name string          Name of the branch to create\n      --worktree path        Check out the branch into a worktree at the given path\n\n### gh issue edit {<numbers> | <urls>} [flags]\n\nEdit issues\n\n      --add-assignee login         Add assigned users by their login. Use \"@me\" to assign yourself, or \"@copilot\" to assign Copilot.\n      --add-blocked-by number      Add 'blocked by' relationships by issue number or URL\n      --add-blocking number        Add 'blocking' relationships by issue number or URL\n      --add-label name             Add labels by name\n      --add-project title          Add the issue to projects by title\n      --add-sub-issue number       Add sub-issues by number or URL\n      --attach file                Attach an image or video file, in '<file>#<image alt text>' format\n  -b, --body string                Set the new body.\n  -F, --body-file file             Read body text from file (use \"-\" to read from standard input)\n  -m, --milestone name             Edit the milestone the issue belongs to by name\n      --parent number              Set the parent issue by number or URL\n      --remove-assignee login      Remove assigned users by their login. Use \"@me\" to unassign yourself, or \"@copilot\" to unassign Copilot.\n      --remove-blocked-by number   Remove 'blocked by' relationships by issue number or URL\n      --remove-blocking number     Remove 'blocking' relationships by issue number or URL\n      --remove-label name          Remove labels by name\n      --remove-milestone           Remove the milestone association from the issue\n      --remove-parent              Remove the parent issue\n      --remove-project title       Remove the issue from projects by title\n      --remove-sub-issue number    Remove sub-issues by number or URL\n      --remove-type                Remove the issue type from the issue\n  -t, --title string               Set the new title.\n      --type name                  Set the issue type by name\n\n### gh issue list [flags]\n\nList issues in a repository\n\n      --app string         Filter by GitHub App author\n  -a, --assignee string    Filter by assignee\n  -A, --author string      Filter by author (use --app to filter by a GitHub App)\n  -q, --jq expression      Filter JSON output using a jq expression\n      --json fields        Output JSON with the specified fields\n  -l, --label strings      Filter by label\n  -L, --limit int          Maximum number of issues to fetch (default 30)\n      --mention string     Filter by mention\n  -m, --milestone string   Filter by milestone number or title\n  -S, --search query       Search issues with query\n  -s, --state string       Filter by state: {open|closed|all} (default \"open\")\n  -t, --template string    Format JSON output using a Go template; see \"gh help formatting\"\n      --type name          Filter by issue type name\n  -w, --web                List issues in the web browser\n\nAliases\n\ngh issue ls\n\n### gh issue lock {<number> | <url>} [flags]\n\nLock issue conversation\n\n  -r, --reason string   Optional reason for locking conversation (off_topic, resolved, spam, too_heated).\n\n### gh issue pin {<number> | <url>}\n\nPin an issue\n\n### gh issue reopen {<number> | <url>} [flags]\n\nReopen issue\n\n  -c, --comment string   Add a reopening comment\n\n### gh issue status [flags]\n\nShow status of relevant issues\n\n  -q, --jq expression     Filter JSON output using a jq expression\n      --json fields       Output JSON with the specified fields\n  -t, --template string   Format JSON output using a Go template; see \"gh help formatting\"\n\n### gh issue transfer {<number> | <url>} <destination-repo>\n\nTransfer issue to another repository\n\n### gh issue unlock {<number> | <url>}\n\nUnlock issue conversation\n\n### gh issue unpin {<number> | <url>}\n\nUnpin an issue\n\n### gh issue view {<number> | <url>} [flags]\n\nView an issue\n\n  -c, --comments          View issue comments\n  -q, --jq expression     Filter JSON output using a jq expression\n      --json fields       Output JSON with the specified fields\n  -t, --template string   Format JSON output using a Go template; see \"gh help formatting\"\n  -w, --web               Open an issue in the browser\n\n## gh label <command>\n\nManage labels\n\n### gh label clone <source-repository> [flags]\n\nClones labels from one repository to another\n\n  -f, --force   Overwrite labels in the destination repository\n\n### gh label create <name> [flags]\n\nCreate a new label\n\n  -c, --color string         Color of the label\n  -d, --description string   Description of the label\n  -f, --force                Update the label color and description if label already exists\n\n### gh label delete <name> [flags]\n\nDelete a label from a repository\n\n  --yes   Confirm deletion without prompting\n\n### gh label edit <name> [flags]\n\nEdit a label\n\n  -c, --color string         Color of the label\n  -d, --description string   Description of the label\n  -n, --name string          New name of the label\n\n### gh label list [flags]\n\nList labels in a repository\n\n  -q, --jq expression     Filter JSON output using a jq expression\n      --json fields       Output JSON with the specified fields\n  -L, --limit int         Maximum number of labels to fetch (default 30)\n      --order string      Order of labels returned: {asc|desc} (default \"asc\")\n  -S, --search string     Search label names and descriptions\n      --sort string       Sort fetched labels: {created|name} (default \"created\")\n  -t, --template string   Format JSON output using a Go template; see \"gh help formatting\"\n  -w, --web               List labels in the web browser\n\nAliases\n\ngh label ls\n\n## gh licenses\n\nView third-party license information\n\n## gh org <command>\n\nManage organizations\n\n### gh org list [flags]\n\nList organizations for the authenticated user.\n\n  -L, --limit int   Maximum number of organizations to list (default 30)\n\nAliases\n\ngh org ls\n\n## gh pr <command> [flags]\n\nManage pull requests\n\n      --help                     Show help for command\n  -R, --repo [HOST/]OWNER/REPO   Select another repository using the [HOST/]OWNER/REPO format\n\n### gh pr checkout [<number> | <url> | <branch>] [flags]\n\nCheck out a pull request in git\n\n  -b, --branch string        Local branch name to use (default [the name of the head branch])\n      --detach               Checkout PR with a detached HEAD\n  -f, --force                Reset the existing local branch to the latest state of the pull request\n      --recurse-submodules   Update all submodules after checkout\n      --worktree path        Check out the pull request into a worktree at the given path\n\nAliases\n\ngh pr co\n\n### gh pr checks [<number> | <url> | <branch>] [flags]\n\nShow CI status for a single pull request\n\n      --fail-fast         Exit watch mode on first check failure\n  -i, --interval int      Refresh interval in seconds in watch mode (default 10)\n  -q, --jq expression     Filter JSON output using a jq expression\n      --json fields       Output JSON with the specified fields\n      --required          Only show checks that are required\n  -t, --template string   Format JSON output using a Go template; see \"gh help formatting\"\n      --watch             Watch checks until they finish\n  -w, --web               Open the web browser to show details about checks\n\n### gh pr close {<number> | <url> | <branch>} [flags]\n\nClose a pull request\n\n  -c, --comment string   Leave a closing comment\n  -d, --delete-branch    Delete the local and remote branch after close\n\n### gh pr comment [<number> | <url> | <branch>] [flags]\n\nAdd a comment to a pull request\n\n      --attach file      Attach an image or video file, in '<file>#<image alt text>' format\n  -b, --body text        The comment body text\n  -F, --body-file file   Read body text from file (use \"-\" to read from standard input)\n      --create-if-none   Create a new comment if no comments are found. Can be used only with --edit-last\n      --delete-last      Delete the last comment of the current user\n      --edit-last        Edit the last comment of the current user\n  -e, --editor           Skip prompts and open the text editor to write the body in\n  -w, --web              Open the web browser to write the comment\n      --yes              Skip the delete confirmation prompt when --delete-last is provided\n\n### gh pr create [flags]\n\nCreate a pull request\n\n  -a, --assignee login       Assign people by their login. Use \"@me\" to self-assign.\n      --attach file          Attach an image or video file, in '<file>#<image alt text>' format\n  -B, --base branch          The branch into which you want your code merged\n  -b, --body string          Body for the pull request\n  -F, --body-file file       Read body text from file (use \"-\" to read from standard input)\n  -d, --draft                Mark pull request as a draft\n      --dry-run              Print details instead of creating the PR. May still push git changes.\n  -e, --editor               Skip prompts and open the text editor to write the title and body in. The first line is the title and the remaining text is the body.\n  -f, --fill                 Use commit info for title and body\n      --fill-first           Use first commit info for title and body\n      --fill-verbose         Use commits msg+body for description\n  -H, --head branch          The branch that contains commits for your pull request (default [current branch])\n  -l, --label name           Add labels by name\n  -m, --milestone name       Add the pull request to a milestone by name\n      --no-maintainer-edit   Disable maintainer's ability to modify pull request\n  -p, --project title        Add the pull request to projects by title\n      --recover string       Recover input from a failed run of create\n  -r, --reviewer handle      Request reviews from people or teams by their handle\n  -T, --template file        Template file to use as starting body text\n  -t, --title string         Title for the pull request\n  -w, --web                  Open the web browser to create a pull request\n\nAliases\n\ngh pr new\n\n### gh pr diff [<number> | <url> | <branch>] [flags]\n\nView changes in a pull request\n\n      --allow-escape-sequences   Allow printing terminal escape sequences\n      --color string             Use color in diff output: {always|never|auto} (default \"auto\")\n  -e, --exclude patterns         Exclude files matching glob patterns from the diff\n      --name-only                Display only names of changed files\n      --patch                    Display diff in patch format\n  -w, --web                      Open the pull request diff in the browser\n\n### gh pr edit [<number> | <url> | <branch>] [flags]\n\nEdit a pull request\n\n      --add-assignee login      Add assigned users by their login. Use \"@me\" to assign yourself, or \"@copilot\" to assign Copilot.\n      --add-label name          Add labels by name\n      --add-project title       Add the pull request to projects by title\n      --add-reviewer login      Add or re-request reviewers by their login. Use \"@copilot\" to request review from Copilot.\n      --attach file             Attach an image or video file, in '<file>#<image alt text>' format\n  -B, --base branch             Change the base branch for this pull request\n  -b, --body string             Set the new body.\n  -F, --body-file file          Read body text from file (use \"-\" to read from standard input)\n  -m, --milestone name          Edit the milestone the pull request belongs to by name\n      --remove-assignee login   Remove assigned users by their login. Use \"@me\" to unassign yourself, or \"@copilot\" to unassign Copilot.\n      --remove-label name       Remove labels by name\n      --remove-milestone        Remove the milestone association from the pull request\n      --remove-project title    Remove the pull request from projects by title\n      --remove-reviewer login   Remove reviewers by their login. Use \"@copilot\" to remove review request from Copilot.\n  -t, --title string            Set the new title.\n\n### gh pr list [flags]\n\nList pull requests in a repository\n\n      --app string        Filter by GitHub App author\n  -a, --assignee string   Filter by assignee\n  -A, --author string     Filter by author (use --app to filter by a GitHub App)\n  -B, --base string       Filter by base branch\n  -d, --draft             Filter by draft state\n  -H, --head string       Filter by head branch (\"<owner>:<branch>\" syntax not supported)\n  -q, --jq expression     Filter JSON output using a jq expression\n      --json fields       Output JSON with the specified fields\n  -l, --label strings     Filter by label\n  -L, --limit int         Maximum number of items to fetch (default 30)\n  -S, --search query      Search pull requests with query\n  -s, --state string      Filter by state: {open|closed|merged|all} (default \"open\")\n  -t, --template string   Format JSON output using a Go template; see \"gh help formatting\"\n  -w, --web               List pull requests in the web browser\n\nAliases\n\ngh pr ls\n\n### gh pr lock {<number> | <url>} [flags]\n\nLock pull request conversation\n\n  -r, --reason string   Optional reason for locking conversation (off_topic, resolved, spam, too_heated).\n\n### gh pr merge [<number> | <url> | <branch>] [flags]\n\nMerge a pull request\n\n      --admin                   Use administrator privileges to merge a pull request that does not meet requirements\n  -A, --author-email text       Email text for merge commit author\n      --auto                    Automatically merge only after necessary requirements are met\n  -b, --body text               Body text for the merge commit\n  -F, --body-file file          Read body text from file (use \"-\" to read from standard input)\n  -d, --delete-branch           Delete the local and remote branch after merge\n      --disable-auto            Disable auto-merge for this pull request\n      --match-head-commit SHA   Commit SHA that the pull request head must match to allow merge\n  -m, --merge                   Merge the commits with the base branch\n  -r, --rebase                  Rebase the commits onto the base branch\n  -s, --squash                  Squash the commits into one commit and merge it into the base branch\n  -t, --subject text            Subject text for the merge commit\n\n### gh pr ready [<number> | <url> | <branch>] [flags]\n\nMark a pull request as ready for review\n\n  --undo   Convert a pull request to \"draft\"\n\n### gh pr reopen {<number> | <url> | <branch>} [flags]\n\nReopen a pull request\n\n  -c, --comment string   Add a reopening comment\n\n### gh pr revert {<number> | <url> | <branch>} [flags]\n\nRevert a pull request\n\n  -b, --body string      Body for the revert pull request\n  -F, --body-file file   Read body text from file (use \"-\" to read from standard input)\n  -d, --draft            Mark revert pull request as a draft\n  -t, --title string     Title for the revert pull request\n\n### gh pr review [<number> | <url> | <branch>] [flags]\n\nAdd a review to a pull request\n\n  -a, --approve           Approve pull request\n  -b, --body string       Specify the body of a review\n  -F, --body-file file    Read body text from file (use \"-\" to read from standard input)\n  -c, --comment           Comment on a pull request\n  -r, --request-changes   Request changes on a pull request\n\n### gh pr status [flags]\n\nShow status of relevant pull requests\n\n  -c, --conflict-status   Display the merge conflict status of each pull request\n  -q, --jq expression     Filter JSON output using a jq expression\n      --json fields       Output JSON with the specified fields\n  -t, --template string   Format JSON output using a Go template; see \"gh help formatting\"\n\n### gh pr unlock {<number> | <url>}\n\nUnlock pull request conversation\n\n### gh pr update-branch [<number> | <url> | <branch>] [flags]\n\nUpdate a pull request branch\n\n  --rebase   Update PR branch by rebasing on top of latest base branch\n\n### gh pr view [<number> | <url> | <branch>] [flags]\n\nView a pull request\n\n  -c, --comments          View pull request comments\n  -q, --jq expression     Filter JSON output using a jq expression\n      --json fields       Output JSON with the specified fields\n  -t, --template string   Format JSON output using a Go template; see \"gh help formatting\"\n  -w, --web               Open a pull request in the browser\n\n## gh preview <command>\n\nExecute previews for gh features\n\n### gh preview prompter [prompt type]\n\nExecute a test program to preview the prompter\n\n## gh project <command>\n\nWork with GitHub Projects.\n\n### gh project close [<number>] [flags]\n\nClose a project\n\n      --format string     Output format: {json}\n  -q, --jq expression     Filter JSON output using a jq expression\n      --owner string      Login of the owner. Use \"@me\" for the current user.\n  -t, --template string   Format JSON output using a Go template; see \"gh help formatting\"\n      --undo              Reopen a closed project\n\n### gh project copy [<number>] [flags]\n\nCopy a project\n\n      --drafts                Include draft issues when copying\n      --format string         Output format: {json}\n  -q, --jq expression         Filter JSON output using a jq expression\n      --source-owner string   Login of the source owner. Use \"@me\" for the current user.\n      --target-owner string   Login of the target owner. Use \"@me\" for the current user.\n  -t, --template string       Format JSON output using a Go template; see \"gh help formatting\"\n      --title string          Title for the new project\n\n### gh project create [flags]\n\nCreate a project\n\n      --format string     Output format: {json}\n  -q, --jq expression     Filter JSON output using a jq expression\n      --owner string      Login of the owner. Use \"@me\" for the current user.\n  -t, --template string   Format JSON output using a Go template; see \"gh help formatting\"\n      --title string      Title for the project\n\n### gh project delete [<number>] [flags]\n\nDelete a project\n\n      --format string     Output format: {json}\n  -q, --jq expression     Filter JSON output using a jq expression\n      --owner string      Login of the owner. Use \"@me\" for the current user.\n  -t, --template string   Format JSON output using a Go template; see \"gh help formatting\"\n\n### gh project edit [<number>] [flags]\n\nEdit a project\n\n  -d, --description string   New description of the project\n      --format string        Output format: {json}\n  -q, --jq expression        Filter JSON output using a jq expression\n      --owner string         Login of the owner. Use \"@me\" for the current user.\n      --readme string        New readme for the project\n  -t, --template string      Format JSON output using a Go template; see \"gh help formatting\"\n      --title string         New title for the project\n      --visibility string    Change project visibility: {PUBLIC|PRIVATE}\n\n### gh project field-create [<number>] [flags]\n\nCreate a field in a project\n\n      --data-type string                DataType of the new field.: {TEXT|SINGLE_SELECT|DATE|NUMBER}\n      --format string                   Output format: {json}\n  -q, --jq expression                   Filter JSON output using a jq expression\n      --name string                     Name of the new field\n      --owner string                    Login of the owner. Use \"@me\" for the current user.\n      --single-select-options strings   Options for SINGLE_SELECT data type\n  -t, --template string                 Format JSON output using a Go template; see \"gh help formatting\"\n\n### gh project field-delete [flags]\n\nDelete a field in a project\n\n      --format string     Output format: {json}\n      --id string         ID of the field to delete\n  -q, --jq expression     Filter JSON output using a jq expression\n  -t, --template string   Format JSON output using a Go template; see \"gh help formatting\"\n\n### gh project field-list [<number>] [flags]\n\nList the fields in a project\n\n      --format string     Output format: {json}\n  -q, --jq expression     Filter JSON output using a jq expression\n  -L, --limit int         Maximum number of fields to fetch (default 30)\n      --owner string      Login of the owner. Use \"@me\" for the current user.\n  -t, --template string   Format JSON output using a Go template; see \"gh help formatting\"\n\n### gh project item-add [<number>] [flags]\n\nAdd a pull request or an issue to a project\n\n      --format string     Output format: {json}\n  -q, --jq expression     Filter JSON output using a jq expression\n      --owner string      Login of the owner. Use \"@me\" for the current user.\n  -t, --template string   Format JSON output using a Go template; see \"gh help formatting\"\n      --url string        URL of the issue or pull request to add to the project\n\n### gh project item-archive [<number>] [flags]\n\nArchive an item in a project\n\n      --format string     Output format: {json}\n      --id string         ID of the item to archive\n  -q, --jq expression     Filter JSON output using a jq expression\n      --owner string      Login of the owner. Use \"@me\" for the current user.\n  -t, --template string   Format JSON output using a Go template; see \"gh help formatting\"\n      --undo              Unarchive an item\n\n### gh project item-create [<number>] [flags]\n\nCreate a draft issue item in a project\n\n      --body string       Body for the draft issue\n      --format string     Output format: {json}\n  -q, --jq expression     Filter JSON output using a jq expression\n      --owner string      Login of the owner. Use \"@me\" for the current user.\n  -t, --template string   Format JSON output using a Go template; see \"gh help formatting\"\n      --title string      Title for the draft issue\n\n### gh project item-delete [<number>] [flags]\n\nDelete an item from a project by ID\n\n      --format string     Output format: {json}\n      --id string         ID of the item to delete\n  -q, --jq expression     Filter JSON output using a jq expression\n      --owner string      Login of the owner. Use \"@me\" for the current user.\n  -t, --template string   Format JSON output using a Go template; see \"gh help formatting\"\n\n### gh project item-edit [<number>] [flags]\n\nEdit an item in a project\n\n      --body string                      Body of the draft issue item\n      --clear                            Remove field value\n      --date string                      Date value for the field (YYYY-MM-DD)\n      --field string                     Name of the field to update\n      --field-id string                  ID of the field to update\n      --format string                    Output format: {json}\n      --id string                        ID of the item to edit\n      --iteration-id string              ID of the iteration value to set on the field\n  -q, --jq expression                    Filter JSON output using a jq expression\n      --number float                     Number value for the field\n      --owner string                     Login of the owner. Use \"@me\" for the current user.\n      --project-id string                ID of the project to which the field belongs to\n      --single-select-option-id string   ID of the single select option value to set on the field\n  -t, --template string                  Format JSON output using a Go template; see \"gh help formatting\"\n      --text string                      Text value for the field\n      --title string                     Title of the draft issue item\n      --url string                       URL of the issue or pull request whose project item to edit\n      --value --field                    Value to set on the field named by --field\n\n### gh project item-list [<number>] [flags]\n\nList the items in a project\n\n      --field stringArray      Name of a field to show as an extra column\n      --field-id stringArray   ID of a field to show as an extra column\n      --format string          Output format: {json}\n  -q, --jq expression          Filter JSON output using a jq expression\n  -L, --limit int              Maximum number of items to fetch (default 30)\n      --owner string           Login of the owner. Use \"@me\" for the current user\n      --query string           Filter items using the Projects filter syntax, e.g. \"assignee:octocat -status:Done\"\n  -t, --template string        Format JSON output using a Go template; see \"gh help formatting\"\n\n### gh project link [<number>] [flags]\n\nLink a project to a repository or a team\n\n      --owner string   Login of the owner. Use \"@me\" for the current user.\n  -R, --repo string    The repository to be linked to this project\n  -T, --team string    The team to be linked to this project\n\n### gh project list [flags]\n\nList the projects for an owner\n\n      --closed            Include closed projects\n      --format string     Output format: {json}\n  -q, --jq expression     Filter JSON output using a jq expression\n  -L, --limit int         Maximum number of projects to fetch (default 30)\n      --owner string      Login of the owner\n  -t, --template string   Format JSON output using a Go template; see \"gh help formatting\"\n  -w, --web               Open projects list in the browser\n\nAliases\n\ngh project ls\n\n### gh project mark-template [<number>] [flags]\n\nMark a project as a template\n\n      --format string     Output format: {json}\n  -q, --jq expression     Filter JSON output using a jq expression\n      --owner string      Login of the org owner.\n  -t, --template string   Format JSON output using a Go template; see \"gh help formatting\"\n      --undo              Unmark the project as a template.\n\n### gh project unlink [<number>] [flags]\n\nUnlink a project from a repository or a team\n\n      --owner string   Login of the owner. Use \"@me\" for the current user.\n  -R, --repo string    The repository to be unlinked from this project\n  -T, --team string    The team to be unlinked from this project\n\n### gh project view [<number>] [flags]\n\nView a project\n\n      --format string     Output format: {json}\n  -q, --jq expression     Filter JSON output using a jq expression\n      --owner string      Login of the owner. Use \"@me\" for the current user.\n  -t, --template string   Format JSON output using a Go template; see \"gh help formatting\"\n  -w, --web               Open a project in the browser\n\n## gh release <command>\n\nManage releases\n\n### gh release create [<tag>] [<filename>... | <pattern>...]\n\nCreate a new release\n\n      --discussion-category string   Start a discussion in the specified category\n  -d, --draft                        Save the release as a draft instead of publishing it\n      --fail-on-no-commits           Fail if there are no commits since the last release (no impact on the first release)\n      --generate-notes               Automatically generate title and notes for the release via GitHub Release Notes API\n      --latest                       Mark this release as \"Latest\" (default [automatic based on date and version]). --latest=false to explicitly NOT set as latest\n  -n, --notes string                 Release notes\n  -F, --notes-file file              Read release notes from file (use \"-\" to read from standard input)\n      --notes-from-tag               Fetch notes from the tag annotation or message of commit associated with tag\n      --notes-start-tag string       Tag to use as the starting point for generating release notes\n  -p, --prerelease                   Mark the release as a prerelease\n      --target branch                Target branch or full commit SHA (default [main branch])\n  -t, --title string                 Release title\n      --verify-tag                   Abort in case the git tag doesn't already exist in the remote repository\n\nAliases\n\ngh release new\n\n### gh release delete <tag> [flags]\n\nDelete a release\n\n      --cleanup-tag   Delete the specified tag in addition to its release\n  -y, --yes           Skip the confirmation prompt\n\n### gh release delete-asset <tag> <asset-name> [flags]\n\nDelete an asset from a release\n\n  -y, --yes   Skip the confirmation prompt\n\n### gh release download [<tag>] [flags]\n\nDownload release assets\n\n      --allow-escape-sequences   Allow printing terminal escape sequences when writing an asset to standard output\n  -A, --archive format           Download the source code archive in the specified format (zip or tar.gz)\n      --clobber                  Overwrite existing files of the same name\n  -D, --dir directory            The directory to download files into (default \".\")\n  -O, --output file              The file to write a single asset to (use \"-\" to write to standard output)\n  -p, --pattern stringArray      Download only assets that match a glob pattern\n      --skip-existing            Skip downloading when files of the same name exist\n\n### gh release edit <tag>\n\nEdit a release\n\n      --discussion-category string   Start a discussion in the specified category when publishing a draft\n      --draft                        Save the release as a draft instead of publishing it\n      --latest                       Explicitly mark the release as \"Latest\"\n  -n, --notes string                 Release notes\n  -F, --notes-file file              Read release notes from file (use \"-\" to read from standard input)\n      --prerelease                   Mark the release as a prerelease\n      --tag string                   The name of the tag\n      --target branch                Target branch or full commit SHA (default [main branch])\n  -t, --title string                 Release title\n      --verify-tag                   Abort in case the git tag doesn't already exist in the remote repository\n\n### gh release list [flags]\n\nList releases in a repository\n\n      --exclude-drafts         Exclude draft releases\n      --exclude-pre-releases   Exclude pre-releases\n  -q, --jq expression          Filter JSON output using a jq expression\n      --json fields            Output JSON with the specified fields\n  -L, --limit int              Maximum number of items to fetch (default 30)\n  -O, --order string           Order of releases returned: {asc|desc} (default \"desc\")\n  -t, --template string        Format JSON output using a Go template; see \"gh help formatting\"\n\nAliases\n\ngh release ls\n\n### gh release upload <tag> <files>... [flags]\n\nUpload assets to a release\n\n  --clobber   Delete and re-upload existing assets of the same name\n\n### gh release verify [<tag>] [flags]\n\nVerify the attestation for a release\n\n      --format string     Output format: {json}\n  -q, --jq expression     Filter JSON output using a jq expression\n  -t, --template string   Format JSON output using a Go template; see \"gh help formatting\"\n\n### gh release verify-asset [<tag>] <file-path> [flags]\n\nVerify that a given asset originated from a release\n\n      --format string     Output format: {json}\n  -q, --jq expression     Filter JSON output using a jq expression\n  -t, --template string   Format JSON output using a Go template; see \"gh help formatting\"\n\n### gh release view [<tag>] [flags]\n\nView information about a release\n\n  -q, --jq expression     Filter JSON output using a jq expression\n      --json fields       Output JSON with the specified fields\n  -t, --template string   Format JSON output using a Go template; see \"gh help formatting\"\n  -w, --web               Open the release in the browser\n\n## gh repo <command>\n\nManage repositories\n\n### gh repo archive [<repository>] [flags]\n\nArchive a repository\n\n  -y, --yes   Skip the confirmation prompt\n\n### gh repo autolink <command>\n\nManage autolink references\n\n#### gh repo autolink create <keyPrefix> <urlTemplate> [flags]\n\nCreate a new autolink reference\n\n  -n, --numeric   Mark autolink as numeric\n\nAliases\n\ngh repo autolink new\n\n#### gh repo autolink delete <id> [flags]\n\nDelete an autolink reference\n\n  --yes   Confirm deletion without prompting\n\n#### gh repo autolink list [flags]\n\nList autolink references for a GitHub repository\n\n  -q, --jq expression     Filter JSON output using a jq expression\n      --json fields       Output JSON with the specified fields\n  -t, --template string   Format JSON output using a Go template; see \"gh help formatting\"\n  -w, --web               List autolink references in the web browser\n\nAliases\n\ngh repo autolink ls\n\n#### gh repo autolink view <id> [flags]\n\nView an autolink reference\n\n  -q, --jq expression     Filter JSON output using a jq expression\n      --json fields       Output JSON with the specified fields\n  -t, --template string   Format JSON output using a Go template; see \"gh help formatting\"\n\n### gh repo clone <repository> [<directory>] [-- <gitflags>...]\n\nClone a repository locally\n\n      --no-upstream                   Do not add an upstream remote when cloning a fork\n  -u, --upstream-remote-name string   Upstream remote name when cloning a fork (default \"upstream\")\n\n### gh repo create [<name>] [flags]\n\nCreate a new repository\n\n      --add-readme             Add a README file to the new repository\n  -c, --clone                  Clone the new repository to the current directory\n  -d, --description string     Description of the repository\n      --disable-issues         Disable issues in the new repository\n      --disable-wiki           Disable wiki in the new repository\n  -g, --gitignore string       Specify a gitignore template for the repository\n  -h, --homepage URL           Repository home page URL\n      --include-all-branches   Include all branches from template repository\n      --internal               Make the new repository internal\n  -l, --license string         Specify an Open Source License for the repository\n      --private                Make the new repository private\n      --public                 Make the new repository public\n      --push                   Push local commits to the new repository\n  -r, --remote string          Specify remote name for the new repository\n  -s, --source string          Specify path to local repository to use as source\n  -t, --team name              The name of the organization team to be granted access\n  -p, --template repository    Make the new repository based on a template repository\n\nAliases\n\ngh repo new\n\n### gh repo delete [<repository>] [flags]\n\nDelete a repository\n\n  --yes   Confirm deletion without prompting\n\n### gh repo deploy-key <command>\n\nManage deploy keys in a repository\n\n#### gh repo deploy-key add <key-file> [flags]\n\nAdd a deploy key to a GitHub repository\n\n  -w, --allow-write    Allow write access for the key\n  -t, --title string   Title of the new key\n\n#### gh repo deploy-key delete <key-id>\n\nDelete a deploy key from a GitHub repository\n\n#### gh repo deploy-key list [flags]\n\nList deploy keys in a GitHub repository\n\n  -q, --jq expression     Filter JSON output using a jq expression\n      --json fields       Output JSON with the specified fields\n  -t, --template string   Format JSON output using a Go template; see \"gh help formatting\"\n\nAliases\n\ngh repo deploy-key ls\n\n### gh repo edit [<repository>] [flags]\n\nEdit repository settings\n\n      --accept-visibility-change-consequences    Accept the consequences of changing the repository visibility\n      --add-topic strings                        Add repository topic\n      --allow-forking                            Allow forking of an organization repository\n      --allow-update-branch                      Allow a pull request head branch that is behind its base branch to be updated\n      --default-branch name                      Set the default branch name for the repository\n      --delete-branch-on-merge                   Delete head branch when pull requests are merged\n  -d, --description string                       Description of the repository\n      --enable-advanced-security                 Enable advanced security in the repository\n      --enable-auto-merge                        Enable auto-merge functionality\n      --enable-discussions                       Enable discussions in the repository\n      --enable-issues                            Enable issues in the repository\n      --enable-merge-commit                      Enable merging pull requests via merge commit\n      --enable-projects                          Enable projects in the repository\n      --enable-rebase-merge                      Enable merging pull requests via rebase\n      --enable-secret-scanning                   Enable secret scanning in the repository\n      --enable-secret-scanning-push-protection   Enable secret scanning push protection in the repository. Secret scanning must be enabled first\n      --enable-squash-merge                      Enable merging pull requests via squashed commit\n      --enable-wiki                              Enable wiki in the repository\n  -h, --homepage URL                             Repository home page URL\n      --remove-topic strings                     Remove repository topic\n      --squash-merge-commit-message string       The default value for a squash merge commit message: {default|pr-title|pr-title-commits|pr-title-description}\n      --template                                 Make the repository available as a template repository\n      --visibility string                        Change the visibility of the repository to {public,private,internal}\n\n### gh repo fork [<repository>] [-- <gitflags>...] [flags]\n\nCreate a fork of a repository\n\n  --clone                 Clone the fork\n  --default-branch-only   Only include the default branch in the fork\n  --fork-name string      Rename the forked repository\n  --org string            Create the fork in an organization\n  --remote                Add a git remote for the fork\n  --remote-name string    Specify the name for the new remote (default \"origin\")\n\n### gh repo gitignore <command>\n\nList and view available repository gitignore templates\n\n#### gh repo gitignore list\n\nList available repository gitignore templates\n\nAliases\n\ngh repo gitignore ls\n\n#### gh repo gitignore view <template>\n\nView an available repository gitignore template\n\n### gh repo license <command>\n\nExplore repository licenses\n\n#### gh repo license list\n\nList common repository licenses\n\nAliases\n\ngh repo license ls\n\n#### gh repo license view {<license-key> | <spdx-id>} [flags]\n\nView a specific repository license\n\n  -w, --web   Open https://choosealicense.com/ in the browser\n\n### gh repo list [<owner>] [flags]\n\nList repositories owned by user or organization\n\n      --archived            Show only archived repositories\n      --fork                Show only forks\n  -q, --jq expression       Filter JSON output using a jq expression\n      --json fields         Output JSON with the specified fields\n  -l, --language string     Filter by primary coding language\n  -L, --limit int           Maximum number of repositories to list (default 30)\n      --no-archived         Omit archived repositories\n      --source              Show only non-forks\n  -t, --template string     Format JSON output using a Go template; see \"gh help formatting\"\n      --topic strings       Filter by topic\n      --visibility string   Filter by repository visibility: {public|private|internal}\n\nAliases\n\ngh repo ls\n\n### gh repo read-dir [<path>] [flags]\n\nList a directory in a repository (preview)\n\n  -q, --jq expression     Filter JSON output using a jq expression\n      --json fields       Output JSON with the specified fields\n      --ref string        The branch, tag, or commit to list from\n  -t, --template string   Format JSON output using a Go template; see \"gh help formatting\"\n\n### gh repo read-file <path> [flags]\n\nRead a file from a repository (preview)\n\n      --allow-escape-sequences   Allow printing terminal escape sequences\n      --clobber                  Overwrite the output path if it already exists\n  -q, --jq expression            Filter JSON output using a jq expression\n      --json fields              Output JSON with the specified fields\n  -o, --output path              Write the file to a path instead of stdout\n      --ref string               The branch, tag, or commit to read from\n  -t, --template string          Format JSON output using a Go template; see \"gh help formatting\"\n\n### gh repo rename [<new-name>] [flags]\n\nRename a repository\n\n  -y, --yes   Skip the confirmation prompt\n\n### gh repo set-default [<repository>] [flags]\n\nConfigure default repository for this directory\n\n  -u, --unset   Unset the current default repository\n  -v, --view    View the current default repository\n\n### gh repo sync [<destination-repository>] [flags]\n\nSync a repository\n\n  -b, --branch string   Branch to sync (default [default branch])\n      --force           Hard reset the branch of the destination repository to match the source repository\n  -s, --source string   Source repository\n\n### gh repo unarchive [<repository>] [flags]\n\nUnarchive a repository\n\n  -y, --yes   Skip the confirmation prompt\n\n### gh repo view [<repository>] [flags]\n\nView a repository\n\n  -b, --branch string     View a specific branch of the repository\n  -q, --jq expression     Filter JSON output using a jq expression\n      --json fields       Output JSON with the specified fields\n  -t, --template string   Format JSON output using a Go template; see \"gh help formatting\"\n  -w, --web               Open a repository in the browser\n\n## gh ruleset <command>\n\nView info about repo rulesets\n\nAliases\n\ngh rs\n\n### gh ruleset check [<branch>] [flags]\n\nView rules that would apply to a given branch\n\n      --default   Check rules on default branch\n  -w, --web       Open the branch rules page in a web browser\n\n### gh ruleset list [flags]\n\nList rulesets for a repository or organization\n\n  -L, --limit int    Maximum number of rulesets to list (default 30)\n  -o, --org string   List organization-wide rulesets for the provided organization\n  -p, --parents      Whether to include rulesets configured at higher levels that also apply (default true)\n  -w, --web          Open the list of rulesets in the web browser\n\nAliases\n\ngh rs ls, gh ruleset ls\n\n### gh ruleset view [<ruleset-id>] [flags]\n\nView information about a ruleset\n\n  -o, --org string   Organization name if the provided ID is an organization-level ruleset\n  -p, --parents      Whether to include rulesets configured at higher levels that also apply (default true)\n  -w, --web          Open the ruleset in the browser\n\n## gh run <command>\n\nView details about workflow runs\n\n### gh run cancel [<run-id>] [flags]\n\nCancel a workflow run\n\n  --force   Force cancel a workflow run\n\n### gh run delete [<run-id>]\n\nDelete a workflow run\n\n### gh run download [<run-id>] [flags]\n\nDownload artifacts generated by a workflow run\n\n  -D, --dir string            The directory to download artifacts into (default \".\")\n  -n, --name stringArray      Download artifacts that match any of the given names\n  -p, --pattern stringArray   Download artifacts that match a glob pattern\n\n### gh run list [flags]\n\nList recent workflow runs\n\n  -a, --all               Include disabled workflows\n  -b, --branch string     Filter runs by branch\n  -c, --commit SHA        Filter runs by the SHA of the commit\n      --created date      Filter runs by the date it was created\n  -e, --event event       Filter runs by which event triggered the run\n  -q, --jq expression     Filter JSON output using a jq expression\n      --json fields       Output JSON with the specified fields\n  -L, --limit int         Maximum number of runs to fetch (default 20)\n  -s, --status string     Filter runs by status: {queued|completed|in_progress|requested|waiting|pending|action_required|cancelled|failure|neutral|skipped|stale|startup_failure|success|timed_out}\n  -t, --template string   Format JSON output using a Go template; see \"gh help formatting\"\n  -u, --user string       Filter runs by user who triggered the run\n  -w, --workflow string   Filter runs by workflow\n\nAliases\n\ngh run ls\n\n### gh run rerun [<run-id>] [flags]\n\nRerun a run\n\n  -d, --debug        Rerun with debug logging\n      --failed       Rerun only failed jobs, including dependencies\n  -j, --job string   Rerun a specific job ID from a run, including dependencies\n\n### gh run view [<run-id>] [flags]\n\nView a summary of a workflow run\n\n  -a, --attempt uint      The attempt number of the workflow run\n      --exit-status       Exit with non-zero status if run failed\n  -j, --job string        View a specific job ID from a run\n  -q, --jq expression     Filter JSON output using a jq expression\n      --json fields       Output JSON with the specified fields\n      --log               View full log for either a run or specific job\n      --log-failed        View the log for any failed steps in a run or specific job\n  -t, --template string   Format JSON output using a Go template; see \"gh help formatting\"\n  -v, --verbose           Show job steps\n  -w, --web               Open run in the browser\n\n### gh run watch <run-id> [flags]\n\nWatch a run until it completes, showing its progress\n\n      --compact        Show only relevant/failed steps\n      --exit-status    Exit with non-zero status if run fails\n  -i, --interval int   Refresh interval in seconds (default 3)\n\n## gh search <command>\n\nSearch for repositories, issues, and pull requests\n\n### gh search code <query> [flags]\n\nSearch within code\n\n      --extension string   Filter on file extension\n      --filename string    Filter on filename\n  -q, --jq expression      Filter JSON output using a jq expression\n      --json fields        Output JSON with the specified fields\n      --language string    Filter results by language\n  -L, --limit int          Maximum number of code results to fetch (default 30)\n      --match strings      Restrict search to file contents or file path: {file|path}\n      --owner strings      Filter on owner\n  -R, --repo OWNER/REPO    Filter on repository, in OWNER/REPO format\n      --size string        Filter on size range, in kilobytes\n  -t, --template string    Format JSON output using a Go template; see \"gh help formatting\"\n  -w, --web                Open the search query in the web browser\n\n### gh search commits [<query>] [flags]\n\nSearch for commits\n\n      --author string            Filter by author\n      --author-date date         Filter based on authored date\n      --author-email string      Filter on author email\n      --author-name string       Filter on author name\n      --committer string         Filter by committer\n      --committer-date date      Filter based on committed date\n      --committer-email string   Filter on committer email\n      --committer-name string    Filter on committer name\n      --hash string              Filter by commit hash\n  -q, --jq expression            Filter JSON output using a jq expression\n      --json fields              Output JSON with the specified fields\n  -L, --limit int                Maximum number of commits to fetch (default 30)\n      --merge                    Filter on merge commits\n      --order string             Order of commits returned, ignored unless '--sort' flag is specified: {asc|desc} (default \"desc\")\n      --owner strings            Filter on repository owner\n      --parent string            Filter by parent hash\n  -R, --repo OWNER/REPO          Filter on repository, in OWNER/REPO format\n      --sort string              Sort fetched commits: {author-date|committer-date} (default \"best-match\")\n  -t, --template string          Format JSON output using a Go template; see \"gh help formatting\"\n      --tree string              Filter by tree hash\n      --visibility strings       Filter based on repository visibility: {public|private|internal}\n  -w, --web                      Open the search query in the web browser\n\n### gh search issues [<query>] [flags]\n\nSearch for issues\n\n      --app string             Filter by GitHub App author\n      --archived               Filter based on the repository archived state {true|false}\n      --assignee string        Filter by assignee\n      --author string          Filter by author (use --app to filter by a GitHub App)\n      --closed date            Filter on closed at date\n      --commenter user         Filter based on comments by user\n      --comments number        Filter on number of comments\n      --created date           Filter based on created at date\n      --include-prs            Include pull requests in results\n      --interactions number    Filter on number of reactions and comments\n      --involves user          Filter based on involvement of user\n  -q, --jq expression          Filter JSON output using a jq expression\n      --json fields            Output JSON with the specified fields\n      --label strings          Filter on label\n      --language string        Filter based on the coding language\n  -L, --limit int              Maximum number of results to fetch (default 30)\n      --locked                 Filter on locked conversation status\n      --match strings          Restrict search to specific field of issue: {title|body|comments}\n      --mentions user          Filter based on user mentions\n      --milestone title        Filter by milestone title\n      --no-assignee            Filter on missing assignee\n      --no-label               Filter on missing label\n      --no-milestone           Filter on missing milestone\n      --no-project             Filter on missing project\n      --order string           Order of results returned, ignored unless '--sort' flag is specified: {asc|desc} (default \"desc\")\n      --owner strings          Filter on repository owner\n      --project owner/number   Filter on project board owner/number\n      --reactions number       Filter on number of reactions\n  -R, --repo OWNER/REPO        Filter on repository, in OWNER/REPO format\n      --search-type string     Type of issue search to perform: {lexical|semantic|hybrid} (default \"lexical\")\n      --sort string            Sort fetched results: {comments|created|interactions|reactions|reactions-+1|reactions--1|reactions-heart|reactions-smile|reactions-tada|reactions-thinking_face|updated} (default \"best-match\")\n      --state string           Filter based on state: {open|closed}\n      --team-mentions string   Filter based on team mentions\n  -t, --template string        Format JSON output using a Go template; see \"gh help formatting\"\n      --updated date           Filter on last updated at date\n      --visibility strings     Filter based on repository visibility: {public|private|internal}\n  -w, --web                    Open the search query in the web browser\n\n### gh search prs [<query>] [flags]\n\nSearch for pull requests\n\n      --app string              Filter by GitHub App author\n      --archived                Filter based on the repository archived state {true|false}\n      --assignee string         Filter by assignee\n      --author string           Filter by author (use --app to filter by a GitHub App)\n  -B, --base string             Filter on base branch name\n      --checks string           Filter based on status of the checks: {pending|success|failure}\n      --closed date             Filter on closed at date\n      --commenter user          Filter based on comments by user\n      --comments number         Filter on number of comments\n      --created date            Filter based on created at date\n      --draft                   Filter based on draft state\n  -H, --head string             Filter on head branch name\n      --interactions number     Filter on number of reactions and comments\n      --involves user           Filter based on involvement of user\n  -q, --jq expression           Filter JSON output using a jq expression\n      --json fields             Output JSON with the specified fields\n      --label strings           Filter on label\n      --language string         Filter based on the coding language\n  -L, --limit int               Maximum number of results to fetch (default 30)\n      --locked                  Filter on locked conversation status\n      --match strings           Restrict search to specific field of issue: {title|body|comments}\n      --mentions user           Filter based on user mentions\n      --merged                  Filter based on merged state\n      --merged-at date          Filter on merged at date\n      --milestone title         Filter by milestone title\n      --no-assignee             Filter on missing assignee\n      --no-label                Filter on missing label\n      --no-milestone            Filter on missing milestone\n      --no-project              Filter on missing project\n      --order string            Order of results returned, ignored unless '--sort' flag is specified: {asc|desc} (default \"desc\")\n      --owner strings           Filter on repository owner\n      --project owner/number    Filter on project board owner/number\n      --reactions number        Filter on number of reactions\n  -R, --repo OWNER/REPO         Filter on repository, in OWNER/REPO format\n      --review string           Filter based on review status: {none|required|approved|changes_requested}\n      --review-requested user   Filter on user or team requested to review\n      --reviewed-by user        Filter on user who reviewed\n      --sort string             Sort fetched results: {comments|reactions|reactions-+1|reactions--1|reactions-smile|reactions-thinking_face|reactions-heart|reactions-tada|interactions|created|updated} (default \"best-match\")\n      --state string            Filter based on state: {open|closed}\n      --team-mentions string    Filter based on team mentions\n  -t, --template string         Format JSON output using a Go template; see \"gh help formatting\"\n      --updated date            Filter on last updated at date\n      --visibility strings      Filter based on repository visibility: {public|private|internal}\n  -w, --web                     Open the search query in the web browser\n\n### gh search repos [<query>] [flags]\n\nSearch for repositories\n\n      --archived                    Filter based on the repository archived state {true|false}\n      --created date                Filter based on created at date\n      --followers number            Filter based on number of followers\n      --forks number                Filter on number of forks\n      --good-first-issues number    Filter on number of issues with the 'good first issue' label\n      --help-wanted-issues number   Filter on number of issues with the 'help wanted' label\n      --include-forks string        Include forks in fetched repositories: {false|true|only}\n  -q, --jq expression               Filter JSON output using a jq expression\n      --json fields                 Output JSON with the specified fields\n      --language string             Filter based on the coding language\n      --license strings             Filter based on license type\n  -L, --limit int                   Maximum number of repositories to fetch (default 30)\n      --match strings               Restrict search to specific field of repository: {name|description|readme}\n      --number-topics number        Filter on number of topics\n      --order string                Order of repositories returned, ignored unless '--sort' flag is specified: {asc|desc} (default \"desc\")\n      --owner strings               Filter on owner\n      --size string                 Filter on a size range, in kilobytes\n      --sort string                 Sort fetched repositories: {forks|help-wanted-issues|stars|updated} (default \"best-match\")\n      --stars number                Filter on number of stars\n  -t, --template string             Format JSON output using a Go template; see \"gh help formatting\"\n      --topic strings               Filter on topic\n      --updated date                Filter on last updated at date\n      --visibility strings          Filter based on visibility: {public|private|internal}\n  -w, --web                         Open the search query in the web browser\n\n## gh secret <command>\n\nManage GitHub secrets\n\n### gh secret delete <secret-name> [flags]\n\nDelete secrets\n\n  -a, --app string   Delete a secret for a specific application: {actions|agents|codespaces|dependabot}\n  -e, --env string   Delete a secret for an environment\n  -o, --org string   Delete a secret for an organization\n  -u, --user         Delete a secret for your user\n\nAliases\n\ngh secret remove\n\n### gh secret list [flags]\n\nList secrets\n\n  -a, --app string        List secrets for a specific application: {actions|agents|codespaces|dependabot}\n  -e, --env string        List secrets for an environment\n  -q, --jq expression     Filter JSON output using a jq expression\n      --json fields       Output JSON with the specified fields\n  -o, --org string        List secrets for an organization\n  -t, --template string   Format JSON output using a Go template; see \"gh help formatting\"\n  -u, --user              List a secret for your user\n\nAliases\n\ngh secret ls\n\n### gh secret set <secret-name> [flags]\n\nCreate or update secrets\n\n  -a, --app string           Set the application for a secret: {actions|agents|codespaces|dependabot}\n  -b, --body string          The value for the secret (reads from standard input if not specified)\n  -e, --env environment      Set deployment environment secret\n  -f, --env-file file        Load secret names and values from a dotenv-formatted file\n      --no-repos-selected    No repositories can access the organization secret\n      --no-store             Print the encrypted, base64-encoded value instead of storing it on GitHub\n  -o, --org organization     Set organization secret\n  -r, --repos repositories   List of repositories that can access an organization or user secret\n  -u, --user                 Set a secret for your user\n  -v, --visibility string    Set visibility for an organization secret: {all|private|selected} (default \"private\")\n\n## gh skill <command>\n\nInstall and manage agent skills (preview)\n\nAliases\n\ngh skills\n\n### gh skill install <repository> [<skill[@version]>] [flags]\n\nInstall agent skills from a GitHub repository (preview)\n\n      --agent string        Target agent (see supported values above)\n      --all                 Install all skills without prompting for skill selection\n      --allow-hidden-dirs   Include skills in hidden directories (e.g. .claude/skills/, .agents/skills/)\n      --dir string          Install to a custom directory (overrides --agent and --scope)\n  -f, --force               Overwrite existing skills without prompting\n      --from-local          Treat the argument as a local directory path instead of a repository\n      --pin string          Pin to a specific git tag or commit SHA\n      --scope string        Installation scope: {project|user} (default \"project\")\n      --upstream            Install from the upstream source when a re-published skill is detected\n\nAliases\n\ngh skill add, gh skills add\n\n### gh skill list [flags]\n\nList installed skills (preview)\n\n      --agent string      Filter by target agent: {github-copilot|claude-code|cursor|codex|gemini-cli|antigravity|antigravity-cli|antigravity2.0|adal|amp|augment|bob|cline|codebuddy|command-code|continue|cortex|crush|deepagents|devin|droid|firebender|goose|grok|iflow-cli|junie|kilo|kimi-cli|kiro-cli|kode|mcpjam|mistral-vibe|mux|neovate|openclaw|opencode|openhands|pi|pochi|qoder|qwen-code|replit|roo|trae|trae-cn|universal|warp|zencoder}\n      --dir string        Scan a custom directory for installed skills\n  -q, --jq expression     Filter JSON output using a jq expression\n      --json fields       Output JSON with the specified fields\n      --scope string      Filter by installation scope: {project|user}\n  -t, --template string   Format JSON output using a Go template; see \"gh help formatting\"\n\nAliases\n\ngh skill ls, gh skills ls\n\n### gh skill preview <repository> [<skill>] [flags]\n\nPreview a skill from a GitHub repository (preview)\n\n  --allow-hidden-dirs   Include skills in hidden directories (e.g. .claude/skills/, .agents/skills/)\n\nAliases\n\ngh skill show, gh skills show\n\n### gh skill publish [<directory>] [flags]\n\nValidate and publish skills to a GitHub repository (preview)\n\n  --dry-run      Validate without publishing\n  --fix          Auto-fix issues where possible without publishing (e.g. strip install metadata)\n  --tag string   Version tag for the release (e.g. v1.0.0)\n\n### gh skill search <query> [flags]\n\nSearch for skills across GitHub (preview)\n\n  -q, --jq expression     Filter JSON output using a jq expression\n      --json fields       Output JSON with the specified fields\n  -L, --limit int         Maximum number of results per page (default 15)\n      --owner string      Filter results to a specific GitHub user or organization\n      --page int          Page number of results to fetch (default 1)\n  -t, --template string   Format JSON output using a Go template; see \"gh help formatting\"\n\n### gh skill update [<skill>...] [flags]\n\nUpdate installed skills to their latest versions (preview)\n\n  --all          Update all skills without prompting\n  --dir string   Scan a custom directory for installed skills\n  --dry-run      Report available updates without modifying files\n  --force        Re-download even if already up to date\n  --unpin        Clear pinned version and include pinned skills in update\n\n## gh ssh-key <command>\n\nManage SSH keys\n\n### gh ssh-key add [<key-file>] [flags]\n\nAdd an SSH key to your GitHub account\n\n  -t, --title string   Title for the new key\n      --type string    Type of the ssh key: {authentication|signing} (default \"authentication\")\n\n### gh ssh-key delete <id> [flags]\n\nDelete an SSH key from your GitHub account\n\n  -y, --yes   Skip the confirmation prompt\n\n### gh ssh-key list\n\nLists SSH keys in your GitHub account\n\nAliases\n\ngh ssh-key ls\n\n## gh status [flags]\n\nPrint information about relevant issues, pull requests, and notifications across repositories\n\n  -e, --exclude strings   Comma separated list of repos to exclude in owner/name format\n  -o, --org string        Report status within an organization\n\n## gh variable <command>\n\nManage GitHub Actions variables\n\n### gh variable delete <variable-name> [flags]\n\nDelete variables\n\n  -e, --env string   Delete a variable for an environment\n  -o, --org string   Delete a variable for an organization\n\nAliases\n\ngh variable remove\n\n### gh variable get <variable-name> [flags]\n\nGet variables\n\n  -e, --env string        Get a variable for an environment\n  -q, --jq expression     Filter JSON output using a jq expression\n      --json fields       Output JSON with the specified fields\n  -o, --org string        Get a variable for an organization\n  -t, --template string   Format JSON output using a Go template; see \"gh help formatting\"\n\n### gh variable list [flags]\n\nList variables\n\n  -e, --env string        List variables for an environment\n  -q, --jq expression     Filter JSON output using a jq expression\n      --json fields       Output JSON with the specified fields\n  -o, --org string        List variables for an organization\n  -t, --template string   Format JSON output using a Go template; see \"gh help formatting\"\n\nAliases\n\ngh variable ls\n\n### gh variable set <variable-name> [flags]\n\nCreate or update variables\n\n  -b, --body string          The value for the variable (reads from standard input if not specified)\n  -e, --env environment      Set deployment environment variable\n  -f, --env-file file        Load variable names and values from a dotenv-formatted file\n  -o, --org organization     Set organization variable\n  -r, --repos repositories   List of repositories that can access an organization variable\n  -v, --visibility string    Set visibility for an organization variable: {all|private|selected} (default \"private\")\n\n## gh workflow <command>\n\nView details about GitHub Actions workflows\n\n### gh workflow disable [<workflow-id> | <workflow-name>]\n\nDisable a workflow\n\n### gh workflow enable [<workflow-id> | <workflow-name>]\n\nEnable a workflow\n\n### gh workflow list [flags]\n\nList workflows\n\n  -a, --all               Include disabled workflows\n  -q, --jq expression     Filter JSON output using a jq expression\n      --json fields       Output JSON with the specified fields\n  -L, --limit int         Maximum number of workflows to fetch (default 50)\n  -t, --template string   Format JSON output using a Go template; see \"gh help formatting\"\n\nAliases\n\ngh workflow ls\n\n### gh workflow run [<workflow-id> | <workflow-name>] [flags]\n\nRun a workflow by creating a workflow_dispatch event\n\n  -F, --field key=value       Add a string parameter in key=value format, respecting @ syntax (see \"gh help api\").\n      --json                  Read workflow inputs as JSON via STDIN\n  -f, --raw-field key=value   Add a string parameter in key=value format\n  -r, --ref string            Branch or tag name which contains the version of the workflow file you'd like to run\n\n### gh workflow view [<workflow-id> | <workflow-name> | <filename>] [flags]\n\nView the summary of a workflow\n\n  -r, --ref string   The branch or tag name which contains the version of the workflow file you'd like to view\n  -w, --web          Open workflow in the browser\n  -y, --yaml         View the workflow yaml file\n\n"
+    },
+    {
+      "id": "telemetry",
+      "summary": "Information about telemetry in gh",
+      "help": "gh collects telemetry to help us understand how the CLI is being used and to improve it.\n\nTo learn more about what data is collected, how it is used, and how to opt out, see:\n<https://cli.github.com/telemetry>\n"
+    }
+  ],
+  "configHelp": "Display or change configuration settings for gh.\n\nCurrent respected settings:\n- `api_host`: experimental: the hostname to use when making API requests for a GitHub host. Note: this is not a security boundary and requests to the canonical host will remain authenticated\n- `git_protocol`: the protocol to use for git clone and push operations `{https | ssh}` (default `https`)\n- `editor`: the text editor program to use for authoring text\n- `prompt`: toggle interactive prompting in the terminal `{enabled | disabled}` (default `enabled`)\n- `prefer_editor_prompt`: toggle preference for editor-based interactive prompting in the terminal `{enabled | disabled}` (default `disabled`)\n- `pager`: the terminal pager program to send standard output to\n- `http_unix_socket`: the path to a Unix socket through which to make an HTTP connection\n- `browser`: the web browser to use for opening URLs\n- `clipboard`: whether to copy one-time OAuth device codes to the clipboard `{enabled | disabled}` (default `enabled`)\n- `color_labels`: whether to display labels using their RGB hex color codes in terminals that support truecolor `{enabled | disabled}` (default `disabled`)\n- `accessible_colors`: whether customizable, 4-bit accessible colors should be used `{enabled | disabled}` (default `disabled`)\n- `accessible_prompter`: whether an accessible prompter should be used `{enabled | disabled}` (default `disabled`)\n- `spinner`: whether to use an animated spinner as a progress indicator `{enabled | disabled}` (default `enabled`)\n- `telemetry`: whether telemetry is enabled, disabled, or logging `{enabled | disabled | log}` (default `enabled`)\n\n\nUSAGE\n  gh config <command> [flags]\n\nAVAILABLE COMMANDS\n  clear-cache:   Clear the cli cache\n  get:           Print the value of a given configuration key\n  list:          Print a list of configuration keys and values\n  set:           Update configuration with a value for the given key\n\nINHERITED FLAGS\n  --help   Show help for command\n\nLEARN MORE\n  Use `gh <command> <subcommand> --help` for more information about a command.\n  Read the manual at https://cli.github.com/manual\n  Learn about exit codes using `gh help exit-codes`\n  Learn about accessibility experiences using `gh help accessibility`\n\n",
+  "configSettings": [
+    {
+      "key": "api_host",
+      "description": "experimental: the hostname to use when making API requests for a GitHub host. Note: this is not a security boundary and requests to the canonical host will remain authenticated",
+      "choices": [],
+      "defaultValue": ""
+    },
+    {
+      "key": "git_protocol",
+      "description": "the protocol to use for git clone and push operations `{https | ssh}` (default `https`)",
+      "choices": [
+        "https",
+        "ssh"
+      ],
+      "defaultValue": "https"
+    },
+    {
+      "key": "editor",
+      "description": "the text editor program to use for authoring text",
+      "choices": [],
+      "defaultValue": ""
+    },
+    {
+      "key": "prompt",
+      "description": "toggle interactive prompting in the terminal `{enabled | disabled}` (default `enabled`)",
+      "choices": [
+        "enabled",
+        "disabled"
+      ],
+      "defaultValue": "enabled"
+    },
+    {
+      "key": "prefer_editor_prompt",
+      "description": "toggle preference for editor-based interactive prompting in the terminal `{enabled | disabled}` (default `disabled`)",
+      "choices": [
+        "enabled",
+        "disabled"
+      ],
+      "defaultValue": "disabled"
+    },
+    {
+      "key": "pager",
+      "description": "the terminal pager program to send standard output to",
+      "choices": [],
+      "defaultValue": ""
+    },
+    {
+      "key": "http_unix_socket",
+      "description": "the path to a Unix socket through which to make an HTTP connection",
+      "choices": [],
+      "defaultValue": ""
+    },
+    {
+      "key": "browser",
+      "description": "the web browser to use for opening URLs",
+      "choices": [],
+      "defaultValue": ""
+    },
+    {
+      "key": "clipboard",
+      "description": "whether to copy one-time OAuth device codes to the clipboard `{enabled | disabled}` (default `enabled`)",
+      "choices": [
+        "enabled",
+        "disabled"
+      ],
+      "defaultValue": "enabled"
+    },
+    {
+      "key": "color_labels",
+      "description": "whether to display labels using their RGB hex color codes in terminals that support truecolor `{enabled | disabled}` (default `disabled`)",
+      "choices": [
+        "enabled",
+        "disabled"
+      ],
+      "defaultValue": "disabled"
+    },
+    {
+      "key": "accessible_colors",
+      "description": "whether customizable, 4-bit accessible colors should be used `{enabled | disabled}` (default `disabled`)",
+      "choices": [
+        "enabled",
+        "disabled"
+      ],
+      "defaultValue": "disabled"
+    },
+    {
+      "key": "accessible_prompter",
+      "description": "whether an accessible prompter should be used `{enabled | disabled}` (default `disabled`)",
+      "choices": [
+        "enabled",
+        "disabled"
+      ],
+      "defaultValue": "disabled"
+    },
+    {
+      "key": "spinner",
+      "description": "whether to use an animated spinner as a progress indicator `{enabled | disabled}` (default `enabled`)",
+      "choices": [
+        "enabled",
+        "disabled"
+      ],
+      "defaultValue": "enabled"
+    },
+    {
+      "key": "telemetry",
+      "description": "whether telemetry is enabled, disabled, or logging `{enabled | disabled | log}` (default `enabled`)",
+      "choices": [
+        "enabled",
+        "disabled",
+        "log"
+      ],
+      "defaultValue": "enabled"
+    }
+  ],
+  "configurationBehaviorSource": "https://github.com/cli/cli/blob/v2.102.0/internal/config/config.go",
+  "environment": [
+    {
+      "names": [
+        "GH_TOKEN",
+        "GITHUB_TOKEN"
+      ],
+      "description": "`GH_TOKEN`, `GITHUB_TOKEN` (in order of precedence): an authentication token that will be used when\na command targets either `github.com` or a subdomain of `ghe.com`. Setting this avoids being prompted to\nauthenticate and takes precedence over previously stored credentials.",
+      "sensitive": true,
+      "presentNames": [],
+      "precedence": "Names appear in CLI precedence order; first active override wins."
+    },
+    {
+      "names": [
+        "GH_ENTERPRISE_TOKEN",
+        "GITHUB_ENTERPRISE_TOKEN"
+      ],
+      "description": "`GH_ENTERPRISE_TOKEN`, `GITHUB_ENTERPRISE_TOKEN` (in order of precedence): an authentication\ntoken that will be used when a command targets a GitHub Enterprise Server host.",
+      "sensitive": true,
+      "presentNames": [],
+      "precedence": "Names appear in CLI precedence order; first active override wins."
+    },
+    {
+      "names": [
+        "GH_HOST"
+      ],
+      "description": "`GH_HOST`: specify the GitHub hostname for commands where a hostname has not been provided, or\ncannot be inferred from the context of a local Git repository. If this host was previously\nauthenticated with, the stored credentials will be used. Otherwise, setting `GH_TOKEN` or\n`GH_ENTERPRISE_TOKEN` is required, depending on the targeted host.",
+      "sensitive": false,
+      "presentNames": [],
+      "precedence": "Activation follows the official help description."
+    },
+    {
+      "names": [
+        "GH_REPO"
+      ],
+      "description": "`GH_REPO`: specify the GitHub repository in the `[HOST/]OWNER/REPO` format for commands\nthat otherwise operate on a local repository.",
+      "sensitive": false,
+      "presentNames": [],
+      "precedence": "Activation follows the official help description."
+    },
+    {
+      "names": [
+        "GH_EDITOR",
+        "GIT_EDITOR",
+        "VISUAL",
+        "EDITOR"
+      ],
+      "description": "`GH_EDITOR`, `GIT_EDITOR`, `VISUAL`, `EDITOR` (in order of precedence): the editor tool to use\nfor authoring text.",
+      "sensitive": false,
+      "presentNames": [],
+      "precedence": "Names appear in CLI precedence order; first active override wins."
+    },
+    {
+      "names": [
+        "GH_BROWSER",
+        "BROWSER"
+      ],
+      "description": "`GH_BROWSER`, `BROWSER` (in order of precedence): the web browser to use for opening links.",
+      "sensitive": false,
+      "presentNames": [],
+      "precedence": "Names appear in CLI precedence order; first active override wins."
+    },
+    {
+      "names": [
+        "GH_DEBUG"
+      ],
+      "description": "`GH_DEBUG`: set to a truthy value to enable verbose output on standard error. Set to `api`\nto additionally log details of HTTP traffic.",
+      "sensitive": false,
+      "presentNames": [],
+      "precedence": "Activation follows the official help description."
+    },
+    {
+      "names": [
+        "DEBUG"
+      ],
+      "description": "`DEBUG` (deprecated): set to `1`, `true`, or `yes` to enable verbose output on standard\nerror.",
+      "sensitive": false,
+      "presentNames": [],
+      "precedence": "Activation follows the official help description."
+    },
+    {
+      "names": [
+        "GH_PAGER",
+        "PAGER"
+      ],
+      "description": "`GH_PAGER`, `PAGER` (in order of precedence): a terminal paging program to send standard output\nto, e.g. `less`.",
+      "sensitive": false,
+      "presentNames": [],
+      "precedence": "Names appear in CLI precedence order; first active override wins."
+    },
+    {
+      "names": [
+        "GLAMOUR_STYLE"
+      ],
+      "description": "`GLAMOUR_STYLE`: the style to use for rendering Markdown. See\n<https://github.com/charmbracelet/glamour#styles>",
+      "sensitive": false,
+      "presentNames": [],
+      "precedence": "Activation follows the official help description."
+    },
+    {
+      "names": [
+        "NO_COLOR"
+      ],
+      "description": "`NO_COLOR`: set to any value to avoid printing ANSI escape sequences for color output.",
+      "sensitive": false,
+      "presentNames": [],
+      "precedence": "Activation follows the official help description."
+    },
+    {
+      "names": [
+        "CLICOLOR"
+      ],
+      "description": "`CLICOLOR`: set to `0` to disable printing ANSI colors in output.",
+      "sensitive": false,
+      "presentNames": [],
+      "precedence": "Activation follows the official help description."
+    },
+    {
+      "names": [
+        "CLICOLOR_FORCE"
+      ],
+      "description": "`CLICOLOR_FORCE`: set to a value other than `0` to keep ANSI colors in output\neven when the output is piped.",
+      "sensitive": false,
+      "presentNames": [],
+      "precedence": "Activation follows the official help description."
+    },
+    {
+      "names": [
+        "GH_COLOR_LABELS"
+      ],
+      "description": "`GH_COLOR_LABELS`: set to any value to display labels using their RGB hex color codes in terminals that\nsupport truecolor.",
+      "sensitive": false,
+      "presentNames": [],
+      "precedence": "Activation follows the official help description."
+    },
+    {
+      "names": [
+        "GH_ACCESSIBLE_COLORS"
+      ],
+      "description": "`GH_ACCESSIBLE_COLORS` (preview): set to a truthy value to use customizable, 4-bit accessible colors.",
+      "sensitive": false,
+      "presentNames": [],
+      "precedence": "Activation follows the official help description."
+    },
+    {
+      "names": [
+        "GH_FORCE_TTY"
+      ],
+      "description": "`GH_FORCE_TTY`: set to any value to force terminal-style output even when the output is\nredirected. When the value is a number, it is interpreted as the number of columns\navailable in the viewport. When the value is a percentage, it will be applied against\nthe number of columns available in the current viewport.",
+      "sensitive": false,
+      "presentNames": [],
+      "precedence": "Activation follows the official help description."
+    },
+    {
+      "names": [
+        "GH_NO_UPDATE_NOTIFIER"
+      ],
+      "description": "`GH_NO_UPDATE_NOTIFIER`: set to any value to disable GitHub CLI update notifications.\nWhen any command is executed, gh checks for new versions once every 24 hours.\nIf a newer version was found, an upgrade notice is displayed on standard error.",
+      "sensitive": false,
+      "presentNames": [],
+      "precedence": "Activation follows the official help description."
+    },
+    {
+      "names": [
+        "GH_NO_EXTENSION_UPDATE_NOTIFIER"
+      ],
+      "description": "`GH_NO_EXTENSION_UPDATE_NOTIFIER`: set to any value to disable GitHub CLI extension update notifications.\nWhen an extension is executed, gh checks for new versions for the executed extension once every 24 hours.\nIf a newer version was found, an upgrade notice is displayed on standard error.",
+      "sensitive": false,
+      "presentNames": [],
+      "precedence": "Activation follows the official help description."
+    },
+    {
+      "names": [
+        "GH_EXTENSION"
+      ],
+      "description": "`GH_EXTENSION`: set to `1` by gh when it invokes an extension, allowing an extension to\ntell whether it was run as `gh <extension>` or directly as a standalone program.",
+      "sensitive": false,
+      "presentNames": [],
+      "precedence": "Activation follows the official help description."
+    },
+    {
+      "names": [
+        "GH_CONFIG_DIR"
+      ],
+      "description": "`GH_CONFIG_DIR`: the directory where gh will store configuration files. If not specified,\nthe default value will be one of the following paths (in order of precedence):\n  - `$XDG_CONFIG_HOME/gh` (if `$XDG_CONFIG_HOME` is set),\n  - `$AppData/GitHub CLI` (on Windows if `$AppData` is set), or\n  - `$HOME/.config/gh`.",
+      "sensitive": false,
+      "presentNames": [],
+      "precedence": "Activation follows the official help description."
+    },
+    {
+      "names": [
+        "GH_PROMPT_DISABLED"
+      ],
+      "description": "`GH_PROMPT_DISABLED`: set to any value to disable interactive prompting in the terminal.",
+      "sensitive": false,
+      "presentNames": [],
+      "precedence": "Activation follows the official help description."
+    },
+    {
+      "names": [
+        "GH_PATH"
+      ],
+      "description": "`GH_PATH`: set the path to the gh executable, useful for when gh can not properly determine\nits own path such as in the cygwin terminal. gh also sets this when invoking extensions so they\ncan call back into the same gh executable.",
+      "sensitive": false,
+      "presentNames": [],
+      "precedence": "Activation follows the official help description."
+    },
+    {
+      "names": [
+        "GH_MDWIDTH"
+      ],
+      "description": "`GH_MDWIDTH`: default maximum width for markdown render wrapping.  The max width of lines\nwrapped on the terminal will be taken as the lesser of the terminal width, this value, or 120 if\nnot specified.  This value is used, for example, with `pr view` subcommand.",
+      "sensitive": false,
+      "presentNames": [],
+      "precedence": "Activation follows the official help description."
+    },
+    {
+      "names": [
+        "GH_ACCESSIBLE_PROMPTER"
+      ],
+      "description": "`GH_ACCESSIBLE_PROMPTER` (preview): set to a truthy value to enable prompts that are\nmore compatible with speech synthesis and braille screen readers.",
+      "sensitive": false,
+      "presentNames": [],
+      "precedence": "Activation follows the official help description."
+    },
+    {
+      "names": [
+        "GH_TELEMETRY"
+      ],
+      "description": "`GH_TELEMETRY`: set to `log` to print telemetry data to standard error instead of sending it.\nSet to `false` or `0` to disable telemetry. Takes precedence over `DO_NOT_TRACK`.",
+      "sensitive": false,
+      "presentNames": [],
+      "precedence": "Activation follows the official help description."
+    },
+    {
+      "names": [
+        "DO_NOT_TRACK"
+      ],
+      "description": "`DO_NOT_TRACK`: set to `true` or `1` to disable telemetry. Ignored when\n`GH_TELEMETRY` is set, which takes precedence.",
+      "sensitive": false,
+      "presentNames": [],
+      "precedence": "Activation follows the official help description."
+    },
+    {
+      "names": [
+        "GH_SPINNER_DISABLED"
+      ],
+      "description": "`GH_SPINNER_DISABLED`: set to a truthy value to replace the spinner animation with\na textual progress indicator.",
+      "sensitive": false,
+      "presentNames": [],
+      "precedence": "Activation follows the official help description."
+    }
+  ],
+  "capabilities": [
+    {
+      "id": "command-catalog",
+      "title": "Built-in commands and flags",
+      "description": "All discovered command leaves and their flags are in the versioned catalog. Catalog-guided means a structured runner definition exists, not that every option combination has interactive proof.",
+      "status": "guided"
+    },
+    {
+      "id": "configuration",
+      "title": "Global and host configuration",
+      "description": "Read native CLI-resolved values; review typed setting changes; write with gh config set. Twelve of fourteen keys have controls. Host removal and inherited/default storage origin are not exposed by the CLI.",
+      "status": "guided"
+    },
+    {
+      "id": "environment",
+      "title": "Environment overrides",
+      "description": "Read the official environment reference and the names of active overrides. Values, tokens and credentials are never returned. Editing the parent process environment needs a separate adapter.",
+      "status": "reference"
+    },
+    {
+      "id": "global-flags",
+      "title": "Help and version flags",
+      "description": "The global --help and --version flags and all help topics are recorded here; command-specific flags remain in the command catalog.",
+      "status": "reference"
+    },
+    {
+      "id": "formatting",
+      "title": "JSON, jq and Go templates",
+      "description": "Official formatting topic documents JSON export, jq filters and Go templates. The dedicated API workspace owns its reviewed formatting controls.",
+      "status": "reference"
+    },
+    {
+      "id": "aliases",
+      "title": "Command aliases and shell aliases",
+      "description": "Built-in alias commands are inventoried. User-defined aliases can expand to external shell commands, so arbitrary alias execution and import require a dedicated reviewed adapter.",
+      "status": "adapter-required"
+    },
+    {
+      "id": "extensions",
+      "title": "Extensions and forwarded arguments",
+      "description": "Extensions run publisher code and can forward arguments to an executable. Dynamic extension commands are outside the built-in inventory and require a reviewed external-code adapter.",
+      "status": "adapter-required"
+    },
+    {
+      "id": "terminal",
+      "title": "Interactive terminal, SSH and external applications",
+      "description": "Terminal interfaces, shell completion installation, arbitrary editor/browser/pager arguments, SSH, Copilot and extension execution require their own adapters. No shell command entry is offered.",
+      "status": "adapter-required"
+    },
+    {
+      "id": "authentication",
+      "title": "Accounts and credentials",
+      "description": "The Accounts screen owns device sign-in and account switching. Token export and terminal authentication output do not belong in the configuration screen.",
+      "status": "guided"
+    },
+    {
+      "id": "cache",
+      "title": "CLI response cache",
+      "description": "gh config clear-cache clears cached CLI responses. It is a separate command in the catalog and does not reset settings.",
+      "status": "reference"
+    },
+    {
+      "id": "accessibility",
+      "title": "Terminal accessibility",
+      "description": "Official accessibility help covers accessible colors, accessible prompting and spinner behavior. Desktop appearance and accessibility preferences are separate.",
+      "status": "reference"
+    },
+    {
+      "id": "telemetry",
+      "title": "Telemetry and diagnostics",
+      "description": "Telemetry and debug environment behavior are documented. The setting is guided; exposing debug output and changing environment values require a separate reviewed workflow.",
+      "status": "reference"
+    }
+  ],
+  "behaviorHelp": {
+    "alias": "Aliases can be used to make shortcuts for gh commands or to compose multiple commands.\n\nRun `gh help alias set` to learn more.\n\n\nUSAGE\n  gh alias <command> [flags]\n\nAVAILABLE COMMANDS\n  delete:        Delete set aliases\n  import:        Import aliases from a YAML file\n  list:          List your aliases\n  set:           Create a shortcut for a gh command\n\nINHERITED FLAGS\n  --help   Show help for command\n\nLEARN MORE\n  Use `gh <command> <subcommand> --help` for more information about a command.\n  Read the manual at https://cli.github.com/manual\n  Learn about exit codes using `gh help exit-codes`\n  Learn about accessibility experiences using `gh help accessibility`\n\n",
+    "alias set": "Define a word that will expand to a full gh command when invoked.\n\nThe expansion may specify additional arguments and flags. If the expansion includes\npositional placeholders such as `$1`, extra arguments that follow the alias will be\ninserted appropriately. Otherwise, extra arguments will be appended to the expanded\ncommand.\n\nUse `-` as expansion argument to read the expansion string from standard input. This\nis useful to avoid quoting issues when defining expansions.\n\nIf the expansion starts with `!` or if `--shell` was given, the expansion is a shell\nexpression that will be evaluated through the `sh` interpreter when the alias is\ninvoked. This allows for chaining multiple commands via piping and redirection.\n\n\nUSAGE\n  gh alias set <alias> <expansion> [flags]\n\nFLAGS\n      --clobber   Overwrite existing aliases of the same name\n  -s, --shell     Declare an alias to be passed through a shell interpreter\n\nINHERITED FLAGS\n  --help   Show help for command\n\nEXAMPLES\n  # Note: Command Prompt on Windows requires using double quotes for arguments\n  $ gh alias set pv 'pr view'\n  $ gh pv -w 123  #=> gh pr view -w 123\n  \n  $ gh alias set bugs 'issue list --label=bugs'\n  $ gh bugs\n  \n  $ gh alias set homework 'issue list --assignee @me'\n  $ gh homework\n  \n  $ gh alias set 'issue mine' 'issue list --mention @me'\n  $ gh issue mine\n  \n  $ gh alias set epicsBy 'issue list --author=\"$1\" --label=\"epic\"'\n  $ gh epicsBy vilmibm  #=> gh issue list --author=\"vilmibm\" --label=\"epic\"\n  \n  $ gh alias set --shell igrep 'gh issue list --label=\"$1\" | grep \"$2\"'\n  $ gh igrep epic foo  #=> gh issue list --label=\"epic\" | grep \"foo\"\n\nLEARN MORE\n  Use `gh <command> <subcommand> --help` for more information about a command.\n  Read the manual at https://cli.github.com/manual\n  Learn about exit codes using `gh help exit-codes`\n  Learn about accessibility experiences using `gh help accessibility`\n\n",
+    "alias import": "Import aliases from the contents of a YAML file.\n\nAliases should be defined as a map in YAML, where the keys represent aliases and\nthe values represent the corresponding expansions. An example file should look like\nthe following:\n\n    bugs: issue list --label=bug\n    igrep: '!gh issue list --label=\"$1\" | grep \"$2\"'\n    features: |-\n        issue list\n        --label=enhancement\n\nUse `-` to read aliases (in YAML format) from standard input.\n\nThe output from `gh alias list` can be used to produce a YAML file\ncontaining your aliases, which you can use to import them from one machine to\nanother. Run `gh help alias list` to learn more.\n\n\nUSAGE\n  gh alias import [<filename> | -] [flags]\n\nFLAGS\n  --clobber   Overwrite existing aliases of the same name\n\nINHERITED FLAGS\n  --help   Show help for command\n\nEXAMPLES\n  # Import aliases from a file\n  $ gh alias import aliases.yml\n  \n  # Import aliases from standard input\n  $ gh alias import -\n\nLEARN MORE\n  Use `gh <command> <subcommand> --help` for more information about a command.\n  Read the manual at https://cli.github.com/manual\n  Learn about exit codes using `gh help exit-codes`\n  Learn about accessibility experiences using `gh help accessibility`\n\n",
+    "extension": "GitHub CLI extensions are repositories that provide additional gh commands.\n\nThe name of the extension repository must start with `gh-` and it must contain an\nexecutable of the same name. All arguments passed to the `gh <extname>` invocation\nwill be forwarded to the `gh-<extname>` executable of the extension.\n\nAn extension cannot override any of the core gh commands. If an extension name conflicts\nwith a core gh command, you can use `gh extension exec <extname>`.\n\nWhen an extension is executed, gh will check for new versions once every 24 hours and display\nan upgrade notice. See `gh help environment` for information on disabling extension notices.\n\nExtensions are not verified, signed, or endorsed by GitHub. When you install or upgrade\n\t\tan extension, you are trusting its publisher. It is your responsibility to review the\n\t\tsource and provenance of any extension before use.\n\nFor the list of available extensions, see <https://github.com/topics/gh-extension>.\n\n\nUSAGE\n  gh extension [flags]\n\nALIASES\n  gh extensions, gh ext\n\nAVAILABLE COMMANDS\n  browse:        Enter a UI for browsing, adding, and removing extensions\n  create:        Create a new extension\n  exec:          Execute an installed extension\n  install:       Install a gh extension from a repository\n  list:          List installed extension commands\n  remove:        Remove an installed extension\n  search:        Search extensions to the GitHub CLI\n  upgrade:       Upgrade installed extensions\n\nINHERITED FLAGS\n  --help   Show help for command\n\nLEARN MORE\n  Use `gh <command> <subcommand> --help` for more information about a command.\n  Read the manual at https://cli.github.com/manual\n  Learn about exit codes using `gh help exit-codes`\n  Learn about accessibility experiences using `gh help accessibility`\n\n",
+    "extension exec": "Execute an extension using the short name. For example, if the extension repository is\n`owner/gh-extension`, you should pass `extension`. You can use this command when\nthe short name conflicts with a core gh command.\n\nAll arguments after the extension name will be forwarded to the executable\nof the extension.\n\n\nUSAGE\n  gh extension exec <name> [args] [flags]\n\nINHERITED FLAGS\n  --help   Show help for command\n\nEXAMPLES\n  # Execute a label extension instead of the core gh label command\n  $ gh extension exec label\n\nLEARN MORE\n  Use `gh <command> <subcommand> --help` for more information about a command.\n  Read the manual at https://cli.github.com/manual\n  Learn about exit codes using `gh help exit-codes`\n  Learn about accessibility experiences using `gh help accessibility`\n\n",
+    "extension install": "Install a GitHub CLI extension from a GitHub or local repository.\n\nFor GitHub repositories, the repository argument can be specified in\n`OWNER/REPO` format or as a full repository URL.\nThe URL format is useful when the repository is not hosted on `github.com`.\n\nFor remote repositories, the GitHub CLI first looks for the release artifacts assuming\nthat it's a binary extension i.e. prebuilt binaries provided as part of the release.\nIn the absence of a release, the repository itself is cloned assuming that it's a\nscript extension i.e. prebuilt executable or script exists on its root.\n\nThe `--pin` flag may be used to specify a tag or commit for binary and script\nextensions respectively, the latest version is used otherwise.\n\nFor local repositories, often used while developing extensions, use `.` as the\nvalue of the repository argument. Note the following:\n\n- After installing an extension from a locally cloned repository, the GitHub CLI will\nmanage this extension as a symbolic link (or equivalent mechanism on Windows) pointing\nto an executable file with the same name as the repository in the repository's root.\nFor example, if the repository is named `gh-foobar`, the symbolic link will point\nto `gh-foobar` in the extension repository's root.\n- When executing the extension, the GitHub CLI will run the executable file found\nby following the symbolic link. If no executable file is found, the extension\nwill fail to execute.\n- If the extension is precompiled, the executable file must be built manually and placed\nin the repository's root.\n\nFor the list of available extensions, see <https://github.com/topics/gh-extension>.\n\n\nUSAGE\n  gh extension install <repository> [flags]\n\nFLAGS\n  --force        Force upgrade extension, or ignore if latest already installed\n  --pin string   Pin extension to a release tag or commit ref\n\nINHERITED FLAGS\n  --help   Show help for command\n\nEXAMPLES\n  # Install an extension from a remote repository hosted on GitHub\n  $ gh extension install owner/gh-extension\n  \n  # Install an extension from a remote repository via full URL\n  $ gh extension install https://my.ghes.com/owner/gh-extension\n  \n  # Install an extension from a local repository in the current working directory\n  $ gh extension install .\n\nLEARN MORE\n  Use `gh <command> <subcommand> --help` for more information about a command.\n  Read the manual at https://cli.github.com/manual\n  Learn about exit codes using `gh help exit-codes`\n  Learn about accessibility experiences using `gh help accessibility`\n\n",
+    "extension upgrade": "Upgrade installed extensions\n\nUSAGE\n  gh extension upgrade {<name> | --all} [flags]\n\nFLAGS\n  --all       Upgrade all extensions\n  --dry-run   Only display upgrades\n  --force     Force upgrade extension\n\nINHERITED FLAGS\n  --help   Show help for command\n\nLEARN MORE\n  Use `gh <command> <subcommand> --help` for more information about a command.\n  Read the manual at https://cli.github.com/manual\n  Learn about exit codes using `gh help exit-codes`\n  Learn about accessibility experiences using `gh help accessibility`\n\n",
+    "config get": "Print the value of a given configuration key\n\nUSAGE\n  gh config get <key> [flags]\n\nFLAGS\n  -h, --host string   Get per-host setting\n\nINHERITED FLAGS\n  --help   Show help for command\n\nEXAMPLES\n  $ gh config get git_protocol\n\nLEARN MORE\n  Use `gh <command> <subcommand> --help` for more information about a command.\n  Read the manual at https://cli.github.com/manual\n  Learn about exit codes using `gh help exit-codes`\n  Learn about accessibility experiences using `gh help accessibility`\n\n",
+    "config list": "Print a list of configuration keys and values\n\nUSAGE\n  gh config list [flags]\n\nALIASES\n  gh config ls\n\nFLAGS\n  -h, --host string   Get per-host configuration\n\nINHERITED FLAGS\n  --help   Show help for command\n\nLEARN MORE\n  Use `gh <command> <subcommand> --help` for more information about a command.\n  Read the manual at https://cli.github.com/manual\n  Learn about exit codes using `gh help exit-codes`\n  Learn about accessibility experiences using `gh help accessibility`\n\n",
+    "config set": "Update configuration with a value for the given key\n\nUSAGE\n  gh config set <key> <value> [flags]\n\nFLAGS\n  -h, --host string   Set per-host setting\n\nINHERITED FLAGS\n  --help   Show help for command\n\nEXAMPLES\n  $ gh config set editor vim\n  $ gh config set editor \"code --wait\"\n  $ gh config set git_protocol ssh --host github.com\n  $ gh config set api_host api-gateway.example.com --host example.com\n  $ gh config set prompt disabled\n\nLEARN MORE\n  Use `gh <command> <subcommand> --help` for more information about a command.\n  Read the manual at https://cli.github.com/manual\n  Learn about exit codes using `gh help exit-codes`\n  Learn about accessibility experiences using `gh help accessibility`\n\n",
+    "config clear-cache": "Clear the cli cache\n\nUSAGE\n  gh config clear-cache [flags]\n\nINHERITED FLAGS\n  --help   Show help for command\n\nEXAMPLES\n  # Clear the cli cache\n  $ gh config clear-cache\n\nLEARN MORE\n  Use `gh <command> <subcommand> --help` for more information about a command.\n  Read the manual at https://cli.github.com/manual\n  Learn about exit codes using `gh help exit-codes`\n  Learn about accessibility experiences using `gh help accessibility`\n\n",
+    "completion": "Generate shell completion scripts for GitHub CLI commands.\n\nWhen installing GitHub CLI through a package manager, it's possible that\nno additional shell configuration is necessary to gain completion support. For\nHomebrew, see <https://docs.brew.sh/Shell-Completion>\n\nIf you need to set up completions manually, follow the instructions below. The exact\nconfig file locations might vary based on your system. Make sure to restart your\nshell before testing whether completions are working.\n\n### bash\n\nFirst, ensure that you install `bash-completion` using your package manager.\n\nAfter, add this to your `~/.bash_profile`:\n\n\teval \"$(gh completion -s bash)\"\n\n### zsh\n\nGenerate a `_gh` completion script and put it somewhere in your `$fpath`:\n\n\tgh completion -s zsh > /usr/local/share/zsh/site-functions/_gh\n\nEnsure that the following is present in your `~/.zshrc`:\n\n\tautoload -U compinit\n\tcompinit -i\n\nZsh version 5.7 or later is recommended.\n\n### fish\n\nGenerate a `gh.fish` completion script:\n\n\tgh completion -s fish > ~/.config/fish/completions/gh.fish\n\n### PowerShell\n\nOpen your profile script with:\n\n\tmkdir -Path (Split-Path -Parent $profile) -ErrorAction SilentlyContinue\n\tnotepad $profile\n\nAdd the line and save the file:\n\n\tInvoke-Expression -Command $(gh completion -s powershell | Out-String)\n\n\nUSAGE\n  gh completion -s <shell>\n\nFLAGS\n  -s, --shell string   Shell type: {bash|zsh|fish|powershell}\n\nINHERITED FLAGS\n  --help   Show help for command\n\nLEARN MORE\n  Use `gh <command> <subcommand> --help` for more information about a command.\n  Read the manual at https://cli.github.com/manual\n  Learn about exit codes using `gh help exit-codes`\n  Learn about accessibility experiences using `gh help accessibility`\n\n"
+  },
+  "coverage": {
+    "catalogLeaves": 196,
+    "catalogGuided": 181,
+    "catalogExcluded": 15,
+    "configKeys": 14,
+    "guidedConfigKeys": 12
+  },
+  "commands": [
+    {
+      "id": "auth login",
+      "summary": "Authenticate with a GitHub host.",
+      "status": "adapter-required",
+      "availability": "Use the dedicated GitHub accounts panel; authentication output is excluded from command history.",
+      "options": 8,
+      "arguments": 0
+    },
+    {
+      "id": "auth logout",
+      "summary": "Remove authentication for a GitHub account.",
+      "status": "catalog-guided",
+      "options": 2,
+      "arguments": 0
+    },
+    {
+      "id": "auth refresh",
+      "summary": "Expand or fix the permission scopes for stored credentials for active account.",
+      "status": "adapter-required",
+      "availability": "Use the dedicated GitHub accounts panel; authentication output is excluded from command history.",
+      "options": 6,
+      "arguments": 0
+    },
+    {
+      "id": "auth setup-git",
+      "summary": "This command configures `git` to use GitHub CLI as a credential helper.",
+      "status": "adapter-required",
+      "availability": "Use the dedicated GitHub accounts panel; authentication output is excluded from command history.",
+      "options": 2,
+      "arguments": 0
+    },
+    {
+      "id": "auth status",
+      "summary": "Display active account and authentication state on each known GitHub host.",
+      "status": "catalog-guided",
+      "options": 6,
+      "arguments": 0
+    },
+    {
+      "id": "auth switch",
+      "summary": "Switch the active account for a GitHub host.",
+      "status": "catalog-guided",
+      "options": 2,
+      "arguments": 0
+    },
+    {
+      "id": "auth token",
+      "summary": "This command outputs the authentication token for an account on a given GitHub host.",
+      "status": "adapter-required",
+      "availability": "Use the dedicated GitHub accounts panel; authentication output is excluded from command history.",
+      "options": 2,
+      "arguments": 0
+    },
+    {
+      "id": "browse",
+      "summary": "Transition from the terminal to the web browser to view and interact with:",
+      "status": "catalog-guided",
+      "options": 10,
+      "arguments": 1
+    },
+    {
+      "id": "codespace code",
+      "summary": "Open a codespace in Visual Studio Code",
+      "status": "adapter-required",
+      "availability": "Requires a dedicated native terminal or external-code adapter; unavailable in the guided runner.",
+      "options": 5,
+      "arguments": 0
+    },
+    {
+      "id": "codespace cp",
+      "summary": "The `cp` command copies files between the local and remote file systems.",
+      "status": "catalog-guided",
+      "options": 6,
+      "arguments": 2
+    },
+    {
+      "id": "codespace create",
+      "summary": "Create a codespace",
+      "status": "catalog-guided",
+      "options": 11,
+      "arguments": 0
+    },
+    {
+      "id": "codespace delete",
+      "summary": "Delete codespaces based on selection criteria.",
+      "status": "catalog-guided",
+      "options": 8,
+      "arguments": 0
+    },
+    {
+      "id": "codespace edit",
+      "summary": "Edit a codespace",
+      "status": "catalog-guided",
+      "options": 5,
+      "arguments": 0
+    },
+    {
+      "id": "codespace jupyter",
+      "summary": "Open a codespace in JupyterLab",
+      "status": "adapter-required",
+      "availability": "Requires a dedicated native terminal or external-code adapter; unavailable in the guided runner.",
+      "options": 3,
+      "arguments": 0
+    },
+    {
+      "id": "codespace list",
+      "summary": "List codespaces of the authenticated user.",
+      "status": "catalog-guided",
+      "options": 8,
+      "arguments": 0
+    },
+    {
+      "id": "codespace logs",
+      "summary": "Access codespace logs",
+      "status": "catalog-guided",
+      "options": 4,
+      "arguments": 0
+    },
+    {
+      "id": "codespace ports forward",
+      "summary": "Forward ports from a codespace to your local machine.",
+      "status": "catalog-guided",
+      "options": 4,
+      "arguments": 1
+    },
+    {
+      "id": "codespace ports visibility",
+      "summary": "Change the visibility of the forwarded port",
+      "status": "catalog-guided",
+      "options": 3,
+      "arguments": 1
+    },
+    {
+      "id": "codespace rebuild",
+      "summary": "Rebuilding recreates your codespace.",
+      "status": "catalog-guided",
+      "options": 4,
+      "arguments": 0
+    },
+    {
+      "id": "codespace ssh",
+      "summary": "The `ssh` command is used to SSH into a codespace. In its simplest form, you can",
+      "status": "adapter-required",
+      "availability": "Requires a dedicated native terminal or external-code adapter; unavailable in the guided runner.",
+      "options": 8,
+      "arguments": 1
+    },
+    {
+      "id": "codespace stop",
+      "summary": "Stop a running codespace",
+      "status": "catalog-guided",
+      "options": 5,
+      "arguments": 0
+    },
+    {
+      "id": "codespace view",
+      "summary": "View details about a codespace",
+      "status": "catalog-guided",
+      "options": 6,
+      "arguments": 0
+    },
+    {
+      "id": "discussion create",
+      "summary": "Create a new GitHub Discussion in a repository.",
+      "status": "catalog-guided",
+      "options": 6,
+      "arguments": 0
+    },
+    {
+      "id": "discussion list",
+      "summary": "List discussions in a GitHub repository. By default, only open discussions",
+      "status": "catalog-guided",
+      "options": 15,
+      "arguments": 0
+    },
+    {
+      "id": "discussion comment",
+      "summary": "Manage comments or replies on a GitHub discussion.",
+      "status": "catalog-guided",
+      "options": 6,
+      "arguments": 1
+    },
+    {
+      "id": "discussion edit",
+      "summary": "Edit a GitHub Discussion.",
+      "status": "catalog-guided",
+      "options": 7,
+      "arguments": 1
+    },
+    {
+      "id": "discussion view",
+      "summary": "Display the title, body, and other information about a discussion.",
+      "status": "catalog-guided",
+      "options": 9,
+      "arguments": 1
+    },
+    {
+      "id": "gist clone",
+      "summary": "Clone a GitHub gist locally.",
+      "status": "catalog-guided",
+      "options": 0,
+      "arguments": 2
+    },
+    {
+      "id": "gist create",
+      "summary": "Create a new GitHub gist with given contents.",
+      "status": "catalog-guided",
+      "options": 4,
+      "arguments": 1
+    },
+    {
+      "id": "gist delete",
+      "summary": "Delete a GitHub gist.",
+      "status": "catalog-guided",
+      "options": 1,
+      "arguments": 1
+    },
+    {
+      "id": "gist edit",
+      "summary": "Edit one of your gists",
+      "status": "catalog-guided",
+      "options": 4,
+      "arguments": 2
+    },
+    {
+      "id": "gist list",
+      "summary": "List gists from your user account.",
+      "status": "catalog-guided",
+      "options": 5,
+      "arguments": 0
+    },
+    {
+      "id": "gist rename",
+      "summary": "Rename a file in the given gist ID / URL.",
+      "status": "catalog-guided",
+      "options": 0,
+      "arguments": 3
+    },
+    {
+      "id": "gist view",
+      "summary": "View the given gist or select from recent gists.",
+      "status": "catalog-guided",
+      "options": 5,
+      "arguments": 1
+    },
+    {
+      "id": "issue create",
+      "summary": "Create an issue on GitHub.",
+      "status": "catalog-guided",
+      "options": 17,
+      "arguments": 0
+    },
+    {
+      "id": "issue list",
+      "summary": "List issues in a GitHub repository. By default, this only lists open issues.",
+      "status": "catalog-guided",
+      "options": 15,
+      "arguments": 0
+    },
+    {
+      "id": "issue status",
+      "summary": "Show status of relevant issues",
+      "status": "catalog-guided",
+      "options": 4,
+      "arguments": 0
+    },
+    {
+      "id": "issue close",
+      "summary": "Close issue",
+      "status": "catalog-guided",
+      "options": 4,
+      "arguments": 1
+    },
+    {
+      "id": "issue comment",
+      "summary": "Add a comment to a GitHub issue.",
+      "status": "catalog-guided",
+      "options": 10,
+      "arguments": 1
+    },
+    {
+      "id": "issue delete",
+      "summary": "Delete issue",
+      "status": "catalog-guided",
+      "options": 2,
+      "arguments": 1
+    },
+    {
+      "id": "issue develop",
+      "summary": "Manage linked branches for an issue.",
+      "status": "catalog-guided",
+      "options": 7,
+      "arguments": 1
+    },
+    {
+      "id": "issue edit",
+      "summary": "Edit one or more issues within the same repository.",
+      "status": "catalog-guided",
+      "options": 23,
+      "arguments": 1
+    },
+    {
+      "id": "issue lock",
+      "summary": "Lock issue conversation",
+      "status": "catalog-guided",
+      "options": 2,
+      "arguments": 1
+    },
+    {
+      "id": "issue pin",
+      "summary": "Pin an issue to a repository.",
+      "status": "catalog-guided",
+      "options": 1,
+      "arguments": 1
+    },
+    {
+      "id": "issue reopen",
+      "summary": "Reopen issue",
+      "status": "catalog-guided",
+      "options": 2,
+      "arguments": 1
+    },
+    {
+      "id": "issue transfer",
+      "summary": "Transfer issue to another repository",
+      "status": "catalog-guided",
+      "options": 1,
+      "arguments": 2
+    },
+    {
+      "id": "issue unlock",
+      "summary": "Unlock issue conversation",
+      "status": "catalog-guided",
+      "options": 1,
+      "arguments": 1
+    },
+    {
+      "id": "issue unpin",
+      "summary": "Unpin an issue from a repository.",
+      "status": "catalog-guided",
+      "options": 1,
+      "arguments": 1
+    },
+    {
+      "id": "issue view",
+      "summary": "Display the title, body, and other information about an issue.",
+      "status": "catalog-guided",
+      "options": 6,
+      "arguments": 1
+    },
+    {
+      "id": "org list",
+      "summary": "List organizations for the authenticated user.",
+      "status": "catalog-guided",
+      "options": 1,
+      "arguments": 0
+    },
+    {
+      "id": "pr create",
+      "summary": "Create a pull request on GitHub.",
+      "status": "catalog-guided",
+      "options": 22,
+      "arguments": 0
+    },
+    {
+      "id": "pr list",
+      "summary": "List pull requests in a GitHub repository. By default, this only lists open PRs.",
+      "status": "catalog-guided",
+      "options": 15,
+      "arguments": 0
+    },
+    {
+      "id": "pr status",
+      "summary": "Show status of relevant pull requests.",
+      "status": "catalog-guided",
+      "options": 5,
+      "arguments": 0
+    },
+    {
+      "id": "pr checkout",
+      "summary": "Check out a pull request in git",
+      "status": "catalog-guided",
+      "options": 6,
+      "arguments": 1
+    },
+    {
+      "id": "pr checks",
+      "summary": "Show CI status for a single pull request.",
+      "status": "catalog-guided",
+      "options": 9,
+      "arguments": 1
+    },
+    {
+      "id": "pr close",
+      "summary": "Close a pull request",
+      "status": "catalog-guided",
+      "options": 3,
+      "arguments": 1
+    },
+    {
+      "id": "pr comment",
+      "summary": "Add a comment to a GitHub pull request.",
+      "status": "catalog-guided",
+      "options": 10,
+      "arguments": 1
+    },
+    {
+      "id": "pr diff",
+      "summary": "View changes in a pull request.",
+      "status": "catalog-guided",
+      "options": 7,
+      "arguments": 1
+    },
+    {
+      "id": "pr edit",
+      "summary": "Edit a pull request.",
+      "status": "catalog-guided",
+      "options": 16,
+      "arguments": 1
+    },
+    {
+      "id": "pr lock",
+      "summary": "Lock pull request conversation",
+      "status": "catalog-guided",
+      "options": 2,
+      "arguments": 1
+    },
+    {
+      "id": "pr merge",
+      "summary": "Merge a pull request on GitHub.",
+      "status": "catalog-guided",
+      "options": 13,
+      "arguments": 1
+    },
+    {
+      "id": "pr ready",
+      "summary": "Mark a pull request as ready for review.",
+      "status": "catalog-guided",
+      "options": 2,
+      "arguments": 1
+    },
+    {
+      "id": "pr reopen",
+      "summary": "Reopen a pull request",
+      "status": "catalog-guided",
+      "options": 2,
+      "arguments": 1
+    },
+    {
+      "id": "pr revert",
+      "summary": "Revert a pull request",
+      "status": "catalog-guided",
+      "options": 5,
+      "arguments": 1
+    },
+    {
+      "id": "pr review",
+      "summary": "Add a review to a pull request.",
+      "status": "catalog-guided",
+      "options": 6,
+      "arguments": 1
+    },
+    {
+      "id": "pr unlock",
+      "summary": "Unlock pull request conversation",
+      "status": "catalog-guided",
+      "options": 1,
+      "arguments": 1
+    },
+    {
+      "id": "pr update-branch",
+      "summary": "Update a pull request branch with latest changes of the base branch.",
+      "status": "catalog-guided",
+      "options": 2,
+      "arguments": 1
+    },
+    {
+      "id": "pr view",
+      "summary": "Display the title, body, and other information about a pull request.",
+      "status": "catalog-guided",
+      "options": 6,
+      "arguments": 1
+    },
+    {
+      "id": "project close",
+      "summary": "Close a project",
+      "status": "catalog-guided",
+      "options": 5,
+      "arguments": 1
+    },
+    {
+      "id": "project copy",
+      "summary": "Copy a project",
+      "status": "catalog-guided",
+      "options": 7,
+      "arguments": 1
+    },
+    {
+      "id": "project create",
+      "summary": "Create a project",
+      "status": "catalog-guided",
+      "options": 5,
+      "arguments": 0
+    },
+    {
+      "id": "project delete",
+      "summary": "Delete a project",
+      "status": "catalog-guided",
+      "options": 4,
+      "arguments": 1
+    },
+    {
+      "id": "project edit",
+      "summary": "Edit a project",
+      "status": "catalog-guided",
+      "options": 8,
+      "arguments": 1
+    },
+    {
+      "id": "project field-create",
+      "summary": "Create a field in a project",
+      "status": "catalog-guided",
+      "options": 7,
+      "arguments": 1
+    },
+    {
+      "id": "project field-delete",
+      "summary": "Delete a field in a project",
+      "status": "catalog-guided",
+      "options": 4,
+      "arguments": 0
+    },
+    {
+      "id": "project field-list",
+      "summary": "List the fields in a project",
+      "status": "catalog-guided",
+      "options": 5,
+      "arguments": 1
+    },
+    {
+      "id": "project item-add",
+      "summary": "Add a pull request or an issue to a project",
+      "status": "catalog-guided",
+      "options": 5,
+      "arguments": 1
+    },
+    {
+      "id": "project item-archive",
+      "summary": "Archive an item in a project",
+      "status": "catalog-guided",
+      "options": 6,
+      "arguments": 1
+    },
+    {
+      "id": "project item-create",
+      "summary": "Create a draft issue item in a project",
+      "status": "catalog-guided",
+      "options": 6,
+      "arguments": 1
+    },
+    {
+      "id": "project item-delete",
+      "summary": "Delete an item from a project by ID",
+      "status": "catalog-guided",
+      "options": 5,
+      "arguments": 1
+    },
+    {
+      "id": "project item-edit",
+      "summary": "Edit a draft issue or a project item.",
+      "status": "catalog-guided",
+      "options": 18,
+      "arguments": 1
+    },
+    {
+      "id": "project item-list",
+      "summary": "List the items in a project.",
+      "status": "catalog-guided",
+      "options": 8,
+      "arguments": 1
+    },
+    {
+      "id": "project link",
+      "summary": "Link a project to a repository or a team",
+      "status": "catalog-guided",
+      "options": 3,
+      "arguments": 1
+    },
+    {
+      "id": "project list",
+      "summary": "List the projects for an owner",
+      "status": "catalog-guided",
+      "options": 7,
+      "arguments": 0
+    },
+    {
+      "id": "project mark-template",
+      "summary": "Mark a project as a template",
+      "status": "catalog-guided",
+      "options": 5,
+      "arguments": 1
+    },
+    {
+      "id": "project unlink",
+      "summary": "Unlink a project from a repository or a team",
+      "status": "catalog-guided",
+      "options": 3,
+      "arguments": 1
+    },
+    {
+      "id": "project view",
+      "summary": "View a project",
+      "status": "catalog-guided",
+      "options": 5,
+      "arguments": 1
+    },
+    {
+      "id": "release create",
+      "summary": "Create a new GitHub Release for a repository.",
+      "status": "catalog-guided",
+      "options": 14,
+      "arguments": 2
+    },
+    {
+      "id": "release list",
+      "summary": "List releases in a repository",
+      "status": "catalog-guided",
+      "options": 8,
+      "arguments": 0
+    },
+    {
+      "id": "release delete",
+      "summary": "Delete a release",
+      "status": "catalog-guided",
+      "options": 3,
+      "arguments": 1
+    },
+    {
+      "id": "release delete-asset",
+      "summary": "Delete an asset from a release",
+      "status": "catalog-guided",
+      "options": 2,
+      "arguments": 2
+    },
+    {
+      "id": "release download",
+      "summary": "Download assets from a GitHub release.",
+      "status": "catalog-guided",
+      "options": 8,
+      "arguments": 1
+    },
+    {
+      "id": "release edit",
+      "summary": "Edit a release",
+      "status": "catalog-guided",
+      "options": 11,
+      "arguments": 1
+    },
+    {
+      "id": "release upload",
+      "summary": "Upload asset files to a GitHub Release.",
+      "status": "catalog-guided",
+      "options": 2,
+      "arguments": 2
+    },
+    {
+      "id": "release verify",
+      "summary": "Verify that a GitHub Release is accompanied by a valid cryptographically signed attestation.",
+      "status": "catalog-guided",
+      "options": 4,
+      "arguments": 1
+    },
+    {
+      "id": "release verify-asset",
+      "summary": "Verify that a given asset file originated from a specific GitHub Release using cryptographically signed attestations.",
+      "status": "catalog-guided",
+      "options": 4,
+      "arguments": 2
+    },
+    {
+      "id": "release view",
+      "summary": "View information about a GitHub Release.",
+      "status": "catalog-guided",
+      "options": 5,
+      "arguments": 1
+    },
+    {
+      "id": "repo create",
+      "summary": "Create a new GitHub repository.",
+      "status": "catalog-guided",
+      "options": 17,
+      "arguments": 1
+    },
+    {
+      "id": "repo list",
+      "summary": "List repositories owned by a user or organization.",
+      "status": "catalog-guided",
+      "options": 11,
+      "arguments": 1
+    },
+    {
+      "id": "repo archive",
+      "summary": "Archive a GitHub repository.",
+      "status": "catalog-guided",
+      "options": 1,
+      "arguments": 1
+    },
+    {
+      "id": "repo autolink create",
+      "summary": "Create a new autolink reference for a repository.",
+      "status": "catalog-guided",
+      "options": 2,
+      "arguments": 2
+    },
+    {
+      "id": "repo autolink delete",
+      "summary": "Delete an autolink reference for a repository.",
+      "status": "catalog-guided",
+      "options": 2,
+      "arguments": 1
+    },
+    {
+      "id": "repo autolink list",
+      "summary": "Gets all autolink references that are configured for a repository.",
+      "status": "catalog-guided",
+      "options": 5,
+      "arguments": 0
+    },
+    {
+      "id": "repo autolink view",
+      "summary": "View an autolink reference for a repository.",
+      "status": "catalog-guided",
+      "options": 4,
+      "arguments": 1
+    },
+    {
+      "id": "repo clone",
+      "summary": "Clone a GitHub repository locally. Pass additional `git clone` flags by listing",
+      "status": "catalog-guided",
+      "options": 5,
+      "arguments": 2
+    },
+    {
+      "id": "repo delete",
+      "summary": "Delete a GitHub repository.",
+      "status": "catalog-guided",
+      "options": 1,
+      "arguments": 1
+    },
+    {
+      "id": "repo deploy-key add",
+      "summary": "Add a deploy key to a GitHub repository.",
+      "status": "catalog-guided",
+      "options": 3,
+      "arguments": 1
+    },
+    {
+      "id": "repo deploy-key delete",
+      "summary": "Delete a deploy key from a GitHub repository",
+      "status": "catalog-guided",
+      "options": 1,
+      "arguments": 1
+    },
+    {
+      "id": "repo deploy-key list",
+      "summary": "List deploy keys in a GitHub repository",
+      "status": "catalog-guided",
+      "options": 4,
+      "arguments": 0
+    },
+    {
+      "id": "repo edit",
+      "summary": "Edit repository settings.",
+      "status": "catalog-guided",
+      "options": 23,
+      "arguments": 1
+    },
+    {
+      "id": "repo fork",
+      "summary": "Create a fork of a repository.",
+      "status": "catalog-guided",
+      "options": 6,
+      "arguments": 1
+    },
+    {
+      "id": "repo gitignore list",
+      "summary": "List available repository gitignore templates",
+      "status": "catalog-guided",
+      "options": 0,
+      "arguments": 0
+    },
+    {
+      "id": "repo gitignore view",
+      "summary": "View an available repository `.gitignore` template.",
+      "status": "catalog-guided",
+      "options": 0,
+      "arguments": 1
+    },
+    {
+      "id": "repo license list",
+      "summary": "List common repository licenses.",
+      "status": "catalog-guided",
+      "options": 0,
+      "arguments": 0
+    },
+    {
+      "id": "repo license view",
+      "summary": "View a specific repository license by license key or SPDX ID.",
+      "status": "catalog-guided",
+      "options": 1,
+      "arguments": 1
+    },
+    {
+      "id": "repo read-dir",
+      "summary": "List the contents of a directory in a GitHub repository without cloning it.",
+      "status": "catalog-guided",
+      "options": 5,
+      "arguments": 1
+    },
+    {
+      "id": "repo read-file",
+      "summary": "Read the contents of a file in a GitHub repository without cloning it.",
+      "status": "catalog-guided",
+      "options": 8,
+      "arguments": 1
+    },
+    {
+      "id": "repo rename",
+      "summary": "Rename a GitHub repository.",
+      "status": "catalog-guided",
+      "options": 2,
+      "arguments": 1
+    },
+    {
+      "id": "repo set-default",
+      "summary": "This command sets the default remote repository to use when querying the",
+      "status": "catalog-guided",
+      "options": 2,
+      "arguments": 1
+    },
+    {
+      "id": "repo sync",
+      "summary": "Sync destination repository from source repository. Syncing uses the default branch",
+      "status": "catalog-guided",
+      "options": 3,
+      "arguments": 1
+    },
+    {
+      "id": "repo unarchive",
+      "summary": "Unarchive a GitHub repository.",
+      "status": "catalog-guided",
+      "options": 1,
+      "arguments": 1
+    },
+    {
+      "id": "repo view",
+      "summary": "Display the description and the README of a GitHub repository.",
+      "status": "catalog-guided",
+      "options": 5,
+      "arguments": 1
+    },
+    {
+      "id": "skill install",
+      "summary": "Install agent skills from a GitHub repository or local directory into",
+      "status": "catalog-guided",
+      "options": 9,
+      "arguments": 2
+    },
+    {
+      "id": "skill list",
+      "summary": "List installed agent skills across known agent host directories.",
+      "status": "catalog-guided",
+      "options": 6,
+      "arguments": 0
+    },
+    {
+      "id": "skill preview",
+      "summary": "Render a skill's `SKILL.md` content in the terminal. This fetches the",
+      "status": "catalog-guided",
+      "options": 1,
+      "arguments": 2
+    },
+    {
+      "id": "skill publish",
+      "summary": "Validate a local repository's skills against the Agent Skills specification",
+      "status": "catalog-guided",
+      "options": 3,
+      "arguments": 1
+    },
+    {
+      "id": "skill search",
+      "summary": "Search across all public GitHub repositories for skills matching a keyword.",
+      "status": "catalog-guided",
+      "options": 6,
+      "arguments": 1
+    },
+    {
+      "id": "skill update",
+      "summary": "Checks installed skills for available updates by comparing the local",
+      "status": "catalog-guided",
+      "options": 5,
+      "arguments": 1
+    },
+    {
+      "id": "cache delete",
+      "summary": "Delete GitHub Actions caches.",
+      "status": "catalog-guided",
+      "options": 4,
+      "arguments": 1
+    },
+    {
+      "id": "cache list",
+      "summary": "List GitHub Actions caches",
+      "status": "catalog-guided",
+      "options": 9,
+      "arguments": 0
+    },
+    {
+      "id": "run cancel",
+      "summary": "Cancel a workflow run",
+      "status": "catalog-guided",
+      "options": 2,
+      "arguments": 1
+    },
+    {
+      "id": "run delete",
+      "summary": "Delete a workflow run",
+      "status": "catalog-guided",
+      "options": 1,
+      "arguments": 1
+    },
+    {
+      "id": "run download",
+      "summary": "Download artifacts generated by a GitHub Actions workflow run.",
+      "status": "catalog-guided",
+      "options": 4,
+      "arguments": 1
+    },
+    {
+      "id": "run list",
+      "summary": "List recent workflow runs.",
+      "status": "catalog-guided",
+      "options": 13,
+      "arguments": 0
+    },
+    {
+      "id": "run rerun",
+      "summary": "Rerun an entire run, only failed jobs, or a specific job from a run.",
+      "status": "catalog-guided",
+      "options": 4,
+      "arguments": 1
+    },
+    {
+      "id": "run view",
+      "summary": "View a summary of a workflow run.",
+      "status": "catalog-guided",
+      "options": 11,
+      "arguments": 1
+    },
+    {
+      "id": "run watch",
+      "summary": "Watch a run until it completes, showing its progress.",
+      "status": "catalog-guided",
+      "options": 4,
+      "arguments": 1
+    },
+    {
+      "id": "workflow disable",
+      "summary": "Disable a workflow, preventing it from running or showing up when listing workflows.",
+      "status": "catalog-guided",
+      "options": 1,
+      "arguments": 1
+    },
+    {
+      "id": "workflow enable",
+      "summary": "Enable a workflow, allowing it to be run and show up when listing workflows.",
+      "status": "catalog-guided",
+      "options": 1,
+      "arguments": 1
+    },
+    {
+      "id": "workflow list",
+      "summary": "List workflow files, hiding disabled workflows by default.",
+      "status": "catalog-guided",
+      "options": 6,
+      "arguments": 0
+    },
+    {
+      "id": "workflow run",
+      "summary": "Create a `workflow_dispatch` event for a given workflow.",
+      "status": "catalog-guided",
+      "options": 5,
+      "arguments": 1
+    },
+    {
+      "id": "workflow view",
+      "summary": "View the summary of a workflow",
+      "status": "catalog-guided",
+      "options": 4,
+      "arguments": 1
+    },
+    {
+      "id": "agent-task create",
+      "summary": "Create an agent task (preview)",
+      "status": "catalog-guided",
+      "options": 5,
+      "arguments": 1
+    },
+    {
+      "id": "agent-task list",
+      "summary": "List agent tasks (preview)",
+      "status": "catalog-guided",
+      "options": 5,
+      "arguments": 0
+    },
+    {
+      "id": "agent-task view",
+      "summary": "View an agent task session.",
+      "status": "catalog-guided",
+      "options": 7,
+      "arguments": 1
+    },
+    {
+      "id": "alias delete",
+      "summary": "Delete set aliases",
+      "status": "catalog-guided",
+      "options": 1,
+      "arguments": 1
+    },
+    {
+      "id": "alias import",
+      "summary": "Import aliases from the contents of a YAML file.",
+      "status": "adapter-required",
+      "availability": "Requires a dedicated native terminal or external-code adapter; unavailable in the guided runner.",
+      "options": 1,
+      "arguments": 1
+    },
+    {
+      "id": "alias list",
+      "summary": "This command prints out all of the aliases gh is configured to use.",
+      "status": "catalog-guided",
+      "options": 0,
+      "arguments": 0
+    },
+    {
+      "id": "alias set",
+      "summary": "Define a word that will expand to a full gh command when invoked.",
+      "status": "catalog-guided",
+      "options": 2,
+      "arguments": 2
+    },
+    {
+      "id": "api",
+      "summary": "Makes an authenticated HTTP request to the GitHub API and prints the response.",
+      "status": "catalog-guided",
+      "options": 16,
+      "arguments": 1
+    },
+    {
+      "id": "attestation download",
+      "summary": "### NOTE: This feature is currently in public preview, and subject to change.",
+      "status": "catalog-guided",
+      "options": 6,
+      "arguments": 1
+    },
+    {
+      "id": "attestation trusted-root",
+      "summary": "Output contents for a trusted_root.jsonl file, likely for offline verification.",
+      "status": "catalog-guided",
+      "options": 4,
+      "arguments": 0
+    },
+    {
+      "id": "attestation verify",
+      "summary": "Verify the integrity and provenance of an artifact using its associated",
+      "status": "catalog-guided",
+      "options": 22,
+      "arguments": 1
+    },
+    {
+      "id": "completion",
+      "summary": "Generate shell completion scripts for GitHub CLI commands.",
+      "status": "catalog-guided",
+      "options": 1,
+      "arguments": 0
+    },
+    {
+      "id": "config clear-cache",
+      "summary": "Clear the cli cache",
+      "status": "catalog-guided",
+      "options": 0,
+      "arguments": 0
+    },
+    {
+      "id": "config get",
+      "summary": "Print the value of a given configuration key",
+      "status": "catalog-guided",
+      "options": 1,
+      "arguments": 1
+    },
+    {
+      "id": "config list",
+      "summary": "Print a list of configuration keys and values",
+      "status": "catalog-guided",
+      "options": 1,
+      "arguments": 0
+    },
+    {
+      "id": "config set",
+      "summary": "Update configuration with a value for the given key",
+      "status": "catalog-guided",
+      "options": 1,
+      "arguments": 2
+    },
+    {
+      "id": "copilot",
+      "summary": "Runs the GitHub Copilot CLI.",
+      "status": "adapter-required",
+      "availability": "Requires a dedicated native terminal or external-code adapter; unavailable in the guided runner.",
+      "options": 1,
+      "arguments": 1
+    },
+    {
+      "id": "extension browse",
+      "summary": "This command will take over your terminal and run a fully interactive",
+      "status": "adapter-required",
+      "availability": "Requires a dedicated native terminal or external-code adapter; unavailable in the guided runner.",
+      "options": 2,
+      "arguments": 0
+    },
+    {
+      "id": "extension create",
+      "summary": "Create a new extension",
+      "status": "adapter-required",
+      "availability": "Requires a dedicated native terminal or external-code adapter; unavailable in the guided runner.",
+      "options": 1,
+      "arguments": 1
+    },
+    {
+      "id": "extension exec",
+      "summary": "Execute an extension using the short name. For example, if the extension repository is",
+      "status": "adapter-required",
+      "availability": "Requires a dedicated native terminal or external-code adapter; unavailable in the guided runner.",
+      "options": 0,
+      "arguments": 2
+    },
+    {
+      "id": "extension install",
+      "summary": "Install a GitHub CLI extension from a GitHub or local repository.",
+      "status": "adapter-required",
+      "availability": "Requires a dedicated native terminal or external-code adapter; unavailable in the guided runner.",
+      "options": 2,
+      "arguments": 1
+    },
+    {
+      "id": "extension list",
+      "summary": "List installed extension commands",
+      "status": "catalog-guided",
+      "options": 0,
+      "arguments": 0
+    },
+    {
+      "id": "extension remove",
+      "summary": "Remove an installed extension",
+      "status": "catalog-guided",
+      "options": 0,
+      "arguments": 1
+    },
+    {
+      "id": "extension search",
+      "summary": "Search for gh extensions.",
+      "status": "catalog-guided",
+      "options": 9,
+      "arguments": 1
+    },
+    {
+      "id": "extension upgrade",
+      "summary": "Upgrade installed extensions",
+      "status": "adapter-required",
+      "availability": "Requires a dedicated native terminal or external-code adapter; unavailable in the guided runner.",
+      "options": 3,
+      "arguments": 1
+    },
+    {
+      "id": "gpg-key add",
+      "summary": "Add a GPG key to your GitHub account",
+      "status": "catalog-guided",
+      "options": 1,
+      "arguments": 1
+    },
+    {
+      "id": "gpg-key delete",
+      "summary": "Delete a GPG key from your GitHub account",
+      "status": "catalog-guided",
+      "options": 1,
+      "arguments": 1
+    },
+    {
+      "id": "gpg-key list",
+      "summary": "Lists GPG keys in your GitHub account",
+      "status": "catalog-guided",
+      "options": 0,
+      "arguments": 0
+    },
+    {
+      "id": "label clone",
+      "summary": "Clones labels from a source repository to a destination repository on GitHub.",
+      "status": "catalog-guided",
+      "options": 2,
+      "arguments": 1
+    },
+    {
+      "id": "label create",
+      "summary": "Create a new label on GitHub, or update an existing one with `--force`.",
+      "status": "catalog-guided",
+      "options": 4,
+      "arguments": 1
+    },
+    {
+      "id": "label delete",
+      "summary": "Delete a label from a repository",
+      "status": "catalog-guided",
+      "options": 2,
+      "arguments": 1
+    },
+    {
+      "id": "label edit",
+      "summary": "Update a label on GitHub.",
+      "status": "catalog-guided",
+      "options": 4,
+      "arguments": 1
+    },
+    {
+      "id": "label list",
+      "summary": "Display labels in a GitHub repository.",
+      "status": "catalog-guided",
+      "options": 9,
+      "arguments": 0
+    },
+    {
+      "id": "licenses",
+      "summary": "View license information for third-party libraries used in this build of the GitHub CLI.",
+      "status": "catalog-guided",
+      "options": 0,
+      "arguments": 0
+    },
+    {
+      "id": "preview prompter",
+      "summary": "Execute a test program to preview the prompter.",
+      "status": "adapter-required",
+      "availability": "Requires a dedicated native terminal or external-code adapter; unavailable in the guided runner.",
+      "options": 0,
+      "arguments": 1
+    },
+    {
+      "id": "ruleset check",
+      "summary": "View information about GitHub rules that apply to a given branch.",
+      "status": "catalog-guided",
+      "options": 3,
+      "arguments": 1
+    },
+    {
+      "id": "ruleset list",
+      "summary": "List GitHub rulesets for a repository or organization.",
+      "status": "catalog-guided",
+      "options": 5,
+      "arguments": 0
+    },
+    {
+      "id": "ruleset view",
+      "summary": "View information about a GitHub ruleset.",
+      "status": "catalog-guided",
+      "options": 4,
+      "arguments": 1
+    },
+    {
+      "id": "search code",
+      "summary": "Search within code in GitHub repositories.",
+      "status": "catalog-guided",
+      "options": 12,
+      "arguments": 1
+    },
+    {
+      "id": "search commits",
+      "summary": "Search for commits on GitHub.",
+      "status": "catalog-guided",
+      "options": 22,
+      "arguments": 1
+    },
+    {
+      "id": "search issues",
+      "summary": "Search for issues on GitHub.",
+      "status": "catalog-guided",
+      "options": 37,
+      "arguments": 1
+    },
+    {
+      "id": "search prs",
+      "summary": "Search for pull requests on GitHub.",
+      "status": "catalog-guided",
+      "options": 44,
+      "arguments": 1
+    },
+    {
+      "id": "search repos",
+      "summary": "Search for repositories on GitHub.",
+      "status": "catalog-guided",
+      "options": 24,
+      "arguments": 1
+    },
+    {
+      "id": "secret delete",
+      "summary": "Delete a secret on one of the following levels:",
+      "status": "catalog-guided",
+      "options": 5,
+      "arguments": 1
+    },
+    {
+      "id": "secret list",
+      "summary": "List secrets on one of the following levels:",
+      "status": "catalog-guided",
+      "options": 8,
+      "arguments": 0
+    },
+    {
+      "id": "secret set",
+      "summary": "Set a value for a secret on one of the following levels:",
+      "status": "catalog-guided",
+      "options": 11,
+      "arguments": 1
+    },
+    {
+      "id": "ssh-key add",
+      "summary": "Add an SSH key to your GitHub account",
+      "status": "catalog-guided",
+      "options": 2,
+      "arguments": 1
+    },
+    {
+      "id": "ssh-key delete",
+      "summary": "Delete an SSH key from your GitHub account",
+      "status": "catalog-guided",
+      "options": 1,
+      "arguments": 1
+    },
+    {
+      "id": "ssh-key list",
+      "summary": "Lists SSH keys in your GitHub account",
+      "status": "catalog-guided",
+      "options": 0,
+      "arguments": 0
+    },
+    {
+      "id": "status",
+      "summary": "The status command prints information about your work on GitHub across all the repositories you're subscribed to, including:",
+      "status": "catalog-guided",
+      "options": 2,
+      "arguments": 0
+    },
+    {
+      "id": "variable delete",
+      "summary": "Delete a variable on one of the following levels:",
+      "status": "catalog-guided",
+      "options": 3,
+      "arguments": 1
+    },
+    {
+      "id": "variable get",
+      "summary": "Get a variable on one of the following levels:",
+      "status": "catalog-guided",
+      "options": 6,
+      "arguments": 1
+    },
+    {
+      "id": "variable list",
+      "summary": "List variables on one of the following levels:",
+      "status": "catalog-guided",
+      "options": 6,
+      "arguments": 0
+    },
+    {
+      "id": "variable set",
+      "summary": "Set a value for a variable on one of the following levels:",
+      "status": "catalog-guided",
+      "options": 7,
+      "arguments": 1
+    }
+  ]
+}

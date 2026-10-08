@@ -58,7 +58,7 @@
         {
           "name": "with-token",
           "description": "Read token from standard input",
-          "type": "secret"
+          "type": "boolean"
         }
       ],
       "arguments": [],
@@ -213,12 +213,12 @@
         {
           "name": "show-token",
           "description": "Display the auth token",
-          "type": "secret"
+          "type": "boolean"
         },
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "text"
+          "type": "multiline"
         }
       ],
       "arguments": [],
@@ -424,13 +424,13 @@
         },
         {
           "name": "expand",
-          "description": "Expand remote file names on remote shell",
+          "description": "Expand remote file names on remote shell Unavailable in the guided runner because it evaluates remote shell expressions.",
           "type": "boolean"
         },
         {
           "name": "profile",
           "description": "Name of the SSH profile to use",
-          "type": "file"
+          "type": "text"
         },
         {
           "name": "recursive",
@@ -451,39 +451,17 @@
       ],
       "arguments": [
         {
-          "name": "e",
-          "description": "[-e]",
+          "name": "sources",
+          "description": "Local or remote: source paths",
           "position": 0,
           "type": "text",
-          "required": false
-        },
-        {
-          "name": "r",
-          "description": "[-r]",
-          "position": 1,
-          "type": "text",
-          "required": false
-        },
-        {
-          "name": "scp-flags",
-          "description": "[-- [<scp flags>...]]",
-          "position": 2,
-          "type": "text",
-          "required": false,
-          "multiple": true
-        },
-        {
-          "name": "sources",
-          "description": "<sources>",
-          "position": 3,
-          "type": "text",
-          "required": true,
-          "multiple": true
+          "multiple": true,
+          "required": true
         },
         {
           "name": "dest",
-          "description": "<dest>",
-          "position": 4,
+          "description": "Local or remote: destination path",
+          "position": 1,
           "type": "text",
           "required": true
         }
@@ -517,7 +495,7 @@
         {
           "name": "devcontainer-path",
           "description": "Path to the devcontainer.json file to use when creating codespace",
-          "type": "file"
+          "type": "text"
         },
         {
           "name": "display-name",
@@ -766,7 +744,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "text"
+          "type": "multiline"
         },
         {
           "name": "user",
@@ -870,19 +848,12 @@
       ],
       "arguments": [
         {
-          "name": "remote-port",
-          "description": "<remote-port>",
+          "name": "port-mappings",
+          "description": "Remote/local port pairs, such as 8080:8080. Each port must be 1–65535.",
           "position": 0,
           "type": "text",
+          "multiple": true,
           "required": true
-        },
-        {
-          "name": "local-port",
-          "description": "<local-port>",
-          "position": 1,
-          "type": "text",
-          "required": true,
-          "multiple": true
         }
       ],
       "mutation": false,
@@ -920,24 +891,12 @@
       ],
       "arguments": [
         {
-          "name": "port",
-          "description": "<port>",
+          "name": "port-visibility",
+          "description": "Port/visibility pairs, such as 8080:private. Visibility is public, private, or org.",
           "position": 0,
           "type": "text",
+          "multiple": true,
           "required": true
-        },
-        {
-          "name": "public-private-org",
-          "description": "{public|private|org}",
-          "position": 1,
-          "type": "choice",
-          "required": true,
-          "choices": [
-            "public",
-            "private",
-            "org"
-          ],
-          "multiple": true
         }
       ],
       "mutation": false,
@@ -1016,7 +975,7 @@
         {
           "name": "profile",
           "description": "Name of the SSH profile to use",
-          "type": "file"
+          "type": "text"
         },
         {
           "name": "repo",
@@ -1039,17 +998,9 @@
       ],
       "arguments": [
         {
-          "name": "ssh-flags",
-          "description": "[-- <ssh-flags>...]",
-          "position": 0,
-          "type": "text",
-          "required": false,
-          "multiple": true
-        },
-        {
           "name": "command",
           "description": "[<command>]",
-          "position": 1,
+          "position": 0,
           "type": "text",
           "required": false
         }
@@ -1167,7 +1118,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "text"
+          "type": "multiline"
         }
       ],
       "arguments": [],
@@ -1369,7 +1320,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "text"
+          "type": "multiline"
         },
         {
           "name": "web",
@@ -1599,7 +1550,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "text"
+          "type": "multiline"
         },
         {
           "name": "web",
@@ -1668,14 +1619,6 @@
           "position": 1,
           "type": "directory",
           "required": false
-        },
-        {
-          "name": "gitflags",
-          "description": "[-- <gitflags>...]",
-          "position": 2,
-          "type": "text",
-          "required": false,
-          "multiple": true
         }
       ],
       "mutation": true,
@@ -1701,13 +1644,12 @@
         {
           "name": "filename",
           "description": "Provide a filename to be used when reading from standard input",
-          "type": "file"
+          "type": "text"
         },
         {
           "name": "public",
           "description": "List the gist publicly (default \"secret\")",
-          "type": "boolean",
-          "default": "secret"
+          "type": "boolean"
         },
         {
           "name": "web",
@@ -1718,16 +1660,11 @@
       "arguments": [
         {
           "name": "filename-pattern",
-          "description": "[<filename>... | <pattern>... | -]",
+          "description": "One or more local filenames or glob patterns. Standard input is unavailable in this runner.",
           "position": 0,
-          "type": "choice",
-          "required": false,
-          "choices": [
-            "filename...",
-            "pattern...",
-            "-"
-          ],
-          "multiple": true
+          "type": "file",
+          "multiple": true,
+          "required": true
         }
       ],
       "mutation": true,
@@ -1778,7 +1715,7 @@
         {
           "name": "add",
           "description": "Add a new file to the gist",
-          "type": "text"
+          "type": "file"
         },
         {
           "name": "desc",
@@ -1788,7 +1725,7 @@
         {
           "name": "filename",
           "description": "Select a file to edit",
-          "type": "file"
+          "type": "text"
         },
         {
           "name": "remove",
@@ -1853,7 +1790,7 @@
         {
           "name": "secret",
           "description": "Show only secret gists",
-          "type": "secret"
+          "type": "boolean"
         }
       ],
       "arguments": [],
@@ -1884,14 +1821,14 @@
           "name": "old-filename",
           "description": "<old-filename>",
           "position": 1,
-          "type": "file",
+          "type": "text",
           "required": true
         },
         {
           "name": "new-filename",
           "description": "<new-filename>",
           "position": 2,
-          "type": "file",
+          "type": "text",
           "required": true
         }
       ],
@@ -1918,7 +1855,7 @@
         {
           "name": "filename",
           "description": "Display a single file from the gist",
-          "type": "file"
+          "type": "text"
         },
         {
           "name": "files",
@@ -1942,7 +1879,7 @@
           "description": "[<id> | <url>]",
           "position": 0,
           "type": "text",
-          "required": false
+          "required": true
         }
       ],
       "mutation": false,
@@ -1964,22 +1901,26 @@
           "name": "assignee",
           "description": "Assign people by their login. Use \"@me\" to self-assign.",
           "type": "entity",
-          "entity": "user"
+          "entity": "user",
+          "multiple": true
         },
         {
           "name": "attach",
           "description": "Attach an image or video file, in '<file>#<image alt text>' format",
-          "type": "file"
+          "type": "file",
+          "multiple": true
         },
         {
           "name": "blocked-by",
           "description": "Mark the new issue as blocked by these issue numbers or URLs",
-          "type": "text"
+          "type": "text",
+          "multiple": true
         },
         {
           "name": "blocking",
           "description": "Mark the new issue as blocking these issue numbers or URLs",
-          "type": "text"
+          "type": "text",
+          "multiple": true
         },
         {
           "name": "body",
@@ -2001,7 +1942,8 @@
           "name": "label",
           "description": "Add labels by name",
           "type": "entity",
-          "entity": "label"
+          "entity": "label",
+          "multiple": true
         },
         {
           "name": "milestone",
@@ -2018,7 +1960,8 @@
           "name": "project",
           "description": "Add the issue to projects by title",
           "type": "entity",
-          "entity": "project"
+          "entity": "project",
+          "multiple": true
         },
         {
           "name": "recover",
@@ -2028,7 +1971,7 @@
         {
           "name": "template",
           "description": "Template name to use as starting body text",
-          "type": "file"
+          "type": "text"
         },
         {
           "name": "title",
@@ -2171,7 +2114,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "text"
+          "type": "multiline"
         },
         {
           "name": "type",
@@ -2278,7 +2221,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "text"
+          "type": "multiline"
         },
         {
           "name": "repo",
@@ -2345,12 +2288,7 @@
         {
           "name": "reason",
           "description": "Reason for closing: {completed|not planned|duplicate}",
-          "type": "choice",
-          "choices": [
-            "completed",
-            "not planned",
-            "duplicate"
-          ]
+          "type": "text"
         },
         {
           "name": "repo",
@@ -2527,7 +2465,7 @@
         {
           "name": "worktree",
           "description": "Check out the branch into a worktree at the given path",
-          "type": "text"
+          "type": "directory"
         },
         {
           "name": "repo",
@@ -2594,7 +2532,8 @@
         {
           "name": "attach",
           "description": "Attach an image or video file, in '<file>#<image alt text>' format",
-          "type": "file"
+          "type": "file",
+          "multiple": true
         },
         {
           "name": "body",
@@ -2686,7 +2625,8 @@
           "position": 0,
           "type": "entity",
           "required": true,
-          "entity": "issue"
+          "entity": "issue",
+          "multiple": true
         }
       ],
       "mutation": true,
@@ -2961,7 +2901,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "text"
+          "type": "multiline"
         },
         {
           "name": "web",
@@ -3058,12 +2998,14 @@
           "name": "assignee",
           "description": "Assign people by their login. Use \"@me\" to self-assign.",
           "type": "entity",
-          "entity": "user"
+          "entity": "user",
+          "multiple": true
         },
         {
           "name": "attach",
           "description": "Attach an image or video file, in '<file>#<image alt text>' format",
-          "type": "file"
+          "type": "file",
+          "multiple": true
         },
         {
           "name": "base",
@@ -3116,14 +3058,14 @@
           "name": "head",
           "description": "The branch that contains commits for your pull request (default [current branch])",
           "type": "entity",
-          "entity": "branch",
-          "default": "[current branch]"
+          "entity": "branch"
         },
         {
           "name": "label",
           "description": "Add labels by name",
           "type": "entity",
-          "entity": "label"
+          "entity": "label",
+          "multiple": true
         },
         {
           "name": "milestone",
@@ -3140,7 +3082,8 @@
           "name": "project",
           "description": "Add the pull request to projects by title",
           "type": "entity",
-          "entity": "project"
+          "entity": "project",
+          "multiple": true
         },
         {
           "name": "recover",
@@ -3151,7 +3094,8 @@
           "name": "reviewer",
           "description": "Request reviews from people or teams by their handle",
           "type": "entity",
-          "entity": "user"
+          "entity": "user",
+          "multiple": true
         },
         {
           "name": "template",
@@ -3320,7 +3264,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "text"
+          "type": "multiline"
         },
         {
           "name": "web",
@@ -3465,7 +3409,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "text"
+          "type": "multiline"
         },
         {
           "name": "repo",
@@ -3542,8 +3486,7 @@
           "name": "branch",
           "description": "Local branch name to use (default [the name of the head branch])",
           "type": "entity",
-          "entity": "branch",
-          "default": "[the name of the head branch]"
+          "entity": "branch"
         },
         {
           "name": "detach",
@@ -3563,7 +3506,7 @@
         {
           "name": "worktree",
           "description": "Check out the pull request into a worktree at the given path",
-          "type": "text"
+          "type": "directory"
         },
         {
           "name": "repo",
@@ -3640,7 +3583,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "text"
+          "type": "multiline"
         },
         {
           "name": "watch",
@@ -3905,7 +3848,8 @@
         {
           "name": "attach",
           "description": "Attach an image or video file, in '<file>#<image alt text>' format",
-          "type": "file"
+          "type": "file",
+          "multiple": true
         },
         {
           "name": "base",
@@ -4441,7 +4385,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "text"
+          "type": "multiline"
         },
         {
           "name": "web",
@@ -4550,7 +4494,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "file"
+          "type": "multiline"
         },
         {
           "name": "undo",
@@ -4564,7 +4508,7 @@
           "description": "[<number>]",
           "position": 0,
           "type": "entity",
-          "required": false,
+          "required": true,
           "entity": "project"
         }
       ],
@@ -4614,7 +4558,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "file"
+          "type": "multiline"
         },
         {
           "name": "title",
@@ -4628,7 +4572,7 @@
           "description": "[<number>]",
           "position": 0,
           "type": "entity",
-          "required": false,
+          "required": true,
           "entity": "project"
         }
       ],
@@ -4669,7 +4613,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "file"
+          "type": "multiline"
         },
         {
           "name": "title",
@@ -4715,7 +4659,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "file"
+          "type": "multiline"
         }
       ],
       "arguments": [
@@ -4724,7 +4668,7 @@
           "description": "[<number>]",
           "position": 0,
           "type": "entity",
-          "required": false,
+          "required": true,
           "entity": "project"
         }
       ],
@@ -4775,7 +4719,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "file"
+          "type": "multiline"
         },
         {
           "name": "title",
@@ -4798,7 +4742,7 @@
           "description": "[<number>]",
           "position": 0,
           "type": "entity",
-          "required": false,
+          "required": true,
           "entity": "project"
         }
       ],
@@ -4861,7 +4805,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "file"
+          "type": "multiline"
         }
       ],
       "arguments": [
@@ -4870,7 +4814,7 @@
           "description": "[<number>]",
           "position": 0,
           "type": "entity",
-          "required": false,
+          "required": true,
           "entity": "project"
         }
       ],
@@ -4910,7 +4854,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "file"
+          "type": "multiline"
         }
       ],
       "arguments": [],
@@ -4959,7 +4903,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "file"
+          "type": "multiline"
         }
       ],
       "arguments": [
@@ -4968,7 +4912,7 @@
           "description": "[<number>]",
           "position": 0,
           "type": "entity",
-          "required": false,
+          "required": true,
           "entity": "project"
         }
       ],
@@ -5009,7 +4953,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "file"
+          "type": "multiline"
         },
         {
           "name": "url",
@@ -5023,7 +4967,7 @@
           "description": "[<number>]",
           "position": 0,
           "type": "entity",
-          "required": false,
+          "required": true,
           "entity": "project"
         }
       ],
@@ -5069,7 +5013,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "file"
+          "type": "multiline"
         },
         {
           "name": "undo",
@@ -5083,7 +5027,7 @@
           "description": "[<number>]",
           "position": 0,
           "type": "entity",
-          "required": false,
+          "required": true,
           "entity": "project"
         }
       ],
@@ -5129,7 +5073,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "file"
+          "type": "multiline"
         },
         {
           "name": "title",
@@ -5143,7 +5087,7 @@
           "description": "[<number>]",
           "position": 0,
           "type": "entity",
-          "required": false,
+          "required": true,
           "entity": "project"
         }
       ],
@@ -5189,7 +5133,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "file"
+          "type": "multiline"
         }
       ],
       "arguments": [
@@ -5198,7 +5142,7 @@
           "description": "[<number>]",
           "position": 0,
           "type": "entity",
-          "required": false,
+          "required": true,
           "entity": "project"
         }
       ],
@@ -5234,9 +5178,8 @@
         },
         {
           "name": "field",
-          "description": "Name of the field to update Repeat this structured value for each item.",
-          "type": "text",
-          "multiple": true
+          "description": "Name of the field to update",
+          "type": "text"
         },
         {
           "name": "field-id",
@@ -5290,7 +5233,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "file"
+          "type": "multiline"
         },
         {
           "name": "text",
@@ -5340,7 +5283,7 @@
       "options": [
         {
           "name": "field",
-          "description": "Name of a field to show as an extra column Repeat this structured value for each item.",
+          "description": "Name of a field to show as an extra column",
           "type": "text",
           "multiple": true
         },
@@ -5385,7 +5328,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "file"
+          "type": "multiline"
         }
       ],
       "arguments": [
@@ -5394,7 +5337,7 @@
           "description": "[<number>]",
           "position": 0,
           "type": "entity",
-          "required": false,
+          "required": true,
           "entity": "project"
         }
       ],
@@ -5438,7 +5381,7 @@
           "description": "[<number>]",
           "position": 0,
           "type": "entity",
-          "required": false,
+          "required": true,
           "entity": "project"
         }
       ],
@@ -5492,7 +5435,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "file"
+          "type": "multiline"
         },
         {
           "name": "web",
@@ -5538,7 +5481,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "file"
+          "type": "multiline"
         },
         {
           "name": "undo",
@@ -5552,7 +5495,7 @@
           "description": "[<number>]",
           "position": 0,
           "type": "entity",
-          "required": false,
+          "required": true,
           "entity": "project"
         }
       ],
@@ -5596,7 +5539,7 @@
           "description": "[<number>]",
           "position": 0,
           "type": "entity",
-          "required": false,
+          "required": true,
           "entity": "project"
         }
       ],
@@ -5637,7 +5580,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "file"
+          "type": "multiline"
         },
         {
           "name": "web",
@@ -5651,7 +5594,7 @@
           "description": "[<number>]",
           "position": 0,
           "type": "entity",
-          "required": false,
+          "required": true,
           "entity": "project"
         }
       ],
@@ -5693,8 +5636,7 @@
         {
           "name": "latest",
           "description": "Mark this release as \"Latest\" (default [automatic based on date and version]). --latest=false to explicitly NOT set as latest",
-          "type": "boolean",
-          "default": "[automatic based on date and version]"
+          "type": "boolean"
         },
         {
           "name": "notes",
@@ -5724,8 +5666,7 @@
         {
           "name": "target",
           "description": "Target branch or full commit SHA (default [main branch])",
-          "type": "text",
-          "default": "[main branch]"
+          "type": "text"
         },
         {
           "name": "title",
@@ -5750,18 +5691,14 @@
           "description": "[<tag>]",
           "position": 0,
           "type": "text",
-          "required": false
+          "required": true
         },
         {
           "name": "filename-pattern",
-          "description": "[<filename>... | <pattern>...]",
+          "description": "Local release asset filenames or glob patterns; append #display label when needed.",
           "position": 1,
-          "type": "choice",
+          "type": "file",
           "required": false,
-          "choices": [
-            "filename...",
-            "pattern..."
-          ],
           "multiple": true
         }
       ],
@@ -5832,7 +5769,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "text"
+          "type": "multiline"
         },
         {
           "name": "repo",
@@ -5975,7 +5912,7 @@
         {
           "name": "output",
           "description": "The file to write a single asset to (use \"-\" to write to standard output)",
-          "type": "text"
+          "type": "file"
         },
         {
           "name": "pattern",
@@ -6057,8 +5994,7 @@
         {
           "name": "target",
           "description": "Target branch or full commit SHA (default [main branch])",
-          "type": "text",
-          "default": "[main branch]"
+          "type": "text"
         },
         {
           "name": "title",
@@ -6161,7 +6097,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "file"
+          "type": "multiline"
         },
         {
           "name": "repo",
@@ -6210,7 +6146,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "file"
+          "type": "multiline"
         },
         {
           "name": "repo",
@@ -6284,7 +6220,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "text"
+          "type": "multiline"
         },
         {
           "name": "web",
@@ -6415,7 +6351,7 @@
         {
           "name": "source",
           "description": "Specify path to local repository to use as source",
-          "type": "text"
+          "type": "directory"
         },
         {
           "name": "team",
@@ -6426,7 +6362,8 @@
         {
           "name": "template",
           "description": "Make the new repository based on a template repository",
-          "type": "file"
+          "type": "entity",
+          "entity": "repository"
         }
       ],
       "arguments": [
@@ -6569,7 +6506,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "text"
+          "type": "multiline"
         },
         {
           "name": "topic",
@@ -6815,7 +6752,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "text"
+          "type": "multiline"
         },
         {
           "name": "web",
@@ -6872,7 +6809,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "text"
+          "type": "multiline"
         },
         {
           "name": "repo",
@@ -6956,14 +6893,6 @@
           "position": 1,
           "type": "directory",
           "required": false
-        },
-        {
-          "name": "gitflags",
-          "description": "Raw git flag forwarding is unavailable; use the guided git controls.",
-          "position": 2,
-          "type": "text",
-          "required": false,
-          "multiple": true
         }
       ],
       "mutation": true,
@@ -7108,7 +7037,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "text"
+          "type": "multiline"
         },
         {
           "name": "repo",
@@ -7256,14 +7185,16 @@
         {
           "name": "template",
           "description": "Make the repository available as a template repository",
-          "type": "file"
+          "type": "boolean"
         },
         {
           "name": "visibility",
           "description": "Change the visibility of the repository to {public,private,internal}",
           "type": "choice",
           "choices": [
-            "public,private,internal"
+            "public",
+            "private",
+            "internal"
           ]
         }
       ],
@@ -7333,14 +7264,6 @@
           "type": "entity",
           "required": false,
           "entity": "repository"
-        },
-        {
-          "name": "gitflags",
-          "description": "[-- <gitflags>...]",
-          "position": 1,
-          "type": "text",
-          "required": false,
-          "multiple": true
         }
       ],
       "mutation": true,
@@ -7486,7 +7409,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "text"
+          "type": "multiline"
         }
       ],
       "arguments": [
@@ -7494,7 +7417,7 @@
           "name": "path",
           "description": "[<path>]",
           "position": 0,
-          "type": "file",
+          "type": "text",
           "required": false
         }
       ],
@@ -7563,7 +7486,7 @@
         {
           "name": "output",
           "description": "Write the file to a path instead of stdout",
-          "type": "text"
+          "type": "file"
         },
         {
           "name": "ref",
@@ -7579,7 +7502,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "text"
+          "type": "multiline"
         }
       ],
       "arguments": [
@@ -7587,7 +7510,7 @@
           "name": "path",
           "description": "<path>",
           "position": 0,
-          "type": "file",
+          "type": "text",
           "required": true
         }
       ],
@@ -7637,7 +7560,7 @@
           "description": "[<new-name>]",
           "position": 0,
           "type": "text",
-          "required": false
+          "required": true
         }
       ],
       "mutation": true,
@@ -7695,8 +7618,7 @@
           "name": "branch",
           "description": "Branch to sync (default [default branch])",
           "type": "entity",
-          "entity": "branch",
-          "default": "[default branch]"
+          "entity": "branch"
         },
         {
           "name": "force",
@@ -7706,7 +7628,7 @@
         {
           "name": "source",
           "description": "Source repository",
-          "type": "text"
+          "type": "directory"
         }
       ],
       "arguments": [
@@ -7853,7 +7775,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "text"
+          "type": "multiline"
         },
         {
           "name": "web",
@@ -8180,7 +8102,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "text"
+          "type": "multiline"
         }
       ],
       "arguments": [],
@@ -8330,7 +8252,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "text"
+          "type": "multiline"
         }
       ],
       "arguments": [
@@ -8440,7 +8362,7 @@
       ],
       "arguments": [
         {
-          "name": "cache-id-cache-key-all",
+          "name": "cache-id-cache-key",
           "description": "[<cache-id> | <cache-key> | --all]",
           "position": 0,
           "type": "text",
@@ -8524,7 +8446,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "text"
+          "type": "multiline"
         },
         {
           "name": "repo",
@@ -8576,7 +8498,7 @@
           "description": "[<run-id>]",
           "position": 0,
           "type": "entity",
-          "required": false,
+          "required": true,
           "entity": "run"
         }
       ],
@@ -8608,7 +8530,7 @@
           "description": "[<run-id>]",
           "position": 0,
           "type": "entity",
-          "required": false,
+          "required": true,
           "entity": "run"
         }
       ],
@@ -8765,7 +8687,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "text"
+          "type": "multiline"
         },
         {
           "name": "user",
@@ -8869,7 +8791,9 @@
         {
           "name": "attempt",
           "description": "The attempt number of the workflow run",
-          "type": "text"
+          "type": "number",
+          "minimum": 0,
+          "maximum": 2147483647
         },
         {
           "name": "exit-status",
@@ -8924,7 +8848,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "text"
+          "type": "multiline"
         },
         {
           "name": "verbose",
@@ -9049,8 +8973,9 @@
           "name": "workflow-id-workflow-name",
           "description": "[<workflow-id> | <workflow-name>]",
           "position": 0,
-          "type": "text",
-          "required": false
+          "type": "entity",
+          "required": true,
+          "entity": "workflow"
         }
       ],
       "mutation": true,
@@ -9080,8 +9005,9 @@
           "name": "workflow-id-workflow-name",
           "description": "[<workflow-id> | <workflow-name>]",
           "position": 0,
-          "type": "text",
-          "required": false
+          "type": "entity",
+          "required": true,
+          "entity": "workflow"
         }
       ],
       "mutation": true,
@@ -9132,7 +9058,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "text"
+          "type": "multiline"
         },
         {
           "name": "repo",
@@ -9197,8 +9123,9 @@
           "name": "workflow-id-workflow-name",
           "description": "[<workflow-id> | <workflow-name>]",
           "position": 0,
-          "type": "text",
-          "required": false
+          "type": "entity",
+          "required": true,
+          "entity": "workflow"
         }
       ],
       "mutation": true,
@@ -9243,8 +9170,9 @@
           "name": "workflow-id-workflow-name-filename",
           "description": "[<workflow-id> | <workflow-name> | <filename>]",
           "position": 0,
-          "type": "file",
-          "required": false
+          "type": "entity",
+          "required": true,
+          "entity": "workflow"
         }
       ],
       "mutation": false,
@@ -9350,7 +9278,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "text"
+          "type": "multiline"
         },
         {
           "name": "web",
@@ -9432,7 +9360,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "text"
+          "type": "multiline"
         },
         {
           "name": "web",
@@ -9486,15 +9414,11 @@
       ],
       "arguments": [
         {
-          "name": "alias-all",
-          "description": "{<alias> | --all}",
+          "name": "alias",
+          "description": "Alias name; omit only when --all is selected",
           "position": 0,
-          "type": "choice",
-          "required": true,
-          "choices": [
-            "alias",
-            "--all"
-          ]
+          "type": "text",
+          "required": false
         }
       ],
       "mutation": true,
@@ -9523,12 +9447,8 @@
           "name": "filename",
           "description": "[<filename> | -]",
           "position": 0,
-          "type": "choice",
-          "required": false,
-          "choices": [
-            "filename",
-            "-"
-          ]
+          "type": "file",
+          "required": false
         }
       ],
       "mutation": true,
@@ -9655,7 +9575,6 @@
           "name": "method",
           "description": "The HTTP method for the request (default \"GET\")",
           "type": "choice",
-          "default": "GET",
           "choices": [
             "GET",
             "POST",
@@ -9696,7 +9615,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "file"
+          "type": "multiline"
         },
         {
           "name": "verbose",
@@ -9775,18 +9694,7 @@
           "description": "[<file-path> | oci://<image-uri>]",
           "position": 0,
           "type": "file",
-          "required": false
-        },
-        {
-          "name": "owner-repo",
-          "description": "[--owner | --repo]",
-          "position": 1,
-          "type": "choice",
-          "required": false,
-          "choices": [
-            "--owner",
-            "--repo"
-          ]
+          "required": true
         }
       ],
       "mutation": true,
@@ -9812,7 +9720,7 @@
         {
           "name": "tuf-root",
           "description": "Path to the TUF root.json file on disk",
-          "type": "text"
+          "type": "file"
         },
         {
           "name": "tuf-url",
@@ -9825,22 +9733,7 @@
           "type": "boolean"
         }
       ],
-      "arguments": [
-        {
-          "name": "tuf-url-url-tuf-root-file-path",
-          "description": "[--tuf-url <url> --tuf-root <file-path>]",
-          "position": 0,
-          "type": "file",
-          "required": false
-        },
-        {
-          "name": "verify-only",
-          "description": "[--verify-only]",
-          "position": 1,
-          "type": "text",
-          "required": false
-        }
-      ],
+      "arguments": [],
       "mutation": false,
       "destructive": false
     },
@@ -9859,7 +9752,7 @@
         {
           "name": "bundle",
           "description": "Path to bundle on disk, either a single bundle in a JSON file or a JSON lines file with multiple bundles",
-          "type": "text"
+          "type": "file"
         },
         {
           "name": "bundle-from-oci",
@@ -9885,7 +9778,7 @@
         {
           "name": "custom-trusted-root",
           "description": "Path to a trusted_root.jsonl file; likely for offline verification",
-          "type": "text"
+          "type": "file"
         },
         {
           "name": "deny-self-hosted-runners",
@@ -9979,7 +9872,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "file"
+          "type": "multiline"
         }
       ],
       "arguments": [
@@ -9988,18 +9881,7 @@
           "description": "[<file-path> | oci://<image-uri>]",
           "position": 0,
           "type": "file",
-          "required": false
-        },
-        {
-          "name": "owner-repo",
-          "description": "[--owner | --repo]",
-          "position": 1,
-          "type": "choice",
-          "required": false,
-          "choices": [
-            "--owner",
-            "--repo"
-          ]
+          "required": true
         }
       ],
       "mutation": false,
@@ -10025,24 +9907,11 @@
             "zsh",
             "fish",
             "powershell"
-          ]
+          ],
+          "required": true
         }
       ],
-      "arguments": [
-        {
-          "name": "shell",
-          "description": "<shell>",
-          "position": 0,
-          "type": "choice",
-          "required": true,
-          "choices": [
-            "bash",
-            "zsh",
-            "fish",
-            "powershell"
-          ]
-        }
-      ],
+      "arguments": [],
       "mutation": false,
       "destructive": false
     },
@@ -10176,15 +10045,8 @@
           "name": "value",
           "description": "<value>",
           "position": 1,
-          "type": "choice",
-          "required": true,
-          "choices": [
-            "enabled",
-            "disabled",
-            "log",
-            "https",
-            "ssh"
-          ]
+          "type": "text",
+          "required": true
         }
       ],
       "mutation": true,
@@ -10486,13 +10348,12 @@
             "help-wanted-issues",
             "stars",
             "updated"
-          ],
-          "default": "best-match"
+          ]
         },
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "text"
+          "type": "multiline"
         },
         {
           "name": "web",
@@ -10572,15 +10433,11 @@
       ],
       "arguments": [
         {
-          "name": "name-all",
-          "description": "{<name> | --all}",
+          "name": "name",
+          "description": "Extension name; omit only when --all is selected",
           "position": 0,
-          "type": "choice",
-          "required": true,
-          "choices": [
-            "name",
-            "--all"
-          ]
+          "type": "text",
+          "required": false
         }
       ],
       "mutation": true,
@@ -10612,7 +10469,7 @@
           "description": "[<key-file>]",
           "position": 0,
           "type": "file",
-          "required": false
+          "required": true
         }
       ],
       "mutation": true,
@@ -10897,7 +10754,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "text"
+          "type": "multiline"
         },
         {
           "name": "web",
@@ -11037,7 +10894,7 @@
           "name": "parents",
           "description": "Whether to include rulesets configured at higher levels that also apply (default true)",
           "type": "boolean",
-          "default": "true"
+          "default": true
         },
         {
           "name": "web",
@@ -11077,7 +10934,7 @@
           "name": "parents",
           "description": "Whether to include rulesets configured at higher levels that also apply (default true)",
           "type": "boolean",
-          "default": "true"
+          "default": true
         },
         {
           "name": "web",
@@ -11123,7 +10980,7 @@
         {
           "name": "filename",
           "description": "Filter on filename",
-          "type": "file"
+          "type": "text"
         },
         {
           "name": "jq",
@@ -11187,7 +11044,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "text"
+          "type": "multiline"
         },
         {
           "name": "web",
@@ -11341,13 +11198,12 @@
           "choices": [
             "author-date",
             "committer-date"
-          ],
-          "default": "best-match"
+          ]
         },
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "text"
+          "type": "multiline"
         },
         {
           "name": "tree",
@@ -11611,20 +11467,7 @@
         {
           "name": "sort",
           "description": "Sort fetched results: {comments|created|interactions|reactions|reactions-+1|reactions--1|reactions-heart|reactions-smile|reactions-tada|reactions-thinking_face|updated} (default \"best-match\")",
-          "type": "choice",
-          "choices": [
-            "comments",
-            "created",
-            "interactions",
-            "reactions",
-            "reactions-+1",
-            "reactions--1",
-            "reactions-heart",
-            "reactions-smile",
-            "reactions-tada",
-            "reactions-thinking_face",
-            "updated"
-          ],
+          "type": "text",
           "default": "best-match"
         },
         {
@@ -11644,7 +11487,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "text"
+          "type": "multiline"
         },
         {
           "name": "updated",
@@ -11960,20 +11803,7 @@
         {
           "name": "sort",
           "description": "Sort fetched results: {comments|reactions|reactions-+1|reactions--1|reactions-smile|reactions-thinking_face|reactions-heart|reactions-tada|interactions|created|updated} (default \"best-match\")",
-          "type": "choice",
-          "choices": [
-            "comments",
-            "reactions",
-            "reactions-+1",
-            "reactions--1",
-            "reactions-smile",
-            "reactions-thinking_face",
-            "reactions-heart",
-            "reactions-tada",
-            "interactions",
-            "created",
-            "updated"
-          ],
+          "type": "text",
           "default": "best-match"
         },
         {
@@ -11993,7 +11823,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "text"
+          "type": "multiline"
         },
         {
           "name": "updated",
@@ -12212,8 +12042,7 @@
             "help-wanted-issues",
             "stars",
             "updated"
-          ],
-          "default": "best-match"
+          ]
         },
         {
           "name": "stars",
@@ -12223,7 +12052,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "text"
+          "type": "multiline"
         },
         {
           "name": "topic",
@@ -12410,7 +12239,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "text"
+          "type": "multiline"
         },
         {
           "name": "user",
@@ -12566,7 +12395,7 @@
           "description": "[<key-file>]",
           "position": 0,
           "type": "file",
-          "required": false
+          "required": true
         }
       ],
       "mutation": true,
@@ -12736,7 +12565,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "text"
+          "type": "multiline"
         },
         {
           "name": "repo",
@@ -12813,7 +12642,7 @@
         {
           "name": "template",
           "description": "Format JSON output using a Go template; see \"gh help formatting\"",
-          "type": "text"
+          "type": "multiline"
         },
         {
           "name": "repo",

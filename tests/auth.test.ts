@@ -37,3 +37,83 @@ test('account changes require confirmation and a known account',async()=>{
 test('device URL must match exact approved host and expected device path',async()=>{
  const {service,calls}=harness();await service.action('login');calls[0].child.stderr.write('Open this URL: https://evil.example/login/device\nOpen this URL: https://github.com/login/device?steal=yes\n');assert.equal(service.snapshot().verificationUrl,undefined);await service.action('cancel');
 });
+
+test('account switching verifies the selected active account instead of trusting exit zero',async()=>{
+ const base={hosts:{'github.com':[{login:'octocat',active:false,state:'success',tokenSource:'keyring',scopes:'repo',gitProtocol:'https'}]}};
+ const service=new AuthService('verified-gh',process.cwd(),{spawn:(_binary,args)=>{const child=new FakeChild();queueMicrotask(()=>{if(args[1]==='status')child.stdout.end(JSON.stringify(base));child.emit('close',0);});return child as unknown as ChildProcess;}});
+ const result=await service.action('switch',{login:'octocat',confirmed:true});assert.equal(result.status,'failed');assert.match(result.error!,/not active after switching/);assert.ok(!result.message);
+});
+test('an active environment credential cannot be reported as a successful saved-account switch',async()=>{
+ let switched=false;const data={hosts:{'github.com':[{login:'environment-user',active:true,state:'success',tokenSource:'GH_TOKEN'},{login:'octocat',active:false,state:'success',tokenSource:'keyring'}]}};
+ const service=new AuthService('verified-gh',process.cwd(),{spawn:(_binary,args)=>{const child=new FakeChild();if(args[1]==='switch')switched=true;queueMicrotask(()=>{if(args[1]==='status')child.stdout.end(JSON.stringify(data));child.emit('close',0);});return child as unknown as ChildProcess;}});
+ await assert.rejects(service.action('switch',{login:'octocat',confirmed:true}),/environment token overrides/);assert.equal(switched,false);
+});
+
+function workflowHarness(options:{source?:string;login?:string;helper?:string;setupExit?:number}={}){
+ const calls:{binary:string;args:string[];child:FakeChild}[]=[];
+ const service=new AuthService('verified-gh',process.cwd(),{spawn:(binary,args,spawnOptions)=>{
+  assert.equal(spawnOptions.shell,false);const child=new FakeChild();calls.push({binary,args,child});
+  if(args[1]==='status')queueMicrotask(()=>{child.stdout.end(JSON.stringify({hosts:{'github.com':[{...status.hosts['github.com'][0],login:options.login??'octocat',tokenSource:options.source??'keyring'}]}}));child.emit('close',0);});
+  else if(args[1]==='setup-git')queueMicrotask(()=>child.emit('close',options.setupExit??0));
+  else if(binary==='git')queueMicrotask(()=>{child.stdout.end(options.helper??'\n!verified-gh auth git-credential\n');child.emit('close',0);});
+  return child as unknown as ChildProcess;
+ }});return {service,calls};
+}
+test('permission refresh reviews the active account and uses guided add/remove flags',async()=>{
+ const {service,calls}=workflowHarness();
+ await assert.rejects(service.action('refresh',{login:'octocat',scopes:['project']}),/confirm/);
+ assert.equal(calls.length,0);
+ const state=await service.action('refresh',{login:'octocat',confirmed:true,scopes:['project','project'],removeScopes:['workflow']});
+ assert.equal(state.status,'starting');const call=calls.find(c=>c.args[1]==='refresh')!;
+ assert.deepEqual(call.args,['auth','refresh','--hostname=github.com','--clipboard=false','--scopes=project','--remove-scopes=workflow']);
+ call.child.stderr.write('! First copy your one-time code: ABCD-1234\nOpen this URL: https://github.com/login/device\n');
+ assert.equal(service.snapshot().deviceCode,'ABCD-1234');
+ const done=next(service,s=>s.message?.startsWith('Permission refresh completed')===true);call.child.emit('close',0);const result=await done;
+ assert.equal(result.status,'authenticated');assert.equal(result.deviceCode,undefined);assert.equal(result.verificationUrl,undefined);assert.match(result.message!,/octocat/);assert.ok(!JSON.stringify(result).includes('must-never-return'));
+});
+test('refresh reset is exclusive and minimum scopes, unsupported values and inactive accounts are rejected',async()=>{
+ const {service,calls}=workflowHarness();
+ for(const payload of [{removeScopes:['gist']},{removeScopes:['repo']},{scopes:['project'],resetScopes:true},{scopes:['workflow'],removeScopes:['workflow']},{removeScopes:['--with-token']},{resetScopes:'true'}])
+  await assert.rejects(service.action('refresh',{login:'octocat',confirmed:true,...payload} as never));
+ await assert.rejects(service.action('refresh',{login:'other-account',confirmed:true}),/active authenticated/);
+ assert.ok(!calls.some(c=>c.args[1]==='refresh'));
+ await service.action('refresh',{login:'octocat',confirmed:true,resetScopes:true});
+ assert.deepEqual(calls.at(-1)!.args,['auth','refresh','--hostname=github.com','--clipboard=false','--reset-scopes']);await service.action('cancel');
+});
+test('refresh rejects environment credentials and cancellation clears device data',async()=>{
+ const environment=workflowHarness({source:'GH_TOKEN'});
+ await assert.rejects(environment.service.action('refresh',{login:'octocat',confirmed:true}),/Environment credentials/);
+ assert.ok(!environment.calls.some(c=>c.args[1]==='refresh'));
+ const {service,calls}=workflowHarness();await service.action('refresh',{login:'octocat',confirmed:true});
+ const call=calls.find(c=>c.args[1]==='refresh')!;call.child.stderr.write('! First copy your one-time code: ABCD-1234\n');
+ await service.action('cancel');assert.equal(call.child.killed,true);assert.equal(service.snapshot().deviceCode,undefined);
+ call.child.stderr.write('! First copy your one-time code: EVIL-1234\n');assert.equal(service.snapshot().deviceCode,undefined);
+});
+test('Git setup requires review, selects one approved authenticated host and reads back the global helper',async()=>{
+ const {service,calls}=workflowHarness();await assert.rejects(service.action('setup-git',{login:'octocat'}),/confirm/);
+ const result=await service.action('setup-git',{hostname:'github.com',login:'octocat',confirmed:true});
+ assert.match(result.message!,/credential helper verified/);assert.ok(!result.error);
+ assert.deepEqual(calls.find(c=>c.args[1]==='setup-git')!.args,['auth','setup-git','--hostname=github.com']);
+ assert.deepEqual(calls.find(c=>c.binary==='git')!.args,['config','--global','--get-all','credential.https://github.com.helper']);
+ assert.ok(!calls.some(c=>c.args.includes('--force')));
+ await assert.rejects(service.action('setup-git',{hostname:'other.example',login:'octocat',confirmed:true}),/hostname/);
+});
+test('setup does not report success from exit zero when readback differs or setup failed',async()=>{
+ for(const options of [{helper:'!other-tool auth git-credential\n'},{helper:'!verified-gh auth git-credential\n\n'},{helper:''},{setupExit:1}]){
+  const {service,calls}=workflowHarness(options);const result=await service.action('setup-git',{login:'octocat',confirmed:true});assert.equal(result.status,'failed');assert.ok(result.error);assert.equal(result.message,undefined);
+  if(options.setupExit)assert.ok(!calls.some(c=>c.binary==='git'));
+ }
+});
+
+test('refresh completion rejects an account changed during browser authorization',async()=>{
+ const options={login:'octocat'};const {service,calls}=workflowHarness(options);
+ await service.action('refresh',{login:'octocat',confirmed:true});
+ const call=calls.find(c=>c.args[1]==='refresh')!;options.login='different-account';
+ const done=next(service,state=>state.status==='failed');call.child.emit('close',0);const state=await done;
+ assert.match(state.error!,/expected authenticated account/);assert.equal(state.message,undefined);
+});
+
+test('a synchronous authorization launch failure clears the pending UI state',async()=>{
+ const service=new AuthService('verified-gh',process.cwd(),{spawn:()=>{throw new Error('private launcher detail');}});
+ const state=await service.action('login');assert.equal(state.status,'failed');assert.equal(state.message,undefined);assert.ok(!state.error?.includes('private launcher detail'));assert.equal(state.deviceCode,undefined);
+});

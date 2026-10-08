@@ -39,18 +39,20 @@ export interface Bootstrap {
   account: string | null; repository: string | null; operations: Operation[];
 }
 export interface HistoryEntry { id: string; at: string; action: string; snapshot?: AppSettings }
-export type AuthAction = 'status' | 'login' | 'cancel' | 'switch' | 'logout';
+export type AuthAction = 'status' | 'login' | 'refresh' | 'setup-git' | 'cancel' | 'switch' | 'logout';
 export interface AuthAccount {
   host: string; login: string; active: boolean; state: string;
   scopes: string[]; gitProtocol: string; tokenSource: 'environment' | 'credential-store' | 'config-file' | 'unknown';
 }
-export interface AuthPayload { hostname?: string; login?: string; scopes?: string[]; confirmed?: boolean }
+export interface AuthPayload { hostname?: string; login?: string; scopes?: string[]; removeScopes?: string[]; resetScopes?: boolean; confirmed?: boolean }
 export interface AuthState {
   status: 'idle' | 'checking' | 'starting' | 'waiting' | 'authenticated' | 'failed' | 'cancelled';
   accounts: AuthAccount[]; allowedHosts: string[]; allowedScopes: string[];
   hostname?: string; deviceCode?: string; verificationUrl?: string; message?: string; error?: string;
 }
 export interface MaterialBridge {
+  api(action:'catalogue'|'describe'|'execute'|'graphqlCatalogue'|'graphqlDescribe'|'graphqlBuild'|'graphqlExecute'|'pick-body-file',payload?:unknown):Promise<unknown>;
+  cliConfig(action:import('./cli-config').CliConfigAction,payload?:import('./cli-config').CliConfigPayload):Promise<import('./cli-config').CliConfigResponse>;
   onCloseRequested(callback:()=>void):()=>void;
   security(action:string,payload?:Record<string,unknown>):Promise<unknown>;
   onSecurity(callback:(status:import('./security').SecurityStatus)=>void):()=>void;

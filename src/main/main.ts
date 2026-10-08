@@ -1,10 +1,13 @@
 import {app,BrowserWindow,ipcMain,dialog,shell,safeStorage,type IpcMainInvokeEvent} from 'electron';
-import {existsSync,readFileSync,writeFileSync} from 'node:fs';
+import {existsSync,readFileSync,writeFileSync,statSync} from 'node:fs';
+import {randomUUID} from 'node:crypto';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {Engine} from './engine';
 import {handleSquirrelStartup} from './squirrel';
 import {AuthService} from './auth';
+import {createApiService} from './github-api';
+import {CliConfigService} from './cli-config';
 import {createSecurityService} from './security';
 import {startUpdater,getUpdateState,checkForUpdates,restartToInstallUpdate,updateEvents} from './updater';
 import {loadCatalog} from './catalog';
@@ -57,8 +60,23 @@ if(!installerLifecycle)app.whenReady().then(async()=>{
  handle('security',(action,payload)=>security.handle(action,payload));
  app.once('will-quit',()=>security.close());
  const auth=new AuthService(binary,workspace);
+ app.once('will-quit',()=>{void auth.action('cancel');});
  auth.subscribe(state=>{if(window&&!window.isDestroyed())window.webContents.send('material:auth-update',state);});
  handle('auth',(action,payload)=>auth.action(action,payload));
+ const apiFiles=new Map<string,{file:string;size:number;modified:number}>();
+ const githubApi=createApiService({binary,cwd:workspace,
+  readBodyFile:async handle=>{const grant=apiFiles.get(handle);if(!grant)throw new Error('Choose the upload file again');const current=statSync(grant.file);if(current.size!==grant.size||current.mtimeMs!==grant.modified)throw new Error('The upload file changed. Choose it again before reviewing this request.');return {bytes:readBoundedFile(grant.file,64*1024*1024),filename:path.basename(grant.file)};},
+  exportBinary:async(bytes,metadata)=>{const result=await dialog.showSaveDialog(window,{title:'Save GitHub API download',defaultPath:metadata.filename||'github-download.bin'});if(result.canceled||!result.filePath)return false;writeFileSync(result.filePath,bytes,{mode:0o600});return true;}
+ });
+ handle('api',async(action:string,payload:unknown)=>{
+  if(action==='pick-body-file'){const result=await dialog.showOpenDialog(window,{title:'Choose a file to upload to GitHub',properties:['openFile']});if(result.canceled||!result.filePaths[0])return null;const file=result.filePaths[0],stats=statSync(file);if(!stats.isFile()||stats.size>64*1024*1024)throw new Error('Choose a regular file smaller than 64 MiB');if(apiFiles.size>=32)apiFiles.delete(apiFiles.keys().next().value!);const handle=randomUUID();apiFiles.set(handle,{file,size:stats.size,modified:stats.mtimeMs});return {handle,filename:path.basename(file),size:stats.size};}
+  if(!['catalogue','describe','execute','graphqlCatalogue','graphqlDescribe','graphqlBuild','graphqlExecute'].includes(action))throw new Error('Unknown GitHub API action');
+  if(payload!==undefined&&sizeBound(payload).length>256000)throw new Error('API request exceeds 256 KB');
+  const id=randomUUID();if(action==='execute'||action==='graphqlExecute')activeOperations.add(id);
+  try{return await (githubApi[action as keyof typeof githubApi] as (input:unknown)=>unknown)(payload);}finally{activeOperations.delete(id);}
+ });
+ const cliConfiguration=new CliConfigService(binary,{chooseExecutable:async definition=>{const result=await dialog.showOpenDialog(window,{title:definition.filePicker?.title,properties:['openFile'],...(process.platform==='win32'?{filters:[{name:'Executable applications',extensions:['exe']}]}:{})});return result.canceled?null:result.filePaths[0]??null;}});
+ handle('cli-config',async(action,payload)=>{const id=randomUUID();if(action==='apply')activeOperations.add(id);try{return await cliConfiguration.action(action,payload);}finally{activeOperations.delete(id);}});
  handle('updates',(action:string)=>{if(action==='check')return checkForUpdates();if(action==='restart'){if(activeOperations.size)throw new Error('Wait for running operations or cancel them before restarting');const previous=quitApproved;quitApproved=true;try{restartToInstallUpdate();}catch(error){quitApproved=previous;throw error;}}else if(action!=='status')throw new Error('Unknown update action');return getUpdateState();});
  handle('bootstrap',async()=>{
   const settled=await Promise.allSettled([runGh(binary,['--version'],workspace),runGh(binary,['api','user'],workspace),runGh(binary,['repo','view','--json','nameWithOwner'],workspace)]);

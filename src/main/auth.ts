@@ -4,7 +4,7 @@ export interface AuthServiceOptions {
  allowedHosts?: string[];
  spawn?: (binary: string, args: string[], options: SpawnOptions) => ChildProcess;
 }
-const ADDITIONAL_SCOPES = ['project','workflow','read:user','user:email','read:packages','write:packages','delete:packages','admin:public_key','admin:repo_hook','read:discussion','write:discussion'];
+const ADDITIONAL_SCOPES = ['repo:status','repo_deployment','public_repo','repo:invite','security_events','admin:repo_hook','write:repo_hook','read:repo_hook','admin:org','write:org','admin:public_key','write:public_key','read:public_key','admin:org_hook','gist','notifications','user','read:user','user:email','user:follow','project','read:project','workflow','write:packages','read:packages','delete:packages','delete_repo','admin:gpg_key','write:gpg_key','read:gpg_key','admin:ssh_signing_key','write:ssh_signing_key','read:ssh_signing_key','read:discussion','write:discussion','codespace','codespace:secrets','copilot','manage_billing:copilot','audit_log','read:audit_log','admin:enterprise','manage_runners:enterprise','manage_billing:enterprise','read:enterprise','scim:enterprise','codespace:metadata','codespace:startup_script','codespace:user_secrets'];
 const HOST = /^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
 /** Dedicated authentication channel: never forward its output to operation history or exports. */
 export class AuthService {
@@ -14,6 +14,7 @@ export class AuthService {
  private child?: ChildProcess;
  private generation = 0;
  private checking?: Promise<AuthState>;
+ private changing=false;
  private state: AuthState;
  constructor(private binary: string, private cwd: string, options: AuthServiceOptions = {}) {
   this.hosts = [...new Set(options.allowedHosts || ['github.com'])];
@@ -31,9 +32,9 @@ export class AuthService {
   // User-initiated browser opening belongs to the renderer's validated external-link workflow.
   return {cwd:this.cwd,shell:false,windowsHide:true,stdio:['ignore','pipe','pipe'],env:{...process.env,GH_PROMPT_DISABLED:'1',GH_PAGER:'cat',NO_COLOR:'1',GIT_TERMINAL_PROMPT:'0'}};
  }
- private async run(args: string[]): Promise<{code:number|null;stdout:string}> {
+ private async run(args: string[], binary=this.binary): Promise<{code:number|null;stdout:string}> {
   return new Promise((resolve,reject)=>{
-   const child=this.spawnProcess(this.binary,args,this.options());let stdout='';let settled=false;
+   const child=this.spawnProcess(binary,args,this.options());let stdout='';let settled=false;
    const finish=(error?:Error,code:number|null=null)=>{if(settled)return;settled=true;clearTimeout(timer);error?reject(error):resolve({code,stdout});};
    const timer=setTimeout(()=>{child.kill();finish(new Error('Authentication status timed out'));},30000);timer.unref();
    child.stdout?.on('data',(chunk:Buffer)=>{stdout+=chunk.toString('utf8');if(stdout.length>131072){child.kill();finish(new Error('Authentication response exceeded its limit'));}});
@@ -65,18 +66,34 @@ export class AuthService {
   return this.checking;
  }
  async action(action: AuthAction, payload: AuthPayload = {}): Promise<AuthState> {
-  if(!['status','login','cancel','switch','logout'].includes(action))throw new Error('Unknown authentication action');
+  if(!['status','login','refresh','setup-git','cancel','switch','logout'].includes(action))throw new Error('Unknown authentication action');
   if(!payload||typeof payload!=='object'||Array.isArray(payload))throw new Error('Invalid authentication request');
-  for(const key of Object.keys(payload))if(!['hostname','login','scopes','confirmed'].includes(key))throw new Error('Unknown authentication parameter');
+  for(const key of Object.keys(payload))if(!['hostname','login','scopes','removeScopes','resetScopes','confirmed'].includes(key))throw new Error('Unknown authentication parameter');
   if(action==='status')return this.refresh();
-  if(action==='cancel') {const child=this.child;this.child=undefined;this.generation++;if(child){child.kill();const timer=setTimeout(()=>child.kill('SIGKILL'),2000);timer.unref();}this.update({status:'cancelled',deviceCode:undefined,verificationUrl:undefined,message:'Sign-in cancelled.',error:undefined});return this.snapshot();}
+  if(action==='cancel') {const child=this.child;this.child=undefined;this.generation++;if(child){child.kill();const timer=setTimeout(()=>child.kill('SIGKILL'),2000);timer.unref();}this.update({status:'cancelled',deviceCode:undefined,verificationUrl:undefined,message:'GitHub authorization cancelled.',error:undefined});return this.snapshot();}
   if(this.child)throw new Error('Finish or cancel the current sign-in first');
+  if(this.changing)throw new Error('Wait for the current account change to finish');
   const host=this.host(payload);
-  if(action==='login') {
+  if(action==='login'||action==='refresh') {
    const scopes=payload.scopes || [];if(!Array.isArray(scopes)||scopes.length>ADDITIONAL_SCOPES.length||scopes.some(s=>typeof s!=='string'||!ADDITIONAL_SCOPES.includes(s)))throw new Error('Choose supported GitHub authorization scopes');
-   const args=['auth','login',`--hostname=${host}`,'--web','--git-protocol=https','--skip-ssh-key','--clipboard=false'];if(scopes.length)args.push(`--scopes=${[...new Set(scopes)].join(',')}`);
-   this.update({status:'starting',hostname:host,deviceCode:undefined,verificationUrl:undefined,error:undefined,message:'Starting GitHub device sign-in…'});
-   const generation=++this.generation;const child=this.spawnProcess(this.binary,args,this.options());this.child=child;let buffer='';let closed=false;
+   const removeScopes=payload.removeScopes??[];
+   if(!Array.isArray(removeScopes)||removeScopes.length>ADDITIONAL_SCOPES.length||removeScopes.some(s=>typeof s!=='string'||!ADDITIONAL_SCOPES.includes(s)||['gist','repo','read:org'].includes(s)))throw new Error('Choose removable GitHub authorization scopes; minimum scopes cannot be removed');
+   if(payload.resetScopes!==undefined&&typeof payload.resetScopes!=='boolean')throw new Error('Invalid reset-scopes choice');
+   if(payload.resetScopes&&(scopes.length||removeScopes.length))throw new Error('Choose reset to minimum permissions or individual permission changes');
+   if(scopes.some(scope=>removeScopes.includes(scope)))throw new Error('A permission cannot be added and removed in the same refresh');
+   if(action==='login'&&(removeScopes.length||payload.resetScopes))throw new Error('Permission removal and reset require Refresh permissions');
+   let expectedLogin:string|undefined;
+   if(action==='refresh'){
+    if(payload.confirmed!==true)throw new Error('Review and confirm the permission refresh');
+    this.changing=true;
+    try{await this.refresh();const active=this.state.accounts.find(a=>a.host===host&&a.active&&a.state==='success');if(!active||active.login!==payload.login)throw new Error('Select the active authenticated account for this host; switch accounts before refreshing another account');if(active.tokenSource==='environment')throw new Error('Environment credentials cannot be refreshed here. Start without that credential to refresh a saved account');expectedLogin=active.login;}finally{this.changing=false;}
+   }
+   const args=action==='login'?['auth','login',`--hostname=${host}`,'--web','--git-protocol=https','--skip-ssh-key','--clipboard=false']:['auth','refresh',`--hostname=${host}`,'--clipboard=false'];
+   if(scopes.length)args.push(`--scopes=${[...new Set(scopes)].join(',')}`);
+   if(removeScopes.length)args.push(`--remove-scopes=${[...new Set(removeScopes)].join(',')}`);
+   if(payload.resetScopes)args.push('--reset-scopes');
+   this.update({status:'starting',hostname:host,deviceCode:undefined,verificationUrl:undefined,error:undefined,message:action==='refresh'?'Starting reviewed GitHub permission refresh…':'Starting GitHub device sign-in…'});
+   const generation=++this.generation;let child:ChildProcess;try{child=this.spawnProcess(this.binary,args,this.options());}catch{this.update({status:'failed',message:undefined,error:'Unable to start GitHub authorization. Check the bundled CLI installation.'});return this.snapshot();}this.child=child;let buffer='';let closed=false;
    const timeout=setTimeout(()=>{if(this.child===child){void this.action('cancel');this.update({status:'failed',error:'The GitHub sign-in request expired. Start a new sign-in.'});}},900000);timeout.unref();
    const receive=(chunk:Buffer)=>{
     if(generation!==this.generation)return;buffer=(buffer+chunk.toString('utf8')).slice(-16384);
@@ -86,15 +103,37 @@ export class AuthService {
     if(code||verificationUrl)this.update({status:'waiting',...(code?{deviceCode:code}:{}),...(verificationUrl?{verificationUrl}:{}),message:'Enter the one-time code on GitHub to finish signing in.'});
    };
    child.stdout?.on('data',receive);child.stderr?.on('data',receive);
-   const finish=async(code:number|null)=>{if(closed)return;closed=true;clearTimeout(timeout);buffer='';if(generation!==this.generation)return;this.child=undefined;this.update({deviceCode:undefined,verificationUrl:undefined});if(code===0){this.update({message:'GitHub sign-in completed.'});await this.refresh();}else this.update({status:'failed',error:'GitHub sign-in did not complete. Start again or check the network.'});};
+   const finish=async(code:number|null)=>{if(closed)return;closed=true;clearTimeout(timeout);buffer='';if(generation!==this.generation)return;this.child=undefined;this.update({deviceCode:undefined,verificationUrl:undefined});if(code===0){await this.refresh();const active=this.state.accounts.find(a=>a.host===host&&a.active&&a.state==='success');if(!active||(expectedLogin&&active.login!==expectedLogin)){this.update({status:'failed',message:undefined,error:'GitHub did not report the expected authenticated account after authorization. Refresh accounts before continuing.'});return;}this.update({message:action==='refresh'?`Permission refresh completed for ${active.login} on ${host}. Reported scopes: ${active.scopes.join(', ')||'not reported'}.`:'GitHub sign-in completed.',error:undefined});}else this.update({status:'failed',message:undefined,error:'GitHub authorization did not complete. Start again or check the network.'});};
    child.on('error',()=>{void finish(null);});child.on('close',code=>{void finish(code);});return this.snapshot();
   }
   if(payload.confirmed!==true)throw new Error('Review and confirm the account change');
   if(typeof payload.login!=='string'||! /^(?:[A-Za-z0-9][A-Za-z0-9-]{0,38})(?:\[bot\])?$/.test(payload.login))throw new Error('Select a valid GitHub account');
-  await this.refresh();const account=this.state.accounts.find(a=>a.host===host&&a.login===payload.login);if(!account)throw new Error('Select a known GitHub account');
-  if(account.tokenSource==='environment')throw new Error('This account is managed by an environment token. Update the environment to change it.');
-  const result=await this.run(['auth',action,`--hostname=${host}`,`--user=${payload.login}`]);
-  if(result.code!==0){this.update({status:'failed',error:`GitHub account ${action} did not complete.`});return this.snapshot();}
-  this.update({message:action==='logout'?'Account removed from this device. Existing tokens remain valid until revoked on GitHub.':'Active GitHub account changed.'});return this.refresh();
+  if(action==='setup-git'){
+   this.changing=true;
+   try{
+    await this.refresh();const account=this.state.accounts.find(a=>a.host===host&&a.login===payload.login&&a.active&&a.state==='success');if(!account)throw new Error('Select the active authenticated account before configuring Git');
+    const result=await this.run(['auth','setup-git',`--hostname=${host}`]);
+    if(result.code!==0){this.update({status:'failed',message:undefined,error:'Git credential-helper setup did not complete. Check Git installation and configuration permissions.'});return this.snapshot();}
+    const readback=await this.run(['config','--global','--get-all',`credential.https://${host}.helper`],'git');
+    const helpers=readback.stdout.split(/\r?\n/);if(helpers.at(-1)==='')helpers.pop();
+    const expected=this.binary.replaceAll('\\','/').replace(/\.exe$/i,'');
+    const installed=helpers.at(-1)?.replaceAll('\\','/');
+    if(readback.code!==0||!installed||!installed.startsWith('!')||!installed.includes(expected)||! /\bauth git-credential\s*$/.test(installed)){this.update({status:'failed',message:undefined,error:'GitHub CLI completed setup, but the expected global credential helper could not be read back. Setup may have changed Git configuration; inspect it before retrying.'});return this.snapshot();}
+    this.update({message:`GitHub CLI credential helper verified in global Git configuration for ${host}. This changes Git authentication on this device; repository settings may override the global helper.`,error:undefined});return this.snapshot();
+   }catch(error){this.update({status:'failed',message:undefined,error:error instanceof Error?error.message:'Git credential-helper verification failed after setup; configuration may have changed.'});return this.snapshot();}finally{this.changing=false;}
+  }
+  this.changing=true;
+  try {
+   await this.refresh();const account=this.state.accounts.find(a=>a.host===host&&a.login===payload.login);if(!account)throw new Error('Select a known GitHub account');
+   if(account.tokenSource==='environment')throw new Error('This account is managed by an environment token. Update the environment to change it.');
+   if(action==='switch'&&this.state.accounts.some(a=>a.host===host&&a.active&&a.tokenSource==='environment'))throw new Error('An environment token overrides saved accounts for this host. Start Material Git without that environment credential to switch saved accounts.');
+   const result=await this.run(['auth',action,`--hostname=${host}`,`--user=${payload.login}`]);
+   if(result.code!==0){this.update({status:'failed',error:`GitHub account ${action} did not complete.`});return this.snapshot();}
+   await this.refresh();
+   const selected=this.state.accounts.find(a=>a.host===host&&a.login===payload.login);
+   if(action==='switch'&&(!selected?.active||selected.state!=='success')){this.update({status:'failed',message:undefined,error:'The selected account is not active after switching. Refresh accounts and check whether an environment credential overrides it.'});return this.snapshot();}
+   if(action==='logout'&&selected){this.update({status:'failed',message:undefined,error:'The account is still reported after removal. Refresh accounts to check its credential source.'});return this.snapshot();}
+   this.update({message:action==='logout'?'Account removed from this device. Existing tokens remain valid until revoked on GitHub.':`Verified active account: ${payload.login} on ${host}.`,error:undefined});return this.snapshot();
+  } finally {this.changing=false;}
  }
 }

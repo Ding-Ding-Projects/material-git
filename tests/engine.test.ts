@@ -61,7 +61,7 @@ test('command-specific create, clone, config, shell alias and API checks reject 
  const engine=new Engine({...metadata,commands},process.cwd(),process.execPath);
  const execute=(commandId:string,values:Record<string,unknown>,args:Record<string,unknown>)=>engine.execute({commandId,values,args,confirmed:true});
  assert.throws(()=>execute('pr create',{title:'A title'},{}),/Required value: body/);
- assert.throws(()=>execute('repo clone',{}, {repository:'owner/repo',gitflags:['-c','core.sshCommand=unsafe']}),/Raw git/);
+ assert.throws(()=>execute('repo clone',{}, {repository:'owner/repo',gitflags:['-c','core.sshCommand=unsafe']}),/Raw git|Unknown argument/);
  assert.throws(()=>execute('repo clone',{}, {repository:'owner/repo',directory:'/tmp/escape'}),/workspace/);
  assert.throws(()=>execute('alias set',{shell:true},{alias:'unsafe',expansion:'echo unsafe'}),/Shell aliases/);
  assert.throws(()=>execute('config set',{}, {key:'git_protocol',value:'enabled'}),/configuration value/);
@@ -80,5 +80,15 @@ test('stream decoding preserves split UTF-8 and credentials cannot leak across c
  const partial=await capture(`process.stdout.write(${JSON.stringify(secret.slice(0,12))});`);assert.equal(partial.operation.stdout,'[REDACTED]');
  const nearUnicode=await capture('process.stdout.write("😀".repeat(35));',false);assert.equal(nearUnicode.operation.stdout,'😀'.repeat(35));
  const boundedUnicode=await capture('process.stdout.write("😀".repeat(300000));',false);assert.equal(boundedUnicode.operation.truncated,true);assert.ok(!boundedUnicode.operation.stdout.includes('\ufffd'));assert.ok(Buffer.byteLength(boundedUnicode.operation.stdout)<=1024*1024);
+ }finally{await rm(dir,{recursive:true,force:true});}
+});
+test('real filenames and Go template expressions are accepted as structured values; remote shell expansion is rejected',async()=>{
+ const {loadCatalog}=await import('../src/main/catalog');const {mkdtemp,writeFile,rm}=await import('node:fs/promises');const {tmpdir}=await import('node:os');const path=await import('node:path');
+ const dir=await mkdtemp(path.join(tmpdir(),'material-native-types-'));const script=path.join(dir,'fixture.cjs');await writeFile(script,'console.log(JSON.stringify(process.argv.slice(2)));');const metadata=loadCatalog();
+ try{
+ async function execute(id:string,values:Record<string,unknown>,args:Record<string,unknown>){const definition={...metadata.commands.find(c=>c.id===id)!,path:[script]};const engine=new Engine({...metadata,commands:[definition]},process.cwd(),process.execPath);const done=new Promise<OperationResult>(resolve=>engine.subscribe(op=>{if(op.endedAt)resolve(op);}));engine.execute({commandId:id,values,args,confirmed:true});return (await done).data as string[];}
+ const gist=await execute('gist create',{}, {'filename-pattern':['hello.py','*.md']});assert.deepEqual(gist,['--','hello.py','*.md']);
+ const template='{{range .}}{{.title}}\n{{end}}';const api=await execute('api',{template},{endpoint:'repos/o/r/issues'});assert.ok(api.includes(`--template=${template}`));
+ const engine=new Engine(metadata,process.cwd(),process.execPath);assert.throws(()=>engine.execute({commandId:'codespace cp',values:{expand:true},args:{sources:['remote:*.md'],dest:'.'},confirmed:true}),/Remote shell expansion/);
  }finally{await rm(dir,{recursive:true,force:true});}
 });

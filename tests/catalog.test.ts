@@ -16,6 +16,20 @@ test('noninteractive coverage and guided metadata match command semantics',()=>{
  assert.equal(get('skill install').arguments[1].name,'skill');
  assert.equal(get('issue create').options.find(o=>o.name==='title')?.required,true);
  assert.equal(get('pr create').options.find(o=>o.name==='body')?.required,true);
- assert.deepEqual(get('completion').arguments[0].choices,['bash','zsh','fish','powershell']);
+ assert.deepEqual(get('completion').options.find(o=>o.name==='shell')?.choices,['bash','zsh','fish','powershell']);
  assert.equal(commands.filter(c=>!c.interactive).length,181);
+});
+test('native placeholders, option alternatives, templates and defaults retain their actual types',()=>{
+ const commands=loadCatalog().commands;const get=(id:string)=>commands.find(c=>c.id===id)!;const option=(id:string,name:string)=>get(id).options.find(o=>o.name===name)!;
+ for(const id of ['gist create','release create']){const files=get(id).arguments.find(a=>a.name==='filename-pattern')!;assert.equal(files.type,'file');assert.equal(files.multiple,true);assert.equal(files.choices,undefined);}
+ assert.equal(get('gist create').arguments[0].required,true);assert.equal(get('release create').arguments[0].required,true);
+ for(const id of ['attestation download','attestation verify']){assert.equal(get(id).arguments.length,1);assert.equal(get(id).arguments[0].required,true);assert.equal(get(id).arguments[0].choices,undefined);}
+ assert.equal(get('attestation trusted-root').arguments.length,0);assert.equal(get('completion').arguments.length,0);assert.equal(option('completion','shell').required,true);
+ assert.equal(get('alias delete').arguments[0].name,'alias');assert.equal(get('alias delete').arguments[0].required,false);
+ assert.equal(get('codespace cp').arguments.length,2);assert.deepEqual(get('codespace ports visibility').arguments.map(a=>a.name),['port-visibility']);assert.equal(get('issue edit').arguments[0].multiple,true);
+ assert.equal(option('api','template').type,'multiline');assert.equal(option('issue create','template').type,'text');assert.equal(option('pr create','template').type,'file');assert.equal(option('repo create','template').entity,'repository');assert.equal(option('repo edit','template').type,'boolean');
+ assert.deepEqual(option('repo edit','visibility').choices,['public','private','internal']);assert.equal(option('attestation verify','format').choices?.[0],'json');
+ assert.equal(option('gist create','filename').type,'text');assert.equal(option('codespace cp','profile').type,'text');assert.equal(option('search code','filename').type,'text');assert.equal(get('repo read-file').arguments[0].type,'text');
+ for(const command of commands)for(const o of command.options){if(o.default===undefined)continue;if(o.type==='boolean')assert.equal(typeof o.default,'boolean',`${command.id} --${o.name}`);if(o.type==='number')assert.ok(typeof o.default==='number'&&Number.isFinite(o.default));if(typeof o.default==='string')assert.ok(!o.default.startsWith('['));}
+ assert.equal(option('gist create','public').default,undefined);assert.equal(option('release create','latest').default,undefined);assert.equal(option('ruleset list','parents').default,true);assert.equal(option('api','method').default,undefined);assert.notEqual(option('project item-edit','field').multiple,true);assert.equal(get('project item-edit').arguments[0].required,false);assert.equal(get('run view').arguments[0].required,false);
 });
