@@ -1,0 +1,4 @@
+# syntax=docker/dockerfile:1
+FROM debian:bullseye-slim@sha256:e5b6442dd2e9684cf5e87d8338b5968f3b348636fc0be6d7850a381e3731a2bd
+RUN --mount=type=secret,id=proxy_ca,required=true,mode=0444 printf 'deb [check-valid-until=no] https://snapshot.debian.org/archive/debian/20250101T000000Z bullseye main\ndeb [check-valid-until=no] https://snapshot.debian.org/archive/debian-security/20250101T000000Z bullseye-security main\n' > /etc/apt/sources.list && printf 'Package: *\nPin: origin snapshot.debian.org\nPin-Priority: 1001\n' > /etc/apt/preferences.d/snapshot && apt-get -o Acquire::https::CaInfo=/run/secrets/proxy_ca update && apt-get -o Acquire::https::CaInfo=/run/secrets/proxy_ca install -y --allow-downgrades --no-install-recommends libc6 build-essential gcc-mingw-w64-x86-64-posix g++-mingw-w64-x86-64-posix pkg-config nasm yasm autoconf automake libtool xz-utils file ca-certificates && rm -rf /var/lib/apt/lists/*
+WORKDIR /build
