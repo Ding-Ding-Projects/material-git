@@ -51,7 +51,8 @@ const initialFields: Record<GitComparisonKind, Record<string, unknown>> = {
 interface ResultRow {values: string[];}
 /** Material comparison panel. Native execution and cancellation remain owned by the host. */
 export class GitComparison extends LitElement {
-  static properties = {bridge: {attribute: false}, references: {attribute: false}, commits: {attribute: false}, language: {}, kind: {state: true}, drafts: {state: true}, busy: {state: true}, error: {state: true}, output: {state: true}, resultRows: {state: true}, hasResult: {state: true}, resultKind: {state: true}, resultPage: {state: true}};
+  static properties = {disabled:{type:Boolean},bridge: {attribute: false}, references: {attribute: false}, commits: {attribute: false}, language: {}, kind: {state: true}, drafts: {state: true}, busy: {state: true}, error: {state: true}, output: {state: true}, resultRows: {state: true}, hasResult: {state: true}, resultKind: {state: true}, resultPage: {state: true}};
+  disabled=false;
   bridge?: GitComparisonBridge;
   references: GitRow[] = [];
   commits: GitRow[] = [];
@@ -77,21 +78,21 @@ export class GitComparison extends LitElement {
   private setField(key: string, value: unknown) {this.drafts = {...this.drafts, [this.kind]: {...this.fields, [key]: value}};this.hasResult = false;this.error = '';}
   private referenceOptions() {const rows = [{id: 'HEAD', label: 'HEAD', detail: ''}, ...this.references, ...this.commits]; return [...new Map(rows.map(row => [row.id, row])).values()];}
   private select(key: string, label: string, options: Array<readonly [string, string]>, allowEmpty = false) {
-    return html`<md-outlined-select .label=${this.label(label)} .value=${String(this.fields[key] ?? '')} ?disabled=${this.busy} @change=${(event: Event) => this.setField(key, (event.target as HTMLSelectElement).value)}>
+    return html`<md-outlined-select .label=${this.label(label)} .value=${String(this.fields[key] ?? '')} ?disabled=${this.disabled||this.busy} @change=${(event: Event) => this.setField(key, (event.target as HTMLSelectElement).value)}>
       ${allowEmpty ? html`<md-select-option value=""><div slot="headline">${this.label('No lower boundary')}</div></md-select-option>` : nothing}
       ${options.map(([value, name]) => html`<md-select-option .value=${value}><div slot="headline">${name}</div></md-select-option>`)}
     </md-outlined-select>`;
   }
   private reference(key: string, label: string, optional = false) {return this.select(key, label, this.referenceOptions().map(row => [row.id, row.label] as const), optional);}
-  private number(key: string, label: string, min: number, max: number) {return html`<md-outlined-text-field type="number" .label=${this.label(label)} .value=${String(this.fields[key] ?? '')} min=${min} max=${max} step="1" ?disabled=${this.busy} @input=${(event: Event) => {const value = (event.target as HTMLInputElement).value; this.setField(key, value === '' ? '' : Number(value));}}></md-outlined-text-field>`;}
-  private text(key: string, label: string, lines = 5) {const value = key === 'identities' ? (this.fields[key] as string[]).join('\n') : String(this.fields[key] ?? '');return html`<md-outlined-text-field class="wide" type="textarea" .label=${this.label(label)} .value=${value} rows=${lines} ?disabled=${this.busy} @input=${(event: Event) => {const value = (event.target as HTMLTextAreaElement).value;this.setField(key, key === 'identities' ? value.split(/\r?\n/).filter(line => line.trim()) : value);}}></md-outlined-text-field>`;}
+  private number(key: string, label: string, min: number, max: number) {return html`<md-outlined-text-field type="number" .label=${this.label(label)} .value=${String(this.fields[key] ?? '')} min=${min} max=${max} step="1" ?disabled=${this.disabled||this.busy} @input=${(event: Event) => {const value = (event.target as HTMLInputElement).value; this.setField(key, value === '' ? '' : Number(value));}}></md-outlined-text-field>`;}
+  private text(key: string, label: string, lines = 5) {const value = key === 'identities' ? (this.fields[key] as string[]).join('\n') : String(this.fields[key] ?? '');return html`<md-outlined-text-field class="wide" type="textarea" .label=${this.label(label)} .value=${value} rows=${lines} ?disabled=${this.disabled||this.busy} @input=${(event: Event) => {const value = (event.target as HTMLTextAreaElement).value;this.setField(key, key === 'identities' ? value.split(/\r?\n/).filter(line => line.trim()) : value);}}></md-outlined-text-field>`;}
   private entities(key: 'refs' | 'commits', label: string, rows: GitRow[], max: number) {
     const selected = this.fields[key] as string[];
-    return html`<div class="wide"><mg-text kind="title-small">${this.label(label)}</mg-text><div class="entities">${rows.map(row => html`<label class="entity"><md-checkbox aria-label=${row.label} .checked=${selected.includes(row.id)} ?disabled=${this.busy || (!selected.includes(row.id) && selected.length >= max)} @change=${(event: Event) => this.setField(key, (event.target as HTMLInputElement).checked ? [...selected, row.id] : selected.filter(id => id !== row.id))}></md-checkbox><span>${row.label}<span class="hint"> ${row.detail}</span></span></label>`)}</div></div>`;
+    return html`<div class="wide"><mg-text kind="title-small">${this.label(label)}</mg-text><div class="entities">${rows.map(row => html`<label class="entity"><md-checkbox aria-label=${row.label} .checked=${selected.includes(row.id)} ?disabled=${this.disabled||this.busy || (!selected.includes(row.id) && selected.length >= max)} @change=${(event: Event) => this.setField(key, (event.target as HTMLInputElement).checked ? [...selected, row.id] : selected.filter(id => id !== row.id))}></md-checkbox><span>${row.label}<span class="hint"> ${row.detail}</span></span></label>`)}</div></div>`;
   }
   private form() {
     switch (this.kind) {
-      case 'shortlog': return html`${this.entities('refs', 'Selected references', this.referenceOptions().filter(row => row.id === 'HEAD' || this.references.some(ref => ref.id === row.id)), 20)}${this.select('group', 'Contributor grouping', [['author', this.label('Author')], ['committer', this.label('Committer')]])}${this.number('pageSize', 'Commits per page', 1, 1000)}<label class="flag"><md-checkbox aria-label=${this.label('Show email addresses')} .checked=${!!this.fields.email} ?disabled=${this.busy} @change=${(event: Event) => this.setField('email', (event.target as HTMLInputElement).checked)}></md-checkbox>${this.label('Show email addresses')}</label>`;
+      case 'shortlog': return html`${this.entities('refs', 'Selected references', this.referenceOptions().filter(row => row.id === 'HEAD' || this.references.some(ref => ref.id === row.id)), 20)}${this.select('group', 'Contributor grouping', [['author', this.label('Author')], ['committer', this.label('Committer')]])}${this.number('pageSize', 'Commits per page', 1, 1000)}<label class="flag"><md-checkbox aria-label=${this.label('Show email addresses')} .checked=${!!this.fields.email} ?disabled=${this.disabled||this.busy} @change=${(event: Event) => this.setField('email', (event.target as HTMLInputElement).checked)}></md-checkbox>${this.label('Show email addresses')}</label>`;
       case 'cherry': return html`${this.reference('upstream', 'Upstream reference')}${this.reference('head', 'Head reference')}${this.reference('limit', 'Lower boundary', true)}`;
       case 'range-diff': return html`${this.reference('oldBase', 'Old base')}${this.reference('oldTip', 'Old tip')}${this.reference('newBase', 'New base')}${this.reference('newTip', 'New tip')}${this.number('creationFactor', 'Creation factor', 1, 999)}`;
       case 'name-rev': return html`${this.commits.length ? this.entities('commits', 'Selected commits', this.commits, 100) : html`<p class="hint wide">${this.label('No commits selected. Select commits from History first.')}</p>`}${this.select('nameScope', 'Reference scope', [['all', this.label('All references')], ['tags', this.label('Tags')], ['branches', this.label('Branches')]])}`;
@@ -113,7 +114,7 @@ export class GitComparison extends LitElement {
   }
   private headings(): string[] {switch(this.resultKind) {case 'shortlog': return ['Count', 'Contributor'];case 'cherry': return ['Patch equivalence', 'Commit', 'Commit details'];case 'name-rev': return ['Commit', 'Reference name'];case 'check-mailmap': return ['Mapped identity'];case 'patch-id': return ['Patch ID', 'Commit'];default: return [];}}
   private async run(page = 0) {
-    if (this.busy || !this.bridge) return;
+    if (this.disabled||this.busy || !this.bridge) return;
     this.busy = true; this.error = ''; this.dispatchEvent(new CustomEvent('comparison-state', {detail: {busy: true}, bubbles: true, composed: true}));
     const kind = this.kind; const fields = {...this.fields, ...(kind === 'shortlog' ? {page} : {})};
     try {
@@ -129,13 +130,13 @@ export class GitComparison extends LitElement {
     finally {this.busy = false; this.dispatchEvent(new CustomEvent('comparison-state', {detail: {busy: false}, bubbles: true, composed: true}));}
   }
   render() {
-    return html`<mg-surface level="low"><div class="panel"><div class="destinations" aria-label=${this.label('Run comparison')}>${destinations.map(entry => html`<md-filter-chip .label=${this.destinationLabel(entry)} .selected=${this.kind === entry[0]} ?disabled=${this.busy} @click=${() => {this.kind = entry[0];this.hasResult = false;this.output = '';this.error = '';}}></md-filter-chip>`)}</div>
+    return html`<mg-surface level="low"><div class="panel"><div class="destinations" aria-label=${this.label('Run comparison')}>${destinations.map(entry => html`<md-filter-chip .label=${this.destinationLabel(entry)} .selected=${this.kind === entry[0]} ?disabled=${this.disabled||this.busy} @click=${() => {this.kind = entry[0];this.hasResult = false;this.output = '';this.error = '';}}></md-filter-chip>`)}</div>
       <p class="hint">${this.label(descriptions[this.kind])}</p><div class="fields">${this.form()}</div>
       ${!this.bridge ? html`<p class="hint">${this.label('Open a repository to enable comparisons.')}</p>` : nothing}
-      <div class="actions"><md-filled-button ?disabled=${this.busy || !this.bridge} @click=${() => this.run()}>${this.label(this.busy ? 'Running comparison' : 'Run comparison')}</md-filled-button>${this.busy ? html`<md-linear-progress indeterminate aria-label=${this.label('Running comparison')}></md-linear-progress>` : nothing}</div>
+      <div class="actions"><md-filled-button ?disabled=${this.disabled||this.busy || !this.bridge} @click=${() => this.run()}>${this.label(this.busy ? 'Running comparison' : 'Run comparison')}</md-filled-button>${this.busy ? html`<md-linear-progress indeterminate aria-label=${this.label('Running comparison')}></md-linear-progress>` : nothing}</div>
       ${this.error ? html`<p class="error" role="alert">${this.error}</p>` : nothing}
       ${this.hasResult ? html`<div class="results" aria-live="polite">${this.resultRows.length ? html`<div class="table-scroll"><table><thead><tr>${this.headings().map(label => html`<th scope="col">${this.label(label)}</th>`)}</tr></thead><tbody>${this.resultRows.map(row => html`<tr>${row.values.map((value, index) => html`<td>${this.resultKind === 'cherry' && index === 0 ? this.label(value) : value}</td>`)}</tr>`)}</tbody></table></div>` : this.output ? html`<pre class="output">${this.output}</pre>` : html`<p>${this.label('No matching records')}</p>`}
-      ${this.resultKind === 'shortlog' ? html`<div class="actions"><md-outlined-button ?disabled=${this.busy || !this.resultPage} @click=${() => this.run(this.resultPage - 1)}>${this.label('Previous')}</md-outlined-button><span>${this.label('Page')} ${this.resultPage + 1}</span><md-outlined-button ?disabled=${this.busy || !this.resultRows.length} @click=${() => this.run(this.resultPage + 1)}>${this.label('Next')}</md-outlined-button></div>` : nothing}</div>` : nothing}
+      ${this.resultKind === 'shortlog' ? html`<div class="actions"><md-outlined-button ?disabled=${this.disabled||this.busy || !this.resultPage} @click=${() => this.run(this.resultPage - 1)}>${this.label('Previous')}</md-outlined-button><span>${this.label('Page')} ${this.resultPage + 1}</span><md-outlined-button ?disabled=${this.disabled||this.busy || !this.resultRows.length} @click=${() => this.run(this.resultPage + 1)}>${this.label('Next')}</md-outlined-button></div>` : nothing}</div>` : nothing}
     </div></mg-surface>`;
   }
 }
