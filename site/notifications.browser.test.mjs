@@ -14,6 +14,7 @@ try{
  await page.waitForFunction(()=>JSON.parse(localStorage.getItem('material-git-site.notifications.v1')).records.filter(record=>record.category==='error').length===3);
  assert.equal(await page.locator('.notification-stack .snackbar.error').count(),3);await page.clock.fastForward(9000);assert.equal(await page.locator('.notification-stack .snackbar.error').count(),3,'errors survive routine toast expiry');
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'stack fits 320px with bilingual 200% text');
+ assert.equal(await page.locator('.notification-stack .snackbar').first().evaluate(card=>getComputedStyle(card).color===getComputedStyle(card.querySelector('p')).color),true,'toast paragraphs use the contrast foreground of their own surface');
  const stack=await page.locator('.notification-stack .snackbar').evaluateAll(cards=>cards.map(card=>{const r=card.getBoundingClientRect();return{top:r.top,bottom:r.bottom}}));for(let i=1;i<stack.length;i++)assert.ok(stack[i].top>=stack[i-1].bottom,'cards never overlap');
  const capturedAt=new Date().toISOString();await page.screenshot({path:out+'/three-errors-bilingual-320.png'});
  await page.locator('.notification-stack .snackbar.error').last().locator('md-text-button').filter({hasText:'Open recovery control'}).click();await page.waitForFunction(()=>document.activeElement?.id==='setting-logo');
