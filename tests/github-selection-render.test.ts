@@ -1,0 +1,19 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {existsSync} from 'node:fs';import {build} from 'esbuild';import {chromium} from 'playwright';
+const browserPath=existsSync('/usr/bin/chromium')?'/usr/bin/chromium':chromium.executablePath();
+test('built issue and pull request controls send visible numbers and preserve selected database identity',{skip:!existsSync(browserPath)},async()=>{
+ const bundle=await build({stdin:{contents:"import './src/renderer/github-workspace.ts';import './src/renderer/scroll-surface.ts';",resolveDir:process.cwd(),sourcefile:'selected-provider-fixture.ts'},bundle:true,write:false,format:'iife',platform:'browser',logLevel:'silent'});
+ const browser=await chromium.launch({headless:true,executablePath:browserPath,args:['--no-sandbox']});const page=await browser.newPage({viewport:{width:1280,height:1000}});page.setDefaultTimeout(5000);const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message));
+ try{
+  await page.setContent('<style>mg-github-workspace{display:block;height:900px}.record-tab-scroll{height:60px}.record-list-scroll{height:240px}.detail-content-scroll{height:300px}</style>');await page.evaluate('globalThis.__name=value=>value');
+  await page.evaluate(()=>{Object.assign(window,{fixtureCalls:[],material:{github:async(action:string,payload:Record<string,unknown>)=>{(window as unknown as {fixtureCalls:unknown[]}).fixtureCalls.push({action,payload});const databaseId=action.startsWith('pulls.')||payload.action==='pulls.close'?99042:88042;return action==='review'?{items:[],hasNext:false,page:0,review:{reviewId:'fixture-review',values:{},expiresAt:'2099-01-01T00:00:00Z',warnings:[]}}:action.endsWith('.list')?{items:[{id:databaseId,number:42,title:'Selected fixture',state:'open'}],hasNext:false,page:0}:{detail:{id:databaseId,number:42,title:'Selected fixture',state:'open'},items:[],hasNext:false,page:0};},openExternal:async()=>{}}});});
+  await page.addScriptTag({content:bundle.outputFiles[0].text});
+  for(const domain of ['issues','pull-requests']){
+   await page.evaluate(domain=>{document.querySelector('mg-github-workspace')?.remove();const workspace=document.createElement('mg-github-workspace') as HTMLElement&{domain:string;hostname:string;repository:string;authenticated:boolean};workspace.domain=domain;workspace.hostname='github.example';workspace.repository='owner/repo';workspace.authenticated=true;document.body.append(workspace);},domain);
+   await page.locator('[data-testid=github-record]').click();await page.getByRole('button',{name:'Close',exact:true}).click();await page.locator('.domain-editor').getByRole('button',{name:'Review changes',exact:true}).click();
+   await page.waitForFunction(domain=>(window as unknown as {fixtureCalls:{action:string;payload:Record<string,unknown>}[]}).fixtureCalls.some(call=>call.action==='review'&&call.payload.action===(domain==='issues'?'issues.close':'pulls.close')),domain);
+  }
+  const calls=await page.evaluate(()=>(window as unknown as {fixtureCalls:{action:string;payload:Record<string,unknown>}[]}).fixtureCalls);
+  for(const [domain,databaseId,providerKind] of [['issues',88042,'issue'],['pulls',99042,'pull-request']] as const){const detail=calls.find(call=>call.action===`${domain}.detail`);assert.equal(detail?.payload.id,'42');assert.equal(detail?.payload.providerId,String(databaseId));assert.equal(detail?.payload.providerKind,providerKind);const review=calls.find(call=>call.action==='review'&&call.payload.action===`${domain}.close`);assert.equal(review?.payload.id,'42');assert.equal(review?.payload.providerId,String(databaseId));assert.equal(review?.payload.hostname,'github.example');}
+  assert.equal(calls.filter(call=>call.action==='apply').length,0);assert.deepEqual(errors,[]);
+ }finally{await browser.close();}
+});
