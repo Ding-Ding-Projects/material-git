@@ -1,4 +1,5 @@
 import {referenceInspectorKinds,buildGitReferenceInspection,type ReferenceInspectorKind} from './git-reference-inspect';
+import type {GitProviderTarget} from '../shared/git-provider';
 import {remoteReferenceQuery,parseRemoteReferences} from './git-remotes';
 import {buildGitComparison,type GitComparisonKind} from './git-comparison';
 import {AsyncLocalStorage} from 'node:async_hooks';
@@ -14,7 +15,7 @@ import {GitProcesses,redactGit} from './git-process';
 interface RequestState {id:string;cancelled:boolean;mutationStarted:boolean;children:Set<string>;}
 interface Grant {root:string;gitDir:string;commonDir:string;bare:boolean;}
 interface Plan {grant:Grant;review:GitReview;argv:string[];input?:string;write?:{file:string;content:string;metadata?:boolean};trust:boolean;bindings?:{file:string;hash:string}[];targetSnapshot?:{id:string;fingerprint:string};destination?:string;newRepository?:{parent:string;target:string;fingerprint:string;configHash:string};}
-export interface GitServiceOptions {binary:string;directory:string;helperDirectory?:string;pickWorktree?:()=>Promise<string|null>;pickFile?:()=>Promise<string|null>;now?:()=>number;}
+export interface GitServiceOptions {binary:string;directory:string;helperDirectory?:string;pickWorktree?:()=>Promise<string|null>;pickFile?:()=>Promise<string|null>;resolveProviderTarget?:(id:string)=>Promise<GitProviderTarget>;now?:()=>number;}
 const TTL=300000,MAX=2097152;
 function string(value:unknown,label:string,required=true,max=4096):string {if(value===undefined||value===''){if(required)throw new Error(`Choose ${label}`);return '';}if(typeof value!=='string'||value.length>max||value.includes('\0'))throw new Error(`Invalid ${label}`);return value;}
 function oneLine(value:unknown,label:string,required=true):string {const result=string(value,label,required);if(/[\r\n]/.test(result))throw new Error(`Invalid ${label}`);return result;}
