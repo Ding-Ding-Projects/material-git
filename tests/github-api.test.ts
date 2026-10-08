@@ -112,3 +112,26 @@ test('pinned official catalogue and GraphQL source are internally consistent and
  const built=api.graphqlBuild({operation:'query',selections:[{field:'repository',args:{owner:'octocat',name:'Hello-World'},selections:[{field:'nameWithOwner'},{field:'issues',args:{first:5},selections:[{field:'nodes',selections:[{field:'title'}]},{field:'pageInfo',selections:[{field:'hasNextPage'},{field:'endCursor'}]}]}]}]});assert.ok(built.document.includes('repository'));
  assert.equal(api.graphqlDescribe('Repository').kind,'OBJECT');assert.equal(api.graphqlCatalogue({kind:'ENUM',pageSize:2}).types.length,2);
 });
+
+test('Approved hosts keep REST, GraphQL, uploads and pagination scoped to the registration',async()=>{
+ const calls:any[]=[];const host={hostname:'enterprise.example',restOrigin:'https://enterprise.example/api/v3',graphqlEndpoint:'https://enterprise.example/api/graphql',uploadsOrigin:'https://enterprise.example/api/uploads'};
+ const api=service(async(...args:any[])=>{calls.push(args);return http([],200,{Link:'<https://enterprise.example/api/v3/items/someone/3?page=2>; rel="next"'});},{resolveHost:(hostname:string)=>{if(hostname!=='enterprise.example')throw new Error('Host is not approved');return host;}});
+ const first=await api.execute({...request,hostname:host.hostname});assert.equal(calls[0][1].at(-1),'https://enterprise.example/api/v3/items/someone/3');
+ await api.execute({...request,hostname:host.hostname,nextPage:first.nextPage});assert.equal(calls[1][1].at(-1),'https://enterprise.example/api/v3/items/someone/3?page=2');
+ await api.graphqlExecute({hostname:host.hostname,operation:'query',selections:[{field:'item',args:{id:'1'},selections:[{field:'id'}]}]});assert.equal(calls[2][1].at(-1),host.graphqlEndpoint);
+ await assert.rejects(()=>api.execute({...request,hostname:'unapproved.example'}),/approved/);await assert.rejects(()=>service().execute({...request,hostname:host.hostname}),/approved/);
+ await assert.rejects(()=>service(undefined,{resolveHost:()=>({...host,restOrigin:'https://foreign.example/api/v3'})}).execute({...request,hostname:host.hostname}),/origin/);
+ const foreign=service(async()=>http([],200,{Link:'<https://foreign.example/api/v3/items/someone/3?page=2>; rel="next"'}),{resolveHost:()=>host});assert.equal((await foreign.execute({...request,hostname:host.hostname})).nextPage,undefined);
+});
+test('Read caching is enumerated and never applied to mutation requests',async()=>{
+ const calls:any[]=[];const api=service(async(...args:any[])=>{calls.push(args);return http({});});await api.execute({...request,cacheSeconds:300});assert.ok(calls[0][1].includes('300s'));
+ for(const cacheSeconds of [-1,10,Infinity])await assert.rejects(()=>api.execute({...request,cacheSeconds}),/duration/);
+ await assert.rejects(()=>api.execute({...request,operationId:'items/update',body:{title:'x'},confirmed:true,cacheSeconds:60}),/read-only/);assert.equal(calls.length,1);
+});
+test('Pinned media inventory supports every declared request type and renders declared textual response variants',async()=>{
+ const official=JSON.parse(readFileSync('data/github-api-catalog.json','utf8')) as ApiCatalogFile;
+ assert.deepEqual([...new Set(official.operations.flatMap(op=>Object.keys(op.requestBody?.content||{})))].sort(),['application/json','application/octet-stream','text/plain','text/x-markdown']);
+ const calls:any[]=[];let responseBody='';let responseMime='text/html';const api=createApiService({binary:'/test/gh',cwd:'/test',catalog:official,graphqlSchema:graphql,runGh:async(...args)=>{calls.push(args);return Buffer.from(`HTTP/2.0 200 OK\r\nContent-Type: ${responseMime}\r\n\r\n${responseBody}`);}});
+ for(const contentType of ['text/plain','text/x-markdown']){responseBody='<p>hello</p>';const result=await api.execute({operationId:'markdown/render-raw',contentType,body:'# hello',confirmed:true});assert.equal(calls.at(-1)[3],'# hello');assert.equal(result.text,responseBody);assert.equal(result.binary,undefined);}
+ for(const [operationId,path,mime,body] of [['meta/get-octocat',{},'application/octocat-stream','octocat'],['repos/get-commit',{owner:'o',repo:'r',ref:'main'},'application/vnd.github.diff','diff --git a/a b/a'],['repos/get-content',{owner:'o',repo:'r',path:'file'},'application/vnd.github.object','{"name":"file"}']] as const){responseMime=mime;responseBody=body;const result=await api.execute({operationId,path,headers:{Accept:mime}});assert.equal(result.binary,undefined);if(mime==='application/vnd.github.object')assert.deepEqual(result.data,{name:'file'});else assert.equal(result.text,body);}
+});
