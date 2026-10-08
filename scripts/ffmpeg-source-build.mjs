@@ -4,6 +4,7 @@ import { mkdir, open, readFile, copyFile, rename, rm, mkdtemp, readdir, writeFil
 import { spawn, spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { verifiedDownload } from './verified-download.mjs';
 
 const projectRoot = fileURLToPath(new URL('..', import.meta.url));
 export const ffmpegSourceManifest = JSON.parse(await readFile(path.join(projectRoot, 'data/ffmpeg-source-build.json'), 'utf8'));
@@ -15,33 +16,7 @@ export async function sourceHash(file) {
  return hash.digest('hex');
 }
 
-async function acquireSource(item, directory) {
- const target = path.join(directory, item.asset);
- try { if (await sourceHash(target) === item.sha256) return target; } catch {}
- const response = await fetch(item.url, { redirect: 'follow', signal: AbortSignal.timeout(180000) });
- if (!response.ok || !response.body) throw new Error(`Pinned ${item.name} source download returned HTTP ${response.status}`);
- const temporary = target + '.tmp';
- const file = await open(temporary, 'w', 0o600);
- const hash = createHash('sha256');
- let bytes = 0;
- try {
-  for await (const part of response.body) {
-   bytes += part.length;
-   if (bytes > 64 * 1024 * 1024) throw new Error('Source archive exceeds 64 MiB');
-   hash.update(part);
-   await file.write(part);
-  }
-  await file.sync();
-  if (hash.digest('hex') !== item.sha256) throw new Error(`Pinned ${item.name} source checksum mismatch`);
- } catch (error) {
-  await file.close();
-  await rm(temporary, { force: true });
-  throw error;
- }
- await file.close();
- await rename(temporary, target);
- return target;
-}
+async function acquireSource(item,directory){return verifiedDownload(item,directory);}
 
 /** The release input is a complete preferred-source bundle, not a source URL offer. */
 export async function verifyFFmpegSourcePayload(directory, platform, converterManifest) {
@@ -128,7 +103,7 @@ export async function buildFFmpegSourcePayload(platform = process.platform + '-'
  let containerName;
  try {
   for (const source of ffmpegSourceManifest.sources) await copyFile(await acquireSource(source, cache), path.join(sources, source.asset));
-  for (const name of ['Dockerfile', 'build.sh', 'ffmpeg-source-build.mjs']) {
+  for (const name of ['Dockerfile', 'build.sh', 'ffmpeg-source-build.mjs', 'verified-download.mjs']) {
    const original = path.join(projectRoot, name.endsWith('.mjs') ? 'scripts' : 'scripts/converter-build', name);
    if (await sourceHash(original) !== ffmpegSourceManifest.recipe[name]) throw new Error('FFmpeg source recipe changed without manifest review');
    await copyFile(original, path.join(recipe, name));
