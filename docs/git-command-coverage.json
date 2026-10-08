@@ -1,7 +1,7 @@
 {
   "version": 1,
   "checkedAt": "2026-10-08",
-  "implementationCheckpoint": "09abd10 + exact provider pull-request checkout workflow",
+  "implementationCheckpoint": "e25b13b + reviewed conflict reuse workflows",
   "auditSource": "coverage/git-action-map.json",
   "auditOfficialCommit": "a018953688f1b10bddf91bff8747068f5f4746a4",
   "auditSourceDigest": "daa7a7fa2fb22ab5d48639a6ba8036db8707db8faaeaec21960aab3ea595a436",
@@ -13,9 +13,9 @@
   "counts": {
     "audited": 173,
     "covered": 0,
-    "partial": 90,
-    "missing": 83,
-    "directPartial": 88,
+    "partial": 91,
+    "missing": 82,
+    "directPartial": 89,
     "delegatedPartial": 1,
     "derivedPartial": 1,
     "equivalentOnlyMissing": 6
@@ -6310,7 +6310,7 @@
     },
     {
       "command": "rerere",
-      "status": "missing",
+      "status": "partial",
       "officialReference": "git-rerere.adoc",
       "auditedOptionMentions": [
         "--abort",
@@ -6320,11 +6320,26 @@
       ],
       "optionAudit": "open; references are not an executable grammar",
       "proposedDestination": "local-repositories/conflicts",
-      "guiRoute": null,
-      "nativeForm": null,
-      "reachability": "none",
-      "verification": "not implemented or not independently reachable",
-      "remaining": "Conflicts > Inspect recorded resolutions and review reuse/forget/clear/gc effects."
+      "guiRoute": "Conflicts > Recorded conflict resolutions",
+      "nativeForm": "rerere status|remaining|diff; rerere --no-rerere-autoupdate; rerere forget -- <selected unmerged path>; rerere clear; rerere gc with typed retention days",
+      "reachability": "direct-task-or-inspector",
+      "nativeSources": [
+        "src/main/git.ts",
+        "src/main/git-conflict-reuse.ts"
+      ],
+      "guiSources": [
+        "src/renderer/git-workspace.ts",
+        "src/renderer/git-workspace-forms.ts",
+        "src/renderer/git-conflict-reuse.ts"
+      ],
+      "verification": "representative isolated native fixtures; complete form/option audit remains open",
+      "evidence": [
+        "tests/git-native.test.ts",
+        "tests/git-advanced.test.ts",
+        "tests/git-conflict-reuse.test.ts"
+      ],
+      "guiEvidence": "browser verifies staging/unstaging, history graph, attribution, typed tree creation, contributor summary, advertised remote references, reviewed owned-local fetch, valid/invalid reference feedback, three-file preview/edit/reviewed save and seeded clone guard; the focused comparison panel additionally verifies reference names, mailmap and normalization; other individual interactions remain open",
+      "remaining": "All main documented forms have dedicated contextual controls and representative real conflict/cache fixtures. Selected-path forgetting only; automatic index updates are intentionally disabled. Full option/runtime and per-form GUI evidence remain open."
     },
     {
       "command": "reset",
@@ -8423,7 +8438,7 @@
   "nextPriorities": [
     "Explicit multi-ref/delete/lease remote policies after the advertised reference chooser.",
     "Interactive rebase todo controls with owned native editors and recovery.",
-    "Recorded conflict resolution (rerere), trailer editing and patch identity.",
+    "Structured commit trailer editing and repository/range-bound request-pull drafts.",
     "Pack inspection/import/verification and symbolic/ref transaction tools.",
     "Explicit trusted regression test/program orchestration and integration/protocol lifecycles.",
     "Git 2.56-only workflows must remain gated until the actual runtime is proved."
