@@ -43,3 +43,8 @@ test('revocation interrupts a provider target revalidation already in progress',
  const registry=new GitHubProviderTargets({request:async()=>{if(hold){entered();await gate;}return {id:88,full_name:'owner/repo',clone_url:'https://github.com/owner/repo.git'};},account:async()=> '7',selectedHostname:()=> 'github.com',inHost:async(_host,work)=>work()});
  const source=await registry.prepare('repositories.clone-source',{repository:'owner/repo',id:88},'github.com');hold=true;const pending=registry.resolve(source.id);await started;registry.discard(source.id);release();await assert.rejects(pending,/revoked/);await assert.rejects(registry.resolve(source.id),/expired/);
 });
+test('context invalidation prevents an in-flight source read from issuing a new receipt',async()=>{
+ let release!:()=>void,entered!:()=>void;const gate=new Promise<void>(resolve=>release=resolve),started=new Promise<void>(resolve=>entered=resolve);
+ const registry=new GitHubProviderTargets({request:async()=>{entered();await gate;return {id:88,full_name:'owner/repo',clone_url:'https://github.com/owner/repo.git'};},account:async()=> '7',selectedHostname:()=> 'github.com',inHost:async(_host,work)=>work()});
+ const pending=registry.prepare('repositories.clone-source',{repository:'owner/repo',id:88},'github.com');await started;registry.invalidate();release();await assert.rejects(pending,/invalidated/);
+});
