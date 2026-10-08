@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {initialValue,resolveSchema,validateValue,redactPreview} from '../src/renderer/api-form';
+import {initialValue,resolveSchema,validateValue,redactPreview,alternativeSchema,emptyTypedValue} from '../src/renderer/api-form';
 
 test('API forms preserve false and zero defaults without filling unrelated optional fields',()=>{
   const schema={type:'object',properties:{enabled:{type:'boolean',default:false},count:{type:'integer',default:0},name:{type:'string'}}};
@@ -44,4 +44,24 @@ test('Request previews redact nested credential keys and provider token shapes w
   assert.equal(redacted.query.text,'[redacted]');
   assert.equal(redacted.query.page,0);
   assert.equal(request.headers.Authorization,'Bearer private-value');
+});
+
+test('Required-only schema alternatives preserve common fields and enforce each branch like the backend',()=>{
+ const schema={type:'object',properties:{type:{type:'string',enum:['Issue']},id:{type:'integer'},owner:{type:'string'},repo:{type:'string'},number:{type:'integer'}},required:['type'],additionalProperties:false,oneOf:[{required:['id']},{required:['owner','repo','number']}]};
+ assert.deepEqual(validateValue(schema,{type:'Issue',id:3},true),[]);
+ assert.deepEqual(validateValue(schema,{type:'Issue',owner:'owner',repo:'repo',number:3},true),[]);
+ assert.match(validateValue(schema,{type:'Issue'},true).join(' '),/exactly one/);
+ assert.match(validateValue(schema,{type:'Issue',id:3,owner:'owner',repo:'repo',number:3},true).join(' '),/exactly one/);
+ assert.match(validateValue(schema,{type:'Invalid',id:3},true).join(' '),/listed choices/);
+ assert.match(validateValue(schema,{type:'Issue',id:3,extra:true},true).join(' '),/allowed property/);
+ assert.deepEqual(alternativeSchema(schema,schema.oneOf[1]).required,['type','owner','repo','number']);
+ assert.equal(alternativeSchema(schema,schema.oneOf[1]).properties?.id.type,'integer');
+});
+test('Unspecified schema properties preserve each JSON type and reject nonfinite numbers and unsafe keys',()=>{
+ const value={text:'',count:0,enabled:false,nested:{list:[null,2,{value:'text'}]}};
+ assert.deepEqual(validateValue({type:'object',additionalProperties:{}},value,true),[]);
+ for(const type of ['string','number','boolean','object','array','null'])assert.deepEqual(validateValue({},emptyTypedValue(type),true),[]);
+ assert.match(validateValue({},Infinity,true).join(' '),/JSON value/);
+ assert.match(validateValue({},JSON.parse('{"__proto__":0}'),true).join(' '),/unsafe/);
+ assert.match(validateValue({type:'array',items:{type:'integer'},uniqueItems:true},[1,1],true).join(' '),/unique/);
 });
