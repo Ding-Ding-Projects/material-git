@@ -63,7 +63,7 @@ No command is fully covered: the complete form, option and per-control execution
 | `difftool` | missing | Changes > Launch a native-picked trusted comparison program on reviewed input copies. |
 | `fast-export` | missing | Transfer > Export selected references to a fresh native-approved stream file. |
 | `fast-import` | missing | Transfer > Validate/import an approved fast-import stream with explicit target ref updates. |
-| `fetch` | partial | Remotes > Fetch; Patches > Import bundle reference; Sparse checkout > Deepen |
+| `fetch` | partial | Remotes > Fetch; selected provider PR > exact head checkout; Patches > Import bundle reference; Sparse checkout > Deepen |
 | `fetch-pack` | missing | Git-owned internal/helper/protocol command. Its parent workflow does not establish a separately reachable command contract; add explicit inspection/lifecycle or typed transfer controls before claiming coverage. |
 | `filter-branch` | missing | History > Review a complete rewrite plan and explicitly trust selected transformation programs. |
 | `fmt-merge-msg` | missing | Branches > Compose an editable merge message from a selected reviewed integration plan. |
@@ -167,7 +167,7 @@ No command is fully covered: the complete form, option and per-control execution
 | `submodule` | partial | Working trees > Submodules |
 | `submodule--helper` | missing | Git-owned internal/helper/protocol command. Its parent workflow does not establish a separately reachable command contract; add explicit inspection/lifecycle or typed transfer controls before claiming coverage. |
 | `svn` | missing | External/integration workflow is not implemented. Needs approved native program/account/file grants, dependency discovery and task-specific reviewed effects. |
-| `switch` | partial | Branches > Switch/Create branch; History > Inspect detached commit |
+| `switch` | partial | Branches > Switch/Create branch; selected provider PR > fresh local branch; History > Inspect detached commit |
 | `symbolic-ref` | partial | Source control toolbar > current branch derived state |
 | `tag` | partial | Tags and stashes > Create/Delete/Verify tag |
 | `unpack-file` | missing | Object storage > Export a selected blob into a fresh native-approved file. |
