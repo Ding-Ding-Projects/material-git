@@ -14,3 +14,17 @@ test('durable converter queue stays paused on restart, resumes granted records a
 test('actual video preset reopens valid duration/dimensions using only owned local files',async(t)=>{if(!(await engines.status()).find(s=>s.kind==='ffmpeg')?.available){t.skip('Bundled FFmpeg engine unavailable');return;}const path=join(fixtureRoot,'tiny-video.mp4');await writeFile(path,Buffer.from(await readFile(resolve('tests/fixtures/tiny-video.base64'),'utf8'),'base64'));const converted=await request('media-webm',[{name:'tiny-video.mp4',bytes:await readFile(path)}],{threads:1});assert.ok(converted.outputs[0].bytes.length>100);assert.equal((converted.details?.output as{streams:Array<{width:number}>}).streams[0].width,16);});
 
 test('ZIP reopening rejects CRC corruption, false expansion sizes and symlink entries before extraction',async()=>{const created=await request('zip-create',[{name:'fixture.txt',bytes:Buffer.from('synthetic '.repeat(1000))}]);const original=Buffer.from(created.outputs[0].bytes),central=original.indexOf(Buffer.from([0x50,0x4b,0x01,0x02]));assert.ok(central>0);const corrupt=Buffer.from(original);corrupt.writeUInt32LE((corrupt.readUInt32LE(central+16)^1)>>>0,central+16);await assert.rejects(request('zip-extract',[{name:'bad.zip',bytes:corrupt}]),/CRC/);const understated=Buffer.from(original);understated.writeUInt32LE(1,central+24);await assert.rejects(request('zip-extract',[{name:'bad.zip',bytes:understated}]),/limit|size|length|large/i);const symlink=Buffer.from(original);symlink.writeUInt32LE((0xa000<<16)>>>0,central+38);await assert.rejects(request('zip-extract',[{name:'bad.zip',bytes:symlink}]),/symbolic/);});
+
+test('native archives verify empty, binary and Unicode entries; wrong passwords and cancellation refuse outputs',async(t)=>{
+ if(!(await engines.status()).find(s=>s.kind==='archive')?.available){t.skip('Verified native archive payload absent');return;}
+ const inputs=[{name:'empty.txt',bytes:Buffer.alloc(0)},{name:'binary.bin',bytes:Buffer.from(Array.from({length:4096},(_,i)=>i%256))},{name:'廣東話.txt',bytes:Buffer.from('Synthetic Unicode fixture')}];
+ for(const adapter of ['7z-create','7z-zip']){
+  const archived=await request(adapter,inputs,{encryption:'content',password:'synthetic-password',threads:1});
+  const restored=await request('7z-extract',[{name:'archive.bin',bytes:archived.outputs[0].bytes}],{password:'synthetic-password'});
+  for(const input of inputs)assert.deepEqual(Buffer.from(restored.outputs.find(o=>o.suffix==='-'+input.name)!.bytes),input.bytes);
+  await assert.rejects(request('7z-extract',[{name:'archive.bin',bytes:archived.outputs[0].bytes}],{password:'wrong-synthetic-password'}),/failed/);
+ }
+ const cancelled=new AbortController();cancelled.abort();
+ await assert.rejects(engines.convert({adapter:'7z-create',inputs,options:{}},cancelled.signal),/cancelled/);
+ for(const name of ['CON.txt','file:stream','trailing.','unsafe '])await assert.rejects(request('7z-create',[{name,bytes:Buffer.from('fixture')}]),/safe basenames/);
+});
