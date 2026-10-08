@@ -37,7 +37,7 @@ function nativeRunner(binary:string,args:string[],cwd:string,input?:string|Buffe
 });}
 function pagination(request:{page?:number;pageSize?:number}){const page=request.page??1,pageSize=request.pageSize??25;if(!Number.isInteger(page)||page<1||page>100000||!Number.isInteger(pageSize)||pageSize<1||pageSize>100)throw new Error('Invalid catalogue page');return {page,pageSize,start:(page-1)*pageSize};}
 function summary({parameters,requestBody,responses,...operation}:ApiOperation){return operation;}
-export function createApiService(options:ApiServiceOptions):GitHubApiBridge {
+export function createApiService(options:ApiServiceOptions):GitHubApiBridge & {invalidateReviews():void} {
  const catalog=options.catalog??JSON.parse(readFileSync(options.catalogPath??path.join(__dirname,'github-api-catalog.json'),'utf8')) as ApiCatalogFile;
  if(catalog.version!==1||!Array.isArray(catalog.operations))throw new Error('Unsupported GitHub API catalogue');
  const operations=new Map(catalog.operations.map(o=>[o.operationId,o]));
