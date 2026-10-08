@@ -1,0 +1,13 @@
+import type {ApprovedHost} from './auth-hosts';
+export function createTokenIdentityVerifier(options:{resolveHost:(hostname:string)=>ApprovedHost;fetch:(url:string,init:RequestInit)=>Promise<Response>}){
+ return async(hostname:string,token:string,signal:AbortSignal):Promise<{id:string;login:string;scopes:string[]}>=>{
+  const host=options.resolveHost(hostname),base=new URL(host.restOrigin);
+  if(host.hostname!==hostname||base.protocol!=='https:'||base.username||base.password||base.search||base.hash||typeof token!=='string'||!token.length||token.length>16384||/[^\x21-\x7e]/.test(token))throw Error('Choose an approved host and valid credential file.');
+  const url=base.href.replace(/\/+$/,'')+'/user';let response:Response;
+  try{response=await options.fetch(url,{method:'GET',redirect:'error',credentials:'omit',signal:AbortSignal.any([signal,AbortSignal.timeout(20000)]),headers:{Authorization:`Bearer ${token}`,Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'}});}catch{throw Error(signal.aborted?'Credential verification was cancelled.':'The approved host could not verify this credential. Check the connection and host.');}
+  const size=Number(response.headers.get('content-length')||'0'),mime=response.headers.get('content-type')||'';
+  if(!response.ok||!response.body||!/^application\/(?:[\w.-]+\+)?json(?:\s*;|$)/i.test(mime)||!Number.isFinite(size)||size<0||size>65536){await response.body?.cancel();throw Error('The approved host did not return a valid account identity. No sign-in was saved.');}
+  const reader=response.body.getReader(),chunks:Uint8Array[]=[];let length=0;
+  try{while(true){const next=await reader.read();if(next.done)break;length+=next.value.byteLength;if(length>65536)throw Error('Account response too large');chunks.push(next.value);}const user=JSON.parse(Buffer.concat(chunks).toString('utf8')),id=Number.isSafeInteger(user.id)&&user.id>0?String(user.id):typeof user.id==='string'&&/^[1-9]\d{0,19}$/.test(user.id)?user.id:'';if(!id||typeof user.login!=='string'||!/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})$/.test(user.login))throw Error('Invalid account identity');const raw=response.headers.get('x-oauth-scopes')||'';if(raw.length>8192)throw Error('Invalid scope response');const scopes=[...new Set(raw.split(',').map(value=>value.trim()).filter(Boolean))];if(scopes.length>100||scopes.some(value=>!/^[a-zA-Z0-9:_-]{1,100}$/.test(value)))throw Error('Invalid scope response');return{id,login:user.login,scopes};}catch{await reader.cancel().catch(()=>{});throw Error('The approved host returned an invalid account response. No sign-in was saved.');}finally{reader.releaseLock();}
+ };
+}
