@@ -19,3 +19,9 @@ test('run monitoring and release preparation have appropriate live contexts',()=
 test('structured dispatch belongs only to workflow selections and creation is usable before selecting a repository',()=>{const dispatch=nativeAreas.actions!.find(area=>area.actions.includes('actions.dispatch-with-options'))!;assert.equal(nativeAreaEligible(dispatch,'workflows'),true);assert.equal(nativeAreaEligible(dispatch,'runs'),false);const create=nativeAreas.repositories!.find(area=>area.actions.includes('repositories.create-with-options'))!;assert.equal(create.selected,undefined);});
 
 test('Codespaces connections, files and ports have selected-record task destinations',()=>{const areas=nativeAreas.codespaces!;const workflows=areas.flatMap(area=>area.workflows||[]);assert.deepEqual(workflows.map(task=>task.commandId),['codespace ssh','codespace code','codespace jupyter','codespace cp','codespace ports forward','codespace ports visibility']);for(const area of areas.filter(area=>area.workflows?.length)){assert.equal(area.selected,true);assert.equal(area.actions.length,0);for(const task of area.workflows!)assert.ok(task.label&&task.yue);}assert.ok(!workflows.some(task=>task.commandId==='preview prompter'));});
+
+test('local Git handoffs belong to selected repository and gist records',()=>{
+ const actual=Object.entries(nativeAreas).flatMap(([domain,areas])=>areas.flatMap(area=>(area.handoffs||[]).map(task=>({domain,area,task}))));
+ assert.deepEqual(actual.map(item=>[item.domain,item.task.action]),[['repositories','repositories.clone-source'],['gists','gists.clone-source']]);
+ for(const item of actual){assert.equal(item.area.selected,true);assert.equal(item.area.id,'local-git');assert.equal(item.area.actions.length,0);assert.ok(item.task.label&&item.task.yue);}
+});

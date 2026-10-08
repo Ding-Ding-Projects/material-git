@@ -22,18 +22,19 @@ const sourceURL=(value:unknown,expected:string)=>{if(typeof value!=='string'||va
 
 /** Opaque source receipts are native-owned; renderer URLs and head claims are never accepted. */
 export class GitHubProviderTargets {
- private plans=new Map<string,SourcePlan>();private discarded=new Set<string>();private now:()=>number;
+ private plans=new Map<string,SourcePlan>();private discarded=new Set<string>();private now:()=>number;private epoch=0;
  constructor(private deps:GitHubProviderDependencies){this.now=deps.now||Date.now;}
  private rememberDiscarded(id:string){if(this.discarded.size>=256)this.discarded.delete(this.discarded.values().next().value!);this.discarded.add(id);}
- invalidate(){for(const id of this.plans.keys())this.rememberDiscarded(id);this.plans.clear();}
+ invalidate(){this.epoch++;for(const id of this.plans.keys())this.rememberDiscarded(id);this.plans.clear();}
  discard(id:unknown){if(typeof id!=='string'||!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(id))throw Error('Choose an issued opaque provider source receipt');if(this.plans.delete(id)){this.rememberDiscarded(id);return;}if(!this.discarded.has(id))throw Error('Choose an issued opaque provider source receipt');}
  async prepare(action:GitHubLocalSourceAction,payload:GitHubPayload,hostname:string):Promise<GitProviderTarget>{
   for(const key of Object.keys(payload))if(!['hostname','repository','id','providerId','providerKind'].includes(key))throw Error('Use only the selected provider record for a local handoff');
   if(hostname!==this.deps.selectedHostname())throw Error('The selected GitHub host changed. Select the local source again.');
-  const account=await this.deps.account(),id=randomUUID(),expiresAt=new Date(this.now()+ttl).toISOString();
+  const epoch=this.epoch,account=await this.deps.account(),id=randomUUID(),expiresAt=new Date(this.now()+ttl).toISOString();
   const target=await this.read(action,payload,hostname,account,id,expiresAt);
   if(await this.deps.account()!==account)throw Error('The active account changed while reading the local source. Select it again.');
   if(hostname!==this.deps.selectedHostname())throw Error('The selected GitHub host changed while reading the local source. Select it again.');
+  if(epoch!==this.epoch)throw Error('The provider source context was invalidated. Select the record again.');
   for(const [key,plan] of this.plans)if(Date.parse(plan.target.expiresAt)<this.now()){this.plans.delete(key);this.rememberDiscarded(key);}
   if(this.plans.size>=32)throw Error('Finish a pending local handoff or wait for its source receipt to expire.');
   this.plans.set(id,{action,payload:structuredClone(payload),account,target:structuredClone(target)});return target;
