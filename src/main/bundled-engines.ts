@@ -35,7 +35,7 @@ export class BundledEngines implements BundledEngineFacade {
         const size = (await stat(this.options.workerPath)).size;
         if (size <= 0 || size > 16 * 1024 * 1024)
             throw new Error('Invalid bundled worker artifact');
-        status.push({ kind: 'worker', available: true, proof: 'Bundled fixed worker source with locked pdf-lib, YAML/XML, ZIP and raster decoders; isolated heap/time/resource bounds', version: 'pdf-lib 1.17.1 / pngjs 7.0.0 / jpeg-js 0.4.4' });
+        status.push({ kind: 'worker', available: true, proof: 'Bundled fixed worker source with locked pdf-lib, YAML/XML, ZIP and raster decoders; isolated memory/time/resource bounds', version: 'pdf-lib 1.17.1 / pngjs 7.0.0 / jpeg-js 0.4.4' });
     }
     catch {
         status.push({ kind: 'worker', available: false, reason: 'The built bundled-engines-worker.cjs artifact is missing. Run the application build with the converter worker entry.' });

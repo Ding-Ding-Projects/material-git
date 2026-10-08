@@ -50,7 +50,7 @@ Each adapter category keeps its own search and anchored regex state. History add
 
 Verified FFmpeg/FFprobe provide fixed WAV/MP3/FLAC/OGG audio and MP4/WebM/MKV video presets. Source signatures, actual stream inventory, reported duration and dimensions gate execution. Limits are 300 seconds, 4096 pixels per side, 8.3 million pixels per frame, 64 MiB output, four threads and a 90-second process deadline. Only local file protocols and allowlisted demuxers are permitted. Arbitrary codecs, filters, flags and remote URLs cannot cross the bridge.
 
-Output probing checks valid streams, duration and dimensions before bytes are offered. Metadata, additional tracks, subtitles/data and lossiness are disclosed. Output reaching a byte cap or failing duration validation is refused. Native temporary storage and Linux resident memory are monitored; worker heap/stack/deadline limits remain explicit. Complete Windows OS memory containment and a least-privileged OS decoder sandbox remain outstanding boundaries.
+Output probing checks valid streams, duration and dimensions before bytes are offered. Metadata, additional tracks, subtitles/data and lossiness are disclosed. Output reaching a byte cap or failing duration validation is refused. Native temporary storage and Linux resident memory are monitored; worker memory/stack/deadline limits remain explicit. Complete Windows OS memory containment and a least-privileged OS decoder sandbox remain outstanding boundaries.
 
 ## Verification
 
