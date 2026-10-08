@@ -4,7 +4,7 @@ import './components';
 import './api-controls';
 import './github-task';
 import {nativeGitHubTaskRoutes} from '../shared/github-native';
-import {nativeAreas,taskLabels,type NativeArea} from './github-workspace-actions';
+import {nativeAreas,nativeAreaEligible,taskLabels,type NativeArea} from './github-workspace-actions';
 import type {Search} from './components';
 import type {AppSettings,Choice} from '../shared/types';
 import {domains,github,pageFrom,rec,arr,str,first,titleOf,idOf,stateOf,authorOf,dateOf,urlOf,relativeDate,ui,type Domain,type RecordData,type DomainPage} from './github-workspace-model';
@@ -67,7 +67,7 @@ export class GitHubWorkspace extends LitElement {
  ${this.domain==='organizations'?html`<md-filled-tonal-button @click=${()=>this.edit('invite',this.copy('Invite member','邀請成員'),[text('login','GitHub username','GitHub 使用者名稱',true),select('role','Role','角色',['direct_member','admin','billing_manager'])],{role:'direct_member'})}>${this.copy('Invite member','邀請成員')}</md-filled-tonal-button><md-outlined-button @click=${()=>this.edit('remove-member',this.copy('Remove member','移除成員'),[text('login','GitHub username','GitHub 使用者名稱',true)],{},true)}>${this.copy('Remove member','移除成員')}</md-outlined-button>`:nothing}
  ${this.domain==='codespaces'?html`<md-outlined-button @click=${()=>this.edit('start',this.copy('Start cloud workspace','啟動雲端工作空間'),[])}>${this.copy('Start','啟動')}</md-outlined-button><md-outlined-button @click=${()=>this.edit('stop',this.copy('Stop cloud workspace','停止雲端工作空間'),[])}>${this.copy('Stop','停止')}</md-outlined-button><md-text-button @click=${()=>this.edit('delete',this.copy('Delete cloud workspace','刪除雲端工作空間'),[],{},true)}>${this.copy('Delete','刪除')}</md-text-button>`:nothing}
  ${urlOf(data)?html`<md-text-button @click=${()=>this.external(urlOf(data))}>${this.copy('Open in browser','在瀏覽器開啟')}<mg-icon slot="icon" name="external"></mg-icon></md-text-button>`:nothing}</mg-layout>`;}
- private get areas(){return nativeAreas[this.domain]||[];}
+ private get areas(){return (nativeAreas[this.domain]||[]).filter(area=>nativeAreaEligible(area,this.listMode));}
  private get taskRepository(){return this.domain==='repositories'&&this.selected?str(first(this.selected,'full_name','nameWithOwner','repository','title')):this.repository;}
  private taskTitle(action:string){const route=nativeGitHubTaskRoutes.find(item=>item.action===action);return this.copy(route?.title||action.split('.').at(-1)||'',taskLabels[action.split('.').at(-1)||'']||route?.title||'');}
  private openNativeArea(area:NativeArea|undefined){if(this.nativeBusy||this.nativeDirty||this.editor){this.notice=this.copy('Finish or close the current editor before changing views.','切換檢視前，請完成或關閉目前編輯器。');return;}this.nativeArea=area?.id||'';this.nativeTask=undefined;this.nativeDirty=false;if(area?.initial)this.openNativeTask(area.initial,true);this.workState();}
