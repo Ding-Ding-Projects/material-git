@@ -18,7 +18,7 @@ page.on('pageerror',error=>errors.push(error.message));
 // Material's role=option is inside a shadow root; visible text is slotted beside it.
 // Click the genuine interactive option host so normal hit-testing crosses that slot.
 async function eventAfter(locator,event,action){
- await locator.evaluate((element,name)=>{element.testEvent=new Promise(resolve=>element.addEventListener(name,()=>resolve(true),{once:true}));},event);
+ await locator.evaluate((element,name)=>{element.testEvent=new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error('Material event timeout: '+name)),10000);element.addEventListener(name,()=>{clearTimeout(timer);resolve(true);},{once:true});});},event);
  await action();await locator.evaluate(element=>element.testEvent);
 }
 async function openSelect(select){await eventAfter(select,'opened',()=>select.click());}
@@ -36,6 +36,7 @@ try{
  await choose(theme,'light');
  checks.push('Settings select accepts ordinary pointer clicks and persists each choice');
  await page.locator('[data-design-id="workspace-titlebar"]').click({button:'right'});
+ await page.getByRole('button',{name:/^Edit appearance/}).click();
  const appearance=page.locator('mg-appearance'),interaction=appearance.locator('md-outlined-select').first();
  await choose(interaction,'hover');
  assert.equal(await appearance.evaluate(element=>element.state),'hover');
@@ -49,7 +50,7 @@ try{
  assert.equal(await nestedSearch.evaluate(element=>element.expanded),false);
  assert.equal(await appearance.isVisible(),true,'Closing the popover must preserve its parent dialog');
  await page.screenshot({path:join(out,'appearance-dialog-light.png')});
- await page.locator('md-dialog[open]').getByRole('button',{name:'Close',exact:true}).click();
+ await page.locator('[data-appearance-panel]').getByRole('button',{name:/^Close/}).first().click();
  checks.push('Dialog select and nested popover accept normal pointer input; Escape dismisses one layer at a time');
  await page.getByTestId('nav-api').click();
  const api=page.locator('mg-api-explorer'),category=api.locator('md-filled-select[label="Category"]');

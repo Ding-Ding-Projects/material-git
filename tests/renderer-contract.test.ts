@@ -9,7 +9,7 @@ const source=(relative:string)=>readFileSync(path.join(root,relative),'utf8');
 // Execute the actual controller method with a fake bridge; no DOM or remote mutation.
 function controllerMethod(file:string,name:string,bindings:Record<string,unknown>={}) {
  const text=source(file),tree=ts.createSourceFile(file,text,ts.ScriptTarget.Latest,true);let body:string|undefined,parameters='',asynchronous=false;
- const visit=(node:ts.Node)=>{if(ts.isMethodDeclaration(node)&&node.name.getText(tree)===name&&node.body){body=node.body.getText(tree);parameters=node.parameters.map(p=>p.getText(tree)).join(',');asynchronous=!!node.modifiers?.some(m=>m.kind===ts.SyntaxKind.AsyncKeyword);}ts.forEachChild(node,visit);};visit(tree);assert.ok(body,`${file}:${name}`);
+ const visit=(node:ts.Node)=>{if(ts.isMethodDeclaration(node)&&node.name.getText(tree)===name&&node.body){body=node.body.getText(tree);parameters=node.parameters.map(p=>p.getText(tree)).join(',');asynchronous=!!node.modifiers?.some(m=>m.kind===ts.SyntaxKind.AsyncKeyword);}if(ts.isPropertyDeclaration(node)&&node.name.getText(tree)===name&&node.initializer&&ts.isArrowFunction(node.initializer)&&ts.isBlock(node.initializer.body)){const arrow=node.initializer;body=arrow.body.getText(tree);parameters=arrow.parameters.map(p=>p.getText(tree)).join(',');asynchronous=!!arrow.modifiers?.some(m=>m.kind===ts.SyntaxKind.AsyncKeyword);}ts.forEachChild(node,visit);};visit(tree);assert.ok(body,`${file}:${name}`);
  const output=ts.transpileModule(`export default ${asynchronous?'async ':''}function tested(${parameters})${body}`,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS}}).outputText;
  // Named parameters in the body are supplied through bindings for event/ID methods.
  return new Function(...Object.keys(bindings),`const exports={};${output};return exports.default;`)(...Object.values(bindings)) as (this:unknown,...args:unknown[])=>unknown;
@@ -107,3 +107,15 @@ test('Tools discard uses its public child boundary only after a durable receipt 
 });
 
 test('managed history refuses tab closure when its exact nested editor cannot discard',async()=>{const key=controllerMethod('src/renderer/app.ts','workStateKey');for(const allowed of [false,true]){const events:string[]=[];const close=controllerMethod('src/renderer/app.ts','closeTabNow',{window:{material:{workspace:async()=>events.push('record')}}});const stateKey=String(key.call({},'history')),context={workStateKey:(id:string)=>key.call({},id),workStates:{[stateKey]:{dirty:true,busy:false}},workspace:{tabs:[{id:'repositories'},{id:'history'}]},closeTabs:['history'],lane:'repositories',notify:()=>{},copy:(en:string)=>en,persist:()=>{},navigate:()=>{},querySelectorAll:(selector:string)=>selector==='mg-workspace-records'?[{mode:'history',discardDrafts:()=>{events.push('discard');return allowed;}}]:[]};await close.call(context,['history']);assert.deepEqual(events,['record','discard']);assert.equal(context.workspace.tabs.length,allowed?1:2);}});
+
+
+test('unchanged child work state does not rescan the complete desktop appearance tree',()=>{
+ const workState=controllerMethod('src/renderer/app.ts','workState');
+ const original={tools:{busy:false,dirty:false}},context={workStates:original,taskChangedAt:123};
+ workState.call(context,{type:'tool-work-state',detail:{id:'tools',busy:false,dirty:false}});
+ assert.equal(context.workStates,original);assert.equal(context.taskChangedAt,123);
+ workState.call(context,{type:'tool-work-state',detail:{id:'tools',busy:true,dirty:false}});
+ assert.notEqual(context.workStates,original);assert.deepEqual(context.workStates.tools,{busy:true,dirty:false});
+ const changed=context.workStates;workState.call(context,{type:'tool-work-state',detail:{id:'tools',busy:true,dirty:false}});
+ assert.equal(context.workStates,changed);
+});
