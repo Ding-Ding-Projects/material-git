@@ -10,7 +10,7 @@ const env={...process.env,MATERIAL_GIT_TEST:'1',MATERIAL_GIT_USER_DATA:join(out,
 for(const key of ['GH_TOKEN','GITHUB_TOKEN','GH_ENTERPRISE_TOKEN','GITHUB_ENTERPRISE_TOKEN'])delete env[key];await mkdir(env.GH_CONFIG_DIR);
 const app=await electron.launch({executablePath:require('electron'),args:['--no-sandbox','--ozone-platform=headless','.'],cwd:root,env});
 try{
- const page=await app.firstWindow();await page.getByTestId('functional-desktop').waitFor({timeout:60000});await page.getByTestId('nav-accounts').click();
+ const page=await app.firstWindow();await page.getByTestId('functional-desktop').waitFor({timeout:60000});for(const id of ['repositories','accounts']){await page.keyboard.press('Control+t');await page.locator(`mg-tab-catalog [data-catalog-id="${id}"]`).click();}
  const tab=page.locator('mg-workspace-tabs md-secondary-tab[data-id="accounts"]');
  await page.waitForFunction(()=>document.querySelector('mg-workspace-tabs')?.shadowRoot.querySelector('[data-id="accounts"]')?.ariaControlsElements?.[0]===document.getElementById('workspace-panel-accounts'));
  await tab.focus();await page.keyboard.press('Home');await page.waitForFunction(()=>document.querySelector('mg-app').lane==='repositories');await page.keyboard.press('End');await page.waitForFunction(()=>document.querySelector('mg-app').lane==='accounts');
