@@ -5,7 +5,7 @@ import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {workspaceDefaults,validateWorkspace,validateEnvelope} from '../src/shared/workspace';
-import {migrateDesktopTabs,openWorkspaceTab,tabLane} from '../src/shared/workspace-tabs';
+import {migrateDesktopTabs,openWorkspaceTab,tabLane,retainWorkingTabs} from '../src/shared/workspace-tabs';
 import {WorkspaceStore} from '../src/main/workspace';
 import {GitService} from '../src/main/git';
 
@@ -50,4 +50,12 @@ test('native picker canonicalizes aliases, distinguishes working trees, and keep
  const aStatus=await service.handle('status',{worktreeId:a.worktreeId});assert.equal(aStatus.kind,'snapshot');if(aStatus.kind==='snapshot')assert.equal(aStatus.snapshot.root,first);
  const bStatus=await service.handle('status',{worktreeId:b.worktreeId});assert.equal(bStatus.kind,'snapshot');if(bStatus.kind==='snapshot')assert.equal(bStatus.snapshot.root,second);
  }finally{service.close();rmSync(dir,{recursive:true,force:true});}
+});
+
+
+test('workspace restore preserves dirty owners when imported tabs use another ID for the same target',()=>{
+ const current=openWorkspaceTab(structuredClone(workspaceDefaults),{kind:'local',key:'a'.repeat(64)},'Live draft owner','old-id');
+ const incoming=openWorkspaceTab(structuredClone(workspaceDefaults),{kind:'local',key:'a'.repeat(64)},'Imported label','new-id');
+ const restored=validateWorkspace(retainWorkingTabs(incoming,current,['old-id']));
+ assert.equal(restored.tabs.length,1);assert.equal(restored.activeTab,'old-id');assert.equal(restored.tabs[0].label,'Live draft owner');assert.equal(restored.lane,'git');
 });

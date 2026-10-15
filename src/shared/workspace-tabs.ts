@@ -17,3 +17,13 @@ export function openWorkspaceTab(state:WorkspaceState,target:WorkspaceTabTarget,
  const tab:WorkspaceTab={id,label,pinned:false,group:'',target:normalized,lane};
  return {...state,tabs:[...state.tabs,tab],activeTab:id,lane};
 }
+
+/** Keep live owner identities when an imported/history layout references the same destination differently. */
+export function retainWorkingTabs(incoming:WorkspaceState,current:WorkspaceState,workingIds:string[]):WorkspaceState {
+ const working=current.tabs.filter(tab=>workingIds.includes(tab.id));if(!working.length)return incoming;
+ const same=(left:WorkspaceTab,right:WorkspaceTab)=>left.id===right.id||!!left.target&&!!right.target&&targetKey(left.target)===targetKey(right.target);
+ const selected=incoming.tabs.find(tab=>tab.id===incoming.activeTab),replacement=selected?working.find(tab=>same(tab,selected)):undefined;
+ const tabs=[...incoming.tabs.filter(tab=>!working.some(owner=>same(tab,owner))),...working];
+ const groups=[...incoming.groups,...current.groups.filter(group=>working.some(tab=>tab.group===group.id)&&!incoming.groups.some(row=>row.id===group.id))];
+ return {...incoming,tabs,groups,...(replacement?{activeTab:replacement.id,lane:tabLane(replacement)}:{})};
+}
