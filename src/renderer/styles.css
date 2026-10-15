@@ -126,7 +126,7 @@ mg-surface[hidden]{display:none!important}
 .desktop-content{grid-column:3;display:grid;grid-template-rows:var(--mg-tab-strip-height) minmax(0,1fr);min-height:0;min-width:0;overflow:hidden}
 .workspace-tabs{border-bottom:1px solid var(--outline);grid-row:1;min-height:0;min-width:0}
 .workspace-stack{grid-row:2;min-height:0;min-width:0;overflow:hidden}
-.workspace-tab-content{height:100%;min-height:0;min-width:0;overflow:hidden}
+.workspace-tab-content{height:100%;min-height:0;min-width:0;overflow:auto;overscroll-behavior:contain}
 .desktop-content.dock-bottom{grid-template-rows:minmax(0,1fr) var(--mg-tab-strip-height)}
 .dock-bottom .workspace-tabs{grid-row:2;border-top:1px solid var(--outline);border-bottom:0}
 .dock-bottom .workspace-stack{grid-row:1}
@@ -291,7 +291,15 @@ to{opacity:1}
 .desktop-navigation,.navigation-splitter{display:none}
 .palette-trigger{--md-text-button-label-text-size:0}
 .palette-trigger mg-icon{width:20px}
-.context-toolbar md-text-button{max-width:58vw;overflow:hidden}
+/* Keep context actions on one row when desktop zoom reduces the CSS viewport.
+   The account label remains its accessible name while its icon stays visible. */
+.context-toolbar::part(container){flex-wrap:nowrap}
+.context-toolbar>mg-layout:first-child{flex:1;min-width:0}
+.context-toolbar>mg-layout:last-child{flex:none}
+.context-toolbar>mg-layout::part(container){flex-wrap:nowrap}
+.context-toolbar md-text-button{flex:1;min-width:0;max-width:100%;overflow:hidden}
+.account-action{width:48px;min-width:48px;min-height:48px;padding-inline:12px;--md-filled-tonal-button-label-text-size:0;--md-filled-tonal-button-icon-size:24px}
+.account-action mg-icon{width:24px;height:24px}
 .domain-toolbar mg-text[kind=title]{font-size:1rem}
 .domain-toolbar{padding-inline:12px}
 .domain-filters{padding-inline:12px}
