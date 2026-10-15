@@ -232,7 +232,7 @@ export class RepositoryFinishService {
             }
             if (diff.length > 262144)
                 blockers.push('Review exceeds the content limit; commit smaller reviewed changes first.');
-            const wt: FinishWorktree = { id: hash(root), root, branch: fields.branch || '', head: fields.HEAD || '', dirty: files.length > 0, locked: !!fields.locked, active: root === g.root, files, ignoredCount: ignored.length, diff, fingerprint: hash(JSON.stringify({ status, identities, ignored, indexState, localConfig, head: fields.HEAD, config })) };
+            const wt: FinishWorktree = { id: hash(root), root, branch: fields.branch || '', head: fields.HEAD || '', dirty: files.length > 0, locked: !!fields.locked, active: root === g.root, files, ignoredCount: ignored.length, diff, fingerprint: hash(JSON.stringify({ status, identities, ignored, indexState, flags, localConfig, head: fields.HEAD, config })) };
             if (!wt.branch && wt.dirty)
                 blockers.push('Assign a branch to detached dirty work before completion.');
             worktrees.push(wt);
@@ -243,7 +243,7 @@ export class RepositoryFinishService {
         const identity = (await this.run(g.root, ['var', 'GIT_AUTHOR_IDENT'], job, false, false, true)).output.trim();
         if (!identity)
             blockers.push('Configure a commit author name and email.');
-        const fingerprint = hash(JSON.stringify({ refs, config, listing, worktrees: worktrees.map(w => w.fingerprint), stashText, remote, remoteUrl, defaultBranch, remoteDefaultHead }));
+        const fingerprint = hash(JSON.stringify({ refs, config, trust, blockers, listing, worktrees: worktrees.map(w => w.fingerprint), stashText, remote, remoteUrl, defaultBranch, remoteDefaultHead }));
         return { worktreeId: id, name: path.basename(g.root), root: g.root, commonDir: g.commonDir, fingerprint, remote, remoteUrl, defaultBranch, remoteDefaultHead, identity, trust, transportFingerprint,transportTrusted:transportTrust,branches, worktrees, stashes, blockers: [...new Set(blockers)] };
     }
     async handle(action: RepositoryFinishAction, payload: RepositoryFinishPayload = {}): Promise<RepositoryFinishResponse> {
@@ -477,6 +477,7 @@ export class RepositoryFinishService {
             const fresh = await this.inventory(job.worktreeId, job,selection.trustPrograms,selection.transportFingerprint);
             if (fresh.fingerprint !== reviewed.fingerprint)
                 throw new Error('Review is stale. Repository contents, configuration or remote default changed.');
+            if(fresh.blockers.length)throw new Error(fresh.blockers.join('\n'));
             await this.archive(fresh, job);
             if ((await this.inventory(job.worktreeId, job,selection.trustPrograms,selection.transportFingerprint)).fingerprint !== fresh.fingerprint)
                 throw new Error('Repository changed during preservation archive');
@@ -533,12 +534,14 @@ export class RepositoryFinishService {
                 await this.run(root, ['update-ref', target, integrated, old], job, true, trust);
             }
             const archived = await this.inventory(job.worktreeId, job,selection.trustPrograms,selection.transportFingerprint);
+            if(archived.blockers.length)throw new Error(archived.blockers.join('\n'));
             await this.archive(archived, job);
             if ((await this.inventory(job.worktreeId, job,selection.trustPrograms,selection.transportFingerprint)).fingerprint !== archived.fingerprint)
                 throw new Error('Repository changed during final recovery archive');
             for (const selected of selection.contributions.filter(s => s.cleanup)) {
                 const tip = sources.get(selected.ref)!;
                 const current = await this.inventory(job.worktreeId, job,selection.trustPrograms,selection.transportFingerprint);
+                if(current.blockers.length)throw new Error('Cleanup retained: '+current.blockers.join('\n'));
                 const wt = current.worktrees.find(w => w.branch === selected.ref);
                 if (current.branches.find(b => b.ref === selected.ref)?.head !== tip || wt?.dirty || wt?.locked || wt?.active || wt?.ignoredCount)
                     throw new Error('Cleanup target changed; retained ' + selected.ref);
