@@ -1,5 +1,28 @@
 # Local verification record
 
+## Current integration acceptance
+
+Implementation resumed after the earlier interface preservation checkpoint. The current scope covers repository contexts/tabs, native working-tree tools, reviewed completion batches, ignore rules, large-file lifecycle and stage/commit coordination, build/run/installer management, and optional repair.
+
+The integration owner is preparing the final combined receipt. These fields are deliberately pending:
+
+| Evidence | Current record |
+| --- | --- |
+| Final integrated source commit | Pending final integration receipt |
+| TypeScript and Linux production build | Pending exact-source result and build timestamp/artifact hash |
+| Complete automated suite | Pending exact-source totals, failures and platform skips |
+| Integrated repository/native workflow checks | Pending final receipt; focused lane evidence is separate |
+| Actual desktop interactions and captures | Pending final source/artifact manifest and completed matrix dimensions |
+| Final public documentation/inventory checks | Pending final integrated validation |
+
+Focused completion evidence exists at source `0c8840810cf506fefc5a2078c8e3e476bb854d63`: twelve native tests passed at backend revision `8cc2842`, and seventeen actual Linux Electron component captures exercised the final renderer. Disposable local bare origins covered preservation/push/integration/archive/cleanup, changed remote-tip retention, conflict retention, queued/active cancellation, shared-store exclusion, stale review and explicit transport trust. The component artifact SHA-256 was `9c08928b7cc4b76188704f921bbd11e3a6182234af1496bc53e0dbf6612a1084`. This evidence does not certify final integrated navigation or a live hosted provider.
+
+Focused receipts from other lanes must retain their own tested source and limits. Native fixture transports, local bare origins and simulated services do not establish actual GitHub release/registry/Docker Hub writes, authenticated model repair, physical camera hardware or remote account permissions. No such operation is claimed by this acceptance block.
+
+Windows clean build/install/uninstall, secure storage, updates and installer execution remain unverified for the resumed implementation. Historical released artifacts predate it. The 104-row inventory still records 161 unresolved surface obligations; ordinary inventory validation can pass while strict completeness remains false.
+
+## Historical verification
+
 Historical entries below describe the revision tested at the time. Earlier command-control checks do not prove the current domain workspace or universal CLI/API parity.
 
 On 2026-10-08, the Linux integration checkout passed TypeScript checking, the Electron/Vite production build, 64 Node behavioral tests, and three documentation regex tests. These counts record the verification at the initial integration; later commits may add checks.

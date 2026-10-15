@@ -1,6 +1,6 @@
 # Roadmap
 
-Current state: preservation closeout requested by the user after the Material desktop refresh and partial Linux verification. Stop new implementation and preserve unfinished work and evidence. The complete feature inventory remains open, and unrelated functionality or Windows release retries are outside this bounded task. Each feature still passes meaningful checks and is genuinely merged/pushed independently. Current active lanes and precise publication boundaries are recorded in [HANDOFF.md](HANDOFF.md). No unchecked requirement below is removed by a partial implementation.
+Current state: implementation has resumed with repository tabs and native working-tree tools, reviewed repository completion batches, ignore rules, large-file payload management, and build/run/installer workflows with optional repair. The inventory retains 104 requirements and 161 unresolved surface obligations. Focused Linux evidence exists for individual lanes; final integrated acceptance is pending. Windows installation, authenticated provider behavior and independent site equivalents require their own evidence. Current scope and publication boundaries are recorded in [HANDOFF.md](HANDOFF.md). No unchecked requirement below is removed by partial implementation.
 
 Check a feature only after actual behavior, meaningful verification and a current capture where visible. All open canonical scope remains below.
 
@@ -12,7 +12,9 @@ Check a feature only after actual behavior, meaningful verification and a curren
 
 ## Delivery priorities
 
-The current matrix was interrupted at approximately 24 of 378 planned captures. Source `115d758` passed TypeScript/build and the workbench/tab checks, while the broader recheck and integrated zoom chain remain pending. No full-matrix or complete-feature checkbox is closed by this run.
+The [current acceptance record](docs/local-verification.md#current-integration-acceptance) must bind the integrated source, artifact hash, tests and actual desktop captures. The earlier 24-of-378 capture interruption and `115d758` checks remain historical. New component fixtures do not complete the full product matrix.
+
+- [ ] Complete exact-source integration checks for repository contexts, working-tree operations, completion batches, ignore rules, large-file stage/commit/restore and build/run/installer/repair workflows, including guarded drafts, cancellation, stale reviews and partial recovery. Preserve focused receipts and identify remaining provider/platform gaps.
 
 - [ ] Finish natural Git/GitHub workflows and action-specific backend/UI gaps.
 - [ ] Verify final built interactions, draft protection, inline recovery and permission errors.
