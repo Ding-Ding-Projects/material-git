@@ -20,11 +20,12 @@ export interface BuildJob {
 export interface InstallerRecord {
  id: string; filename: string; sourceRevision: string; sourceFingerprint: string; recipe: BuildRecipe;
  platform: string; version: string; sha256: string; size: number; createdAt: string;
- status: 'verified'|'missing'|'changed';
+ status: 'verified'|'missing'|'changed'; fileIdentity:string;
 }
 export interface ArtifactReview { id: string; action:'delete'|'open'|'install'; records: InstallerRecord[]; expiresAt:number }
 export type BuildToolsRequest =
  | {action:'discover'; worktreeId:string}
+ | {action:'recipes';worktreeId:string} | {action:'save-recipe';worktreeId:string;recipe:BuildRecipe} | {action:'delete-recipe';worktreeId:string;recipeId:string}
  | {action:'pick-executable'}
  | {action:'review'; worktreeId:string; recipe:BuildRecipe; run:boolean}
  | {action:'start'; reviewId:string; trustExecution:boolean}
@@ -37,5 +38,6 @@ export type BuildToolsRequest =
 export interface BuildToolsResponse {
  discovery?:BuildDiscovery; executable?:string|null; plan?:BuildPlan; job?:BuildJob; jobs?:BuildJob[];
  installers?:InstallerRecord[]; review?:ArtifactReview; exported?:string[]; cancelled?:boolean; message?:string;
+ recipes?:BuildRecipe[]; failures?:{id:string;error:string}[];
 }
 export type BuildToolsAPI = (request:BuildToolsRequest)=>Promise<BuildToolsResponse>;
