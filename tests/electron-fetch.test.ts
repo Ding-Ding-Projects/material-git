@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {EventEmitter} from 'node:events';
-import {PassThrough} from 'node:stream';
+import {PassThrough,Readable} from 'node:stream';
 import type {Net} from 'electron';
 import {createElectronFetch} from '../src/main/electron-fetch.js';
 
@@ -74,4 +74,23 @@ test('explicit authorization requires a trusted URL predicate and is never forwa
   await assert.rejects(fetch(response.headers.get('location')!, {headers: {Authorization: 'Bearer explicit-test-value'}}), /not approved/);
   await assert.rejects(fetch('https://api.example.com/user', {headers: {Authorization: 'Bearer explicit-test-value'}}), /not approved/);
   for (const name of ['Cookie', 'Proxy-Authorization']) await assert.rejects(fetch('https://api.example.com/repos/owner/project', {headers: {[name]: 'forbidden'}}), /not approved/);
+});
+
+test('approved provider uploads wait for native flush callbacks and retain exact bytes',async()=>{
+ class Upload extends Request {chunks:Buffer[]=[];pending:(()=>void)[]=[];write(chunk:Buffer,_encoding:unknown,callback:()=>void){this.chunks.push(Buffer.from(chunk));this.pending.push(callback);}}
+ const request=new Upload();request.start=()=>request.response(201).end('accepted');
+ const fetch=createElectronFetch({request:()=>request} as unknown as Pick<Net,'request'>,{allowMutation:true,authorizeHeader:url=>url.origin==='https://uploads.github.com'});
+ const source=Readable.from([Buffer.from('first'),Buffer.from([0,255,10])]);
+ const pending=fetch('https://uploads.github.com/repos/owner/name/releases/1/assets',{method:'POST',headers:{Authorization:'Bearer test'},body:source});
+ await new Promise(resolve=>setImmediate(resolve));assert.equal(request.chunks.length,1);request.pending.shift()!();
+ await new Promise(resolve=>setImmediate(resolve));assert.equal(request.chunks.length,2);request.pending.shift()!();
+ const response=await pending;assert.equal(response.status,201);assert.equal(await response.text(),'accepted');assert.deepEqual(Buffer.concat(request.chunks),Buffer.from([102,105,114,115,116,0,255,10]));
+});
+
+test('cancelling an upload waiting on native flush destroys its owned source',async()=>{
+ class Upload extends Request {write(_chunk:Buffer,_encoding:unknown,_callback:()=>void){}}
+ const request=new Upload(),controller=new AbortController(),source=Readable.from([Buffer.alloc(10),Buffer.alloc(20)]);
+ const fetch=createElectronFetch({request:()=>request} as unknown as Pick<Net,'request'>,{allowMutation:true});
+ const pending=fetch('https://example.com/upload',{method:'POST',body:source,signal:controller.signal});
+ await new Promise(resolve=>setImmediate(resolve));controller.abort(new Error('cancel upload'));await assert.rejects(pending,/cancel upload/);assert.equal(source.destroyed,true);assert.equal(request.aborted,true);
 });
