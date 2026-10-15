@@ -1,6 +1,6 @@
 # Roadmap
 
-Current priority: implement missing applicable functionality across the complete feature inventory before the general defect backlog and further Windows release retries. Each feature still passes meaningful checks and is genuinely merged/pushed independently. Current active lanes and precise publication boundaries are recorded in [HANDOFF.md](HANDOFF.md). No unchecked requirement below is removed by a partial implementation.
+Current state: preservation closeout requested by the user after the Material desktop refresh and partial Linux verification. Stop new implementation and preserve unfinished work and evidence. The complete feature inventory remains open, and unrelated functionality or Windows release retries are outside this bounded task. Each feature still passes meaningful checks and is genuinely merged/pushed independently. Current active lanes and precise publication boundaries are recorded in [HANDOFF.md](HANDOFF.md). No unchecked requirement below is removed by a partial implementation.
 
 Check a feature only after actual behavior, meaningful verification and a current capture where visible. All open canonical scope remains below.
 
@@ -12,9 +12,11 @@ Check a feature only after actual behavior, meaningful verification and a curren
 
 ## Delivery priorities
 
+The current matrix was interrupted at approximately 24 of 378 planned captures. Source `115d758` passed TypeScript/build and the workbench/tab checks, while the broader recheck and integrated zoom chain remain pending. No full-matrix or complete-feature checkbox is closed by this run.
+
 - [ ] Finish natural Git/GitHub workflows and action-specific backend/UI gaps.
 - [ ] Verify final built interactions, draft protection, inline recovery and permission errors.
-- [ ] Complete the remaining recording and interaction/language/theme/scale matrix. All nine obsolete core images have been replaced by 21 reviewed captures bound to source `e464ff70`; the full per-feature matrix remains open.
+- [ ] Complete the remaining recording and interaction/language/theme/scale matrix. Preserve the 21 historical captures bound to source `e464ff70` alongside the separately recorded current interface evidence; the full per-feature matrix remains open.
 - [ ] Verify independent site equivalents and preserve owner-private audience.
 - [ ] Prove fresh Windows install/offline dependencies, vault/update behavior and release artifacts.
 - [ ] Resolve authorized About homepage HTTP403 and external wiki/Discussion/Project/publication evidence.
@@ -34,7 +36,7 @@ Check a feature only after actual behavior, meaningful verification and a curren
 
 ## appearance
 
-- [ ] [Material Design 3 conformance](docs/requirements/appearance/material-design.md) — app: partial, site: unknown. Audit every rendered surface, genuine registrations and a negative replacement regression.
+- [ ] [Material Design 3 conformance](docs/requirements/appearance/material-design.md) — app: partial, site: unknown. Official controls, symbols, searchable choices, color fields, secondary tabs and shared/shadow-local defaults have been refreshed. Complete the per-surface anatomy and negative-replacement audit with the remaining integrated interaction/capture matrix; no Expressive certification is claimed.
 - [ ] [Workflow navigation and window chrome](docs/requirements/appearance/workflow-navigation.md) — app: partial, site: unknown. Capture and drive every navigation/window control at final revision; no catalog, marketing hero or generic form may substitute for a domain.
 - [ ] [Material Design 3 motion with a complete reduced-motion path](docs/requirements/appearance/motion.md) — app: partial, site: unknown. Verify OS preference composition, rainbow/confirmation/ladder alternatives and persisted schedules.
 - [ ] [Per-element appearance editor](docs/requirements/appearance/appearance-editor.md) — app: partial, site: unknown. Audit each property/state/layer, undo/redo, presets, copy/import, keyboard/context access and unsupported explanations.

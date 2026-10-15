@@ -4,7 +4,13 @@ A Windows desktop workspace for Git repositories and GitHub. Navigate real repos
 
 Install the unsigned Windows application from [build-16-1](https://github.com/Ding-Ding-Projects/material-git/releases/tag/build-16-1). [Documentation site](https://material-git.earlyray.chatgpt.site) · [Feature status](docs/requirements/README.md) · [Roadmap](ROADMAP.md) · [Handoff](HANDOFF.md).
 
-**Full Git/GitHub action parity is not verified.** Upstream command and schema inventories do not prove working GUI behavior. The published release may precede changes documented in source. Current screenshots and recording for the domain remake await final build verification.
+**Full Git/GitHub action parity is not verified.** Upstream command and schema inventories do not prove working GUI behavior. The published release may precede changes documented in source. The Material control refresh preserves the existing domain workflows. Its Linux evidence is recorded separately from the historical gallery and Windows release. A current recording and exhaustive feature coverage remain open.
+
+## Desktop interface
+
+The current desktop uses official Material Web controls, locally bundled Material Symbols, tonal light/dark surfaces, searchable choice dialogs and a reusable color editor. Tabs keep grouping, pinning and docking; enlarged text preserves scroll access to the work area. [Component provenance](design/material-provenance.md) distinguishes official controls from application compositions.
+
+The current interface build at source `115d758` passed TypeScript and Linux compilation; its workbench and tab regressions passed 38 and five checks respectively. Verification stopped for preservation closeout before the complete matrix finished. Fresh captures from that build are maintained separately from the [historical gallery](docs/images/README.md); only captures with their reviewed source/build receipt establish the shown state. See [verification status](HANDOFF.md#verification-boundaries).
 
 <details>
 <summary>Tasks, support and limits</summary>
@@ -49,7 +55,7 @@ Windows CI builds/packages/publishes. It does not run tests or lint; notes must 
 
 [Documentation index](docs/README.md) · [Authentication](docs/authentication.md) · [Security](docs/security.md) · [Workspace records](docs/workspace.md) · [API workspace](docs/api-explorer.md) · [Design provenance](design/material-provenance.md).
 
-The [reviewed screenshot ledger](docs/images/README.md) records 21 genuine Linux desktop captures from source `e464ff7`, with exact per-image capture times, dimensions and SHA-256 hashes. The gallery covers real domain records, provider empty states, export-format choices, verified native download completion, converter adapter limits and light/dark/Cantonese/bilingual/narrow presentation. These images describe that source artifact, independently of the separately published Windows installer. Settled native account and Download Start frames are included; superseded loading, empty-queue and transition frames remain excluded. Final destination coverage, recording and the full language/scale matrix remain open.
+The [historical screenshot ledger](docs/images/README.md) preserves 21 genuine Linux desktop captures from source `e464ff7`, with exact per-image capture times, dimensions and SHA-256 hashes. That earlier gallery covers real domain records, provider empty states, export-format choices, verified native download completion, converter adapter limits and light/dark/Cantonese/bilingual/narrow presentation. These images describe their recorded source artifact, not the current control refresh or the separately published Windows installer. Settled native account and Download Start frames are included; superseded loading, empty-queue and transition frames remain excluded. Final destination coverage, recording and the full language/scale matrix remain open.
 
 The site is https://material-git.earlyray.chatgpt.site and currently owner-private. Repository About homepage PATCH returned HTTP 403 with the connected credential; permission/deployment verification belong to the publishing owner. Source visibility and site audience are independent.
 
