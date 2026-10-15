@@ -81,7 +81,7 @@ export class GitService {
   if(!this.largeFiles)return response;
   const opened=(action==='open'||action==='open-worktree')&&response.kind==='snapshot';
   const materialized=action==='apply'&&response.kind==='result'&&response.ok&&plan&&[
-   'clone','provider-checkout','branch-switch','merge','rebase','cherry-pick','revert',
+   'clone','provider-checkout','stage','commit','branch-switch','merge','rebase','cherry-pick','revert',
    'continue','abort','skip','pull','reset','discard','stash-apply','stash-pop',
    'patch-apply','patch-am','sparse-set','sparse-disable'
   ].includes(plan.review.task);
@@ -93,8 +93,8 @@ export class GitService {
   const request=this.requestContext.getStore();let release:(()=>void)|undefined,authorized=false;
   let snapshot=current??await this.snapshot(id,grant),notice='';
   try{
-   release=acquireRepositoryLock(grant.commonDir,request?.id??randomUUID());
    const result=await this.largeFiles.autoRestore(id,request?.controller.signal,async()=>{
+    release=acquireRepositoryLock(grant.commonDir,request?.id??randomUUID());
     await this.authorizeLargeFiles?.();authorized=true;
     request?.controller.signal.throwIfAborted();if(request)request.mutationStarted=true;
    });
