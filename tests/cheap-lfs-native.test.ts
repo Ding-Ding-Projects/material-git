@@ -152,6 +152,10 @@ test('ordinary local commits do not request an account and both pointer families
         await rm(root, { recursive: true, force: true });
     }
 });
+test('local inventory and settings remain available while configured provider failures stay visible',async()=>{
+ const root=await mkdtemp(join(tmpdir(),'cheap-lfs-local-inventory-'));let requests=0,remote:string|null=null;const service=new CheapLfsService({preferencesDirectory:join(root,'prefs'),executeGit:execute,selectedAccount:async()=>{requests++;throw Error('Configured provider is unavailable')},resolveWorktree:async()=>({id:'fixture',root,gitDir:join(root,'.git'),commonDir:join(root,'.git'),fingerprint:'fixture',head:'',branch:'main',remoteUrl:remote})});
+ try{await execute({root,argv:['init'],maximumBytes:1024*1024});let result=await service.handle('inspect',{worktreeId:'fixture'});assert.equal(result.kind,'inventory');if(result.kind==='inventory'){assert.equal(result.visibility,'unknown');assert.equal(result.providerAvailable,false);const saved=await service.handle('settings',{worktreeId:'fixture',settings:{...result.settings,parallel:false}});assert.equal(saved.kind,'settings')}assert.equal(requests,0);remote='https://github.com/fixture/payloads.git';result=await service.handle('inspect',{worktreeId:'fixture'});assert.equal(result.kind,'inventory');if(result.kind==='inventory'){assert.equal(result.settings.parallel,false);assert.equal(result.providerAvailable,false);assert.match(result.providerNotice??'',/Configured provider is unavailable/)}assert.equal(requests,1);await assert.rejects(service.handle('review',{worktreeId:'fixture',task:'compression',paths:[]}),/Configured provider is unavailable/)}finally{await service.dispose();await rm(root,{recursive:true,force:true})}
+});
 test('ORAS rejects untrusted archive bytes before extraction', () => { assert.throws(() => validateCheapLfsOrasArchive(Buffer.from('untrusted'), 'linux-x64'), /integrity/); });
 test('materialized staged pointer stays staged while unchanged HEAD payload is excluded', async () => {
     const root = await mkdtemp(join(tmpdir(), 'cheap-lfs-staged-'));
