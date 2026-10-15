@@ -13,7 +13,7 @@ export class StartupPersonalization extends LitElement {
     :host([hidden]){display:none}mg-surface{display:block;width:min(340px,calc(100vw - 32px));--surface:var(--md-sys-color-surface-container-high);--outline:var(--md-sys-color-outline-variant);--mg-surface-radius:var(--md-sys-shape-corner-large,16px);--mg-surface-padding:12px}
     mg-layout{display:block;min-width:0}mg-text{overflow-wrap:anywhere}mg-text[kind=title]{font-size:1rem}mg-text[kind=muted]{font-size:.8125rem;color:var(--md-sys-color-on-surface-variant)}
     img{display:block;width:100%;height:140px;object-fit:contain;border-radius:8px;margin-top:8px;background:var(--md-sys-color-surface-container)}
-    md-text-button{max-width:100%;--md-text-button-container-shape:12px}md-text-button:focus-visible{outline:2px solid var(--md-sys-color-primary);outline-offset:3px}
+    md-text-button{max-width:100%;}md-text-button:focus-visible{outline:2px solid var(--md-sys-color-primary);outline-offset:3px}
     @media(max-height:440px){img{height:72px}:host{inset:auto 8px 8px auto}mg-surface{--mg-surface-padding:8px}}
     @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
   `;
