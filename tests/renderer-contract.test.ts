@@ -20,6 +20,13 @@ function modelBinding(name:string,bindings:Record<string,unknown>={}) {
  const output=ts.transpileModule(`export default ${expression};`,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS}}).outputText;
  return new Function(...Object.keys(bindings),`const exports={};${output};return exports.default;`)(...Object.values(bindings));
 }
+type OwnedControl={tag:string;domain?:string;mode?:string;discardDrafts:()=>unknown};
+function closeContext(id:string,controls:OwnedControl[]=[]) {
+ const owner='utility:'+id,stateKey=owner+'::'+id+'::'+id;
+ const context={ownerForTab:controllerMethod('src/renderer/app.ts','ownerForTab'),tabState:controllerMethod('src/renderer/app.ts','tabState'),workStates:{[stateKey]:{dirty:true,busy:false}} as Record<string,{dirty:boolean;busy:boolean}>,workspace:{activeTab:'repositories',tabs:[{id:'repositories',target:{kind:'utility',lane:'repositories'}},{id,target:{kind:'utility',lane:id}}]},surfaceCache:[{owner,key:owner+'::'+id,lane:id},{owner:'utility:repositories',key:'utility:repositories::repositories',lane:'repositories'}],closeTabs:[id],lane:'repositories',notify:()=>{},persist:()=>{},navigate:()=>{},activateTab:()=>{},querySelectorAll:(selector:string)=>{assert.equal(selector,'[data-surface-owner]');return [{dataset:{surfaceOwner:owner},controls},{dataset:{surfaceOwner:'utility:sibling'},controls:[{tag:'mg-github-workspace',discardDrafts:()=>assert.fail('Sibling draft must remain untouched')}]}];}};
+ return {context,stateKey};
+}
+function closeController(record:(...args:unknown[])=>Promise<unknown>){return controllerMethod('src/renderer/app.ts','closeTabNow',{window:{material:{workspace:record}},ownedControls:(panel:{controls:OwnedControl[]},selector:string)=>panel.controls.filter(control=>selector.split(',').includes(control.tag))});}
 test('actual export controller snapshots selected visible provider rows and omits absent optional JSON fields',()=>{
  const str=modelBinding('str'),first=modelBinding('first'),idOf=modelBinding('idOf',{str,first});
  const exportRows=controllerMethod('src/renderer/github-workspace.ts','exportRows',{idOf});
@@ -58,33 +65,26 @@ test('failed apply invalidates review before a retry',async()=>{
  await save.call(context);await save.call(context);assert.equal(calls,1);assert.equal(context.editor.review,false);assert.equal(context.editor.reviewId,undefined);assert.equal(context.notice,'permission denied');assert.equal(context.saving,false);
 });
 test('tab close controller uses actual work-state mapping for dirty and active destinations',()=>{
- const key=controllerMethod('src/renderer/app.ts','workStateKey');
  const review=controllerMethod('src/renderer/app.ts','closeTabReview');
  for(const id of ['issues','api','cli-config','tools']){
-  let closed=0;const stateKey=String(key.call({},id));
-  const context={workStateKey:(target:string)=>key.call({},target),workStates:{[stateKey]:{dirty:true,busy:false}},closeTabs:[] as string[],closeTabNow:()=>closed++,notify:()=>{},copy:(en:string)=>en};
-  review.call(context,[id]);assert.deepEqual(context.closeTabs,[id]);assert.equal(closed,0);
-  context.closeTabs=[];context.workStates[stateKey]={dirty:false,busy:true};review.call(context,[id]);assert.equal(closed,0);assert.deepEqual(context.closeTabs,[]);
-  context.workStates[stateKey]={dirty:false,busy:false};review.call(context,[id]);assert.equal(closed,1);
+  let closed=0;const {context,stateKey}=closeContext(id),model={...context,closeTabs:[] as string[],closeTabNow:()=>closed++};
+  review.call(model,[id]);assert.deepEqual(model.closeTabs,[id]);assert.equal(closed,0);
+  model.closeTabs=[];model.workStates[stateKey]={dirty:false,busy:true};review.call(model,[id]);assert.equal(closed,0);assert.deepEqual(model.closeTabs,[]);
+  model.workStates[stateKey]={dirty:false,busy:false};review.call(model,[id]);assert.equal(closed,1);
  }
 });
 test('actual tab discard waits for its native record before clearing matching nested drafts and preserves them on failure',async()=>{
- const key=controllerMethod('src/renderer/app.ts','workStateKey');let release!:()=>void;const gate=new Promise<void>(resolve=>release=resolve);const calls:unknown[]=[];const cacheDiscards:string[]=[];
- const close=controllerMethod('src/renderer/app.ts','closeTabNow',{window:{material:{workspace:async(...args:unknown[])=>{calls.push(args);await gate;}}}});
- const views=['issues','pull-requests'].map(domain=>({domain,discardDrafts:()=>cacheDiscards.push(domain)}));
- const context={workStateKey:(id:string)=>key.call({},id),workStates:{issues:{dirty:true,busy:false}},workspace:{tabs:[{id:'repositories'},{id:'issues'}]},closeTabs:['issues'],lane:'repositories',notify:()=>{},copy:(en:string)=>en,persist:()=>{},navigate:()=>{},querySelectorAll:(selector:string)=>{assert.ok(['mg-github-workspace','mg-workspace-records'].includes(selector));return selector==='mg-github-workspace'?views:[];}};
+ let release!:()=>void;const gate=new Promise<void>(resolve=>release=resolve),calls:unknown[]=[],cacheDiscards:string[]=[];
+ const close=closeController(async(...args)=>{calls.push(args);await gate;});const {context}=closeContext('issues',[{tag:'mg-github-workspace',domain:'issues',discardDrafts:()=>cacheDiscards.push('issues')}]);
  const pending=close.call(context,['issues']);assert.equal(context.workspace.tabs.length,2);assert.deepEqual(cacheDiscards,[]);assert.deepEqual(calls,[['discard',{ids:['issues']}]]);
- release();await pending;assert.deepEqual(context.workspace.tabs,[{id:'repositories'}]);assert.deepEqual(cacheDiscards,['issues']);
- const failed=controllerMethod('src/renderer/app.ts','closeTabNow',{window:{material:{workspace:async()=>{throw new Error('disk unavailable');}}}});
- const failureDiscards:string[]=[];
- const unchanged={...context,workStates:{issues:{dirty:true,busy:false}},workspace:{tabs:[{id:'repositories'},{id:'issues'}]},closeTabs:['issues'],querySelectorAll:()=>[{domain:'issues',discardDrafts:()=>failureDiscards.push('issues')}]};
+ release();await pending;assert.deepEqual(context.workspace.tabs.map(tab=>tab.id),['repositories']);assert.deepEqual(cacheDiscards,['issues']);
+ const failureDiscards:string[]=[],failed=closeController(async()=>{throw new Error('disk unavailable');}),unchanged=closeContext('issues',[{tag:'mg-github-workspace',domain:'issues',discardDrafts:()=>failureDiscards.push('issues')}]).context;
  await failed.call(unchanged,['issues']);assert.equal(unchanged.workspace.tabs.length,2);assert.deepEqual(unchanged.closeTabs,['issues']);assert.deepEqual(failureDiscards,[]);
 });
 test('tab discard preserves nested drafts when an operation becomes busy during native recording',async()=>{
- const key=controllerMethod('src/renderer/app.ts','workStateKey');let release!:()=>void;const gate=new Promise<void>(resolve=>release=resolve);let discarded=0;
- const close=controllerMethod('src/renderer/app.ts','closeTabNow',{window:{material:{workspace:async()=>{await gate;}}}});
- const context={workStateKey:(id:string)=>key.call({},id),workStates:{issues:{dirty:true,busy:false}},workspace:{tabs:[{id:'repositories'},{id:'issues'}]},closeTabs:['issues'],lane:'repositories',notify:()=>{},copy:(en:string)=>en,persist:()=>{},navigate:()=>{},querySelectorAll:()=>[{domain:'issues',discardDrafts:()=>discarded++}]};
- const pending=close.call(context,['issues']);context.workStates.issues.busy=true;release();await pending;
+ let release!:()=>void;const gate=new Promise<void>(resolve=>release=resolve);let discarded=0;
+ const close=closeController(async()=>{await gate;}),{context,stateKey}=closeContext('issues',[{tag:'mg-github-workspace',domain:'issues',discardDrafts:()=>discarded++}]);
+ const pending=close.call(context,['issues']);context.workStates[stateKey].busy=true;release();await pending;
  assert.equal(discarded,0);assert.equal(context.workspace.tabs.length,2);assert.deepEqual(context.closeTabs,['issues']);
 });
 test('reduced motion and build-bound provenance remain honest',()=>{
@@ -97,25 +97,21 @@ test('Material control template boundaries remain paired in the shell',()=>{
 });
 
 test('Tools discard uses its public child boundary only after a durable receipt and busy recheck',async()=>{
- const key=controllerMethod('src/renderer/app.ts','workStateKey');
  for(const outcome of ['saved','failed','became-busy']as const){let release!:()=>void,discarded=0;const gate=new Promise<void>(resolve=>release=resolve),calls:unknown[]=[];
-  const close=controllerMethod('src/renderer/app.ts','closeTabNow',{window:{material:{workspace:async(...args:unknown[])=>{calls.push(args);await gate;if(outcome==='failed')throw Error('Fixture record failure');}}}});
-  const stateKey=String(key.call({},'tools')),context={workStateKey:(id:string)=>key.call({},id),workStates:{[stateKey]:{dirty:true,busy:false}},workspace:{tabs:[{id:'repositories'},{id:'tools'}]},closeTabs:['tools'],lane:'repositories',notify:()=>{},copy:(en:string)=>en,persist:()=>{},navigate:()=>{},querySelectorAll:(selector:string)=>selector==='mg-tools'?[{discardDrafts:()=>discarded++}]:[]};
+  const close=closeController(async(...args)=>{calls.push(args);await gate;if(outcome==='failed')throw Error('Fixture record failure');}),{context,stateKey}=closeContext('tools',[{tag:'mg-tools',discardDrafts:()=>discarded++}]);
   const pending=close.call(context,['tools']);assert.equal(discarded,0);assert.equal(context.workspace.tabs.length,2);if(outcome==='became-busy')context.workStates[stateKey].busy=true;release();await pending;
   assert.deepEqual(calls,[['discard',{ids:['tools']}]]);assert.equal(discarded,outcome==='saved'?1:0);assert.equal(context.workspace.tabs.length,outcome==='saved'?1:2);if(outcome!=='saved')assert.deepEqual(context.closeTabs,['tools']);
  }
 });
-
-test('managed history refuses tab closure when its exact nested editor cannot discard',async()=>{const key=controllerMethod('src/renderer/app.ts','workStateKey');for(const allowed of [false,true]){const events:string[]=[];const close=controllerMethod('src/renderer/app.ts','closeTabNow',{window:{material:{workspace:async()=>events.push('record')}}});const stateKey=String(key.call({},'history')),context={workStateKey:(id:string)=>key.call({},id),workStates:{[stateKey]:{dirty:true,busy:false}},workspace:{tabs:[{id:'repositories'},{id:'history'}]},closeTabs:['history'],lane:'repositories',notify:()=>{},copy:(en:string)=>en,persist:()=>{},navigate:()=>{},querySelectorAll:(selector:string)=>selector==='mg-workspace-records'?[{mode:'history',discardDrafts:()=>{events.push('discard');return allowed;}}]:[]};await close.call(context,['history']);assert.deepEqual(events,['record','discard']);assert.equal(context.workspace.tabs.length,allowed?1:2);}});
-
-
+test('managed history refuses tab closure when its exact nested editor cannot discard',async()=>{
+ for(const allowed of [false,true]){const events:string[]=[],close=closeController(async()=>events.push('record')),{context}=closeContext('history',[{tag:'mg-workspace-records',mode:'history',discardDrafts:()=>{events.push('discard');return allowed;}}]);await close.call(context,['history']);assert.deepEqual(events,['record','discard']);assert.equal(context.workspace.tabs.length,allowed?1:2);}
+});
 test('unchanged child work state does not rescan the complete desktop appearance tree',()=>{
- const workState=controllerMethod('src/renderer/app.ts','workState');
- const original={tools:{busy:false,dirty:false}},context={workStates:original,taskChangedAt:123};
- workState.call(context,{type:'tool-work-state',detail:{id:'tools',busy:false,dirty:false}});
- assert.equal(context.workStates,original);assert.equal(context.taskChangedAt,123);
- workState.call(context,{type:'tool-work-state',detail:{id:'tools',busy:true,dirty:false}});
- assert.notEqual(context.workStates,original);assert.deepEqual(context.workStates.tools,{busy:true,dirty:false});
- const changed=context.workStates;workState.call(context,{type:'tool-work-state',detail:{id:'tools',busy:true,dirty:false}});
- assert.equal(context.workStates,changed);
+ class ElementFixture{dataset={surfaceOwner:'utility:tools',surfaceLane:'tools'};}
+ const owner=new ElementFixture(),workState=controllerMethod('src/renderer/app.ts','workState',{HTMLElement:ElementFixture}),key='utility:tools::tools::tools';
+ const original={[key]:{busy:false,dirty:false}},context={workStates:original,taskChangedAt:123};
+ const event=(busy:boolean)=>({type:'tools-work-state',detail:{id:'tools',busy,dirty:false},composedPath:()=>[{},owner]});
+ workState.call(context,event(false));assert.equal(context.workStates,original);assert.equal(context.taskChangedAt,123);
+ workState.call(context,event(true));assert.notEqual(context.workStates,original);assert.deepEqual(context.workStates[key],{busy:true,dirty:false});
+ const changed=context.workStates;workState.call(context,event(true));assert.equal(context.workStates,changed);
 });
