@@ -4,6 +4,7 @@ Material Git uses task destinations for local Git and GitHub records. Documentat
 
 - [104-feature inventory](requirements/README.md), categorized articles and 104 feature-specific Cantonese translations; runtime localization remains separate.
 - [Git task/safety audit](coverage/git-actions-audit.md) and [GitHub CLI/REST/GraphQL audit](coverage/github-actions-audit.md).
+- [Repository and working tree management](repository-worktrees.md), [廣東話](repository-worktrees.yue.md).
 - [Authentication](authentication.md), [security](security.md), [workspace tabs/history/notifications/offline articles](workspace.md).
 - [API workspace](api-explorer.md), [schema coverage](api-coverage.md), [dedicated integrations](cli-workflows.md).
 - [Personalization](personalization.md), [regex](regex.md), [converters](converters.md), [Ollama](ollama.md).

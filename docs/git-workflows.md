@@ -8,7 +8,7 @@ History contains a commit ancestry graph generated from actual parent object IDs
 
 Remotes supports explicit fetch, pull strategy, single-reference push, remote add, rename, URL change and removal. Push never adds force. Account identity follows the selected remote URL and trusted credential helper configuration. No remote mutation is performed by the test suite.
 
-Tags and stashes support creation, signing, deletion, saving, apply, pop and drop. Working trees supports native-picked addition, lock, unlock, clean removal and pruning missing registration entries. Submodules supports add, initialize/update, sync and deinitialize with selected recursive behavior.
+Tags and stashes support creation, signing, deletion, saving, apply, pop and drop. Working trees supports native-picked existing/new/detached addition, exact-row opening, lock reasons, move, native moved-location repair, evidence-based removal and dry-run-reviewed stale registration pruning. See [repository and working tree management](repository-worktrees.md) for preservation requirements and local upstream evidence limits. Submodules supports add, initialize/update, sync and deinitialize with selected recursive behavior.
 
 Conflicts shows the base, current and incoming versions next to an editable resolution. A reviewed resolution atomically replaces the selected file and stages it. Merge, rebase, cherry-pick, revert and mailbox import can continue or abort; eligible operations can skip. Recognized credentials in a conflict refuse this editor rather than silently replacing them with redacted text. Resolve those files in a protected editor, then stage them.
 
