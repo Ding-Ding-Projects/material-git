@@ -22,7 +22,9 @@ export interface CheapLfsInventory {
     kind: 'inventory';
     worktreeId: string;
     repository: string;
-    visibility: 'public' | 'private';
+    visibility: 'public' | 'private' | 'unknown';
+    providerAvailable?:boolean;
+    providerNotice?:string;
     files: CheapLfsFile[];
     settings: CheapLfsSettings;
     vaultAvailable: boolean;
