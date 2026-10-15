@@ -7,13 +7,16 @@ The user requested a preservation stop after resumed integration. The reported o
 | Evidence | Preserved record |
 | --- | --- |
 | Source checkpoint before this documentation update | `01b547eecf1d53dea9aa31955600994b69f6ecf3` |
-| Latest exact build binding | Integration owner confirmation pending; do not infer a final build from a prior artifact |
+| Latest exact build binding | Linux x64, source `01b547eecf1d53dea9aa31955600994b69f6ecf3`, built `2026-10-15T23:48:50.802Z` |
+| Preservation TypeScript check | Fresh isolated check after the stop passed, exit zero |
 | First integrated full suite | 797 tests: 786 passes, 10 failures, one skip; 329.32 seconds |
 | Focused follow-ups | 18 tab/owner checks after `6886ef2`; 21 native integration checks; six OCI recovery checks at `7c75a82` |
-| Later full-suite sequence | No accepted final result recorded; retain its actual terminal or interrupted status |
+| Later serial suite | Interrupted by owned `SIGINT` at `2026-10-15T23:50:59Z`; 433 reported entries, 363 passes, zero failures, 69 cancellations, one skip, 128,915.84 ms; incomplete |
 | Actual desktop matrix | Incomplete; no full matrix acceptance |
 | Visual issue | User reports oversized/overlapping controls in the shown screenshot; open, no verified fix |
 | Inventory | 104 rows, 161 unresolved surface obligations |
+
+The later suite summary includes interrupted test containers and does not count complete execution of the remaining tests. Zero recorded failures in that interrupted run does not establish acceptance or erase the earlier ten failures. No owned test process remained active at closeout. The integration owner retains `material-final-tests-v2.log`, `material-final-tests-v2-stop.json` and `material-preservation-typecheck-01b547e.log` as private evidence; the production artifact records its source/time in `dist/main/provenance.json`. All unfinished code worktrees remain retained.
 
 Likely references for the visual report are native captures `independent-build-contexts.png` (SHA-256 `dd27941a0b60ef4b2aefedc7f2d62edfec1f16744718facde008a1c28e71386f`) and `utility-disposal-complete.png` (SHA-256 `e72912781c3d97ae7a3760ee58ff17fd4cba106c952b48bd703b3dfe5cb5ce67`). Their receipt identifies source `6c9b8ea71283f921ddc6e3d843c2620b6ca1cf82` and main artifact SHA-256 `a44864bf6a79c354bfa1c00c2fd053e19162d748074e2fe8a8b3ebde32c75833`, with no renderer errors. That proves the recorded interactions, not visual correctness. Confirm the affected screen and scale settings before attempting a fix when work resumes.
 

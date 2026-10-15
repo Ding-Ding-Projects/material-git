@@ -10,7 +10,7 @@ Install the unsigned Windows application from [build-16-1](https://github.com/Di
 
 The current desktop uses official Material Web controls, locally bundled Material Symbols, tonal light/dark surfaces, searchable choice dialogs and a reusable color editor. Tabs keep grouping, pinning and docking; enlarged text preserves scroll access to the work area. [Component provenance](design/material-provenance.md) distinguishes official controls from application compositions.
 
-Repository tabs keep their native repository identity and guarded drafts. Native repository selection or explicit reconnection establishes access; a saved path alone cannot grant it. Working-tree tools, completion, ignore rules and build tools operate on the selected repository context. The [verification record](docs/local-verification.md#current-integration-acceptance) separates focused native/Electron checks from the pending final integrated suite and capture matrix. Historical screenshots retain their original source receipts.
+Repository tabs keep their native repository identity and guarded drafts. Native repository selection or explicit reconnection establishes access; a saved path alone cannot grant it. Working-tree tools, completion, ignore rules and build tools operate on the selected repository context. The [verification record](docs/local-verification.md#current-integration-acceptance) records the exact Linux build and passed TypeScript check alongside the failed first suite, interrupted follow-up suite and incomplete capture matrix. Historical screenshots retain their original source receipts.
 
 <details>
 <summary>Tasks, support and limits</summary>
