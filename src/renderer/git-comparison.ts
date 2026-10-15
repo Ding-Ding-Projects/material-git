@@ -1,5 +1,9 @@
 import {LitElement, html, css, nothing} from './material';
+import type {Search} from './components';
 import './components';
+import './workspace-controls';
+import {keyed} from 'lit/directives/keyed.js';
+import {defaults} from '../shared/preferences';
 import type {GitRow, GitResponse} from '../shared/git';
 import type {GitComparisonKind, GitComparisonBridge} from '../shared/git-comparison';
 
@@ -10,6 +14,7 @@ const destinations: ReadonlyArray<readonly [GitComparisonKind, string, string]> 
   ['stripspace', 'Normalize draft', '整理草稿'],
 ];
 const yue: Record<string, string> = {
+  'Filter references': '篩選參照', 'Filter selected history commits': '篩選所選歷史提交',
   'Run comparison': '執行比較', 'Running comparison': '比較進行中', 'Selected references': '所選參照',
   'Contributor grouping': '貢獻者分組', Author: '作者', Committer: '提交者', 'Show email addresses': '顯示電郵地址',
   'Commits per page': '每頁提交數目', Previous: '上一頁', Next: '下一頁', Page: '頁',
@@ -48,11 +53,15 @@ const initialFields: Record<GitComparisonKind, Record<string, unknown>> = {
   'name-rev': {commits: [], nameScope: 'all'}, 'check-mailmap': {identities: []},
   'patch-id': {patch: '', strategy: 'stable'}, stripspace: {text: '', comments: 'keep'},
 };
+interface SearchDraft {query: string; regex: boolean; pattern: string; flags: string;}
 interface ResultRow {values: string[];}
 /** Material comparison panel. Native execution and cancellation remain owned by the host. */
 export class GitComparison extends LitElement {
   static properties = {disabled:{type:Boolean},bridge: {attribute: false}, references: {attribute: false}, commits: {attribute: false}, language: {}, kind: {state: true}, drafts: {state: true}, busy: {state: true}, error: {state: true}, output: {state: true}, resultRows: {state: true}, hasResult: {state: true}, resultKind: {state: true}, resultPage: {state: true}};
   disabled=false;
+  private entitySearches = new Map<string, SearchDraft>();
+  private entityMatches: string[] | null = null;
+  private searchGeneration = 0;
   bridge?: GitComparisonBridge;
   references: GitRow[] = [];
   commits: GitRow[] = [];
@@ -65,7 +74,7 @@ export class GitComparison extends LitElement {
     :host{display:block;min-width:0;color:var(--md-sys-color-on-surface,#18201b);--surface:var(--md-sys-color-surface-container-low,#f0f4ef);--outline:var(--md-sys-color-outline-variant,#c0ccc3)}
     .panel,.fields,.results{display:grid;gap:12px}.destinations,.actions,.flag{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
     .fields{grid-template-columns:repeat(2,minmax(0,1fr))}.wide{grid-column:1/-1}.entities{max-height:220px;overflow:auto;display:grid;gap:4px}
-    .entity{display:flex;align-items:center;gap:8px;overflow-wrap:anywhere}.entity span{min-width:0}
+    .entity{min-height:48px;display:flex;align-items:center;gap:8px;overflow-wrap:anywhere}.entity span{min-width:0}
     md-outlined-select,md-outlined-text-field{width:100%;min-width:0}.hint{color:var(--md-sys-color-on-surface-variant,#40534b);font-size:12px;line-height:1.5}
     .error{color:var(--md-sys-color-error,#ba1a1a)}.output{font:12px/1.6 ui-monospace,monospace;white-space:pre-wrap;overflow-wrap:anywhere;max-height:420px;overflow:auto;background:var(--md-sys-color-surface-container-high,#e7ece6);border-radius:12px;padding:12px}
     .table-scroll{overflow:auto}table{width:100%;border-collapse:collapse;text-align:left}th,td{padding:9px;border-bottom:1px solid var(--md-sys-color-outline-variant,#c0ccc3);overflow-wrap:anywhere}th{font-size:12px}
@@ -83,12 +92,42 @@ export class GitComparison extends LitElement {
       ${options.map(([value, name]) => html`<md-select-option .value=${value}><div slot="headline">${name}</div></md-select-option>`)}
     </md-outlined-select>`;
   }
-  private reference(key: string, label: string, optional = false) {return this.select(key, label, this.referenceOptions().map(row => [row.id, row.label] as const), optional);}
+  private reference(key: string, label: string, optional = false) {
+    const options = this.referenceOptions().map(row => ({value: row.id, label: row.label, detail: row.detail}));
+    if (optional) options.unshift({value: '', label: this.label('No lower boundary'), detail: ''});
+    // New repository records reset the local search, never the selected revision.
+    return keyed(`${this.kind}:${key}:${JSON.stringify(options)}`, html`<mg-workspace-choice
+      .controlId=${`comparison-${this.kind}-${key}`} .label=${this.label(label)} .value=${String(this.fields[key] ?? '')}
+      .options=${options} .settings=${{...defaults, language: this.language === 'yue' || this.language === 'both' ? this.language : 'en'}}
+      .disabled=${this.disabled || this.busy} @value-change=${(event: CustomEvent<string>) => this.setField(key, event.detail)}></mg-workspace-choice>`);
+  }
+  protected updated(changed: Map<string, unknown>) {
+    if (changed.has('kind') || changed.has('references') || changed.has('commits')) {
+      const search = this.renderRoot.querySelector<Search>('mg-search[data-entities]');
+      if (search) void this.filterEntities(search);
+      else this.searchGeneration++;
+    }
+  }
+  private entityRows() {return this.kind === 'name-rev' ? this.commits : this.referenceOptions().filter(row => row.id === 'HEAD' || this.references.some(ref => ref.id === row.id));}
+  private async filterEntities(search: Search) {
+    const generation = ++this.searchGeneration, kind = this.kind, rows = this.entityRows();
+    this.entitySearches.set(kind, {query: search.query, regex: search.regex, pattern: search.pattern, flags: search.flags});
+    this.entityMatches = []; this.requestUpdate();
+    const matches = await search.matchValues(rows.map(row => `${row.label} ${row.id} ${row.detail ?? ''}`));
+    if (generation !== this.searchGeneration || kind !== this.kind) return;
+    this.entityMatches = rows.filter((_, index) => matches[index]).map(row => row.id); this.requestUpdate();
+  }
   private number(key: string, label: string, min: number, max: number) {return html`<md-outlined-text-field type="number" .label=${this.label(label)} .value=${String(this.fields[key] ?? '')} min=${min} max=${max} step="1" ?disabled=${this.disabled||this.busy} @input=${(event: Event) => {const value = (event.target as HTMLInputElement).value; this.setField(key, value === '' ? '' : Number(value));}}></md-outlined-text-field>`;}
   private text(key: string, label: string, lines = 5) {const value = key === 'identities' ? (this.fields[key] as string[]).join('\n') : String(this.fields[key] ?? '');return html`<md-outlined-text-field class="wide" type="textarea" .label=${this.label(label)} .value=${value} rows=${lines} ?disabled=${this.disabled||this.busy} @input=${(event: Event) => {const value = (event.target as HTMLTextAreaElement).value;this.setField(key, key === 'identities' ? value.split(/\r?\n/).filter(line => line.trim()) : value);}}></md-outlined-text-field>`;}
   private entities(key: 'refs' | 'commits', label: string, rows: GitRow[], max: number) {
     const selected = this.fields[key] as string[];
-    return html`<div class="wide"><mg-text kind="title-small">${this.label(label)}</mg-text><div class="entities">${rows.map(row => html`<label class="entity"><md-checkbox aria-label=${row.label} .checked=${selected.includes(row.id)} ?disabled=${this.disabled||this.busy || (!selected.includes(row.id) && selected.length >= max)} @change=${(event: Event) => this.setField(key, (event.target as HTMLInputElement).checked ? [...selected, row.id] : selected.filter(id => id !== row.id))}></md-checkbox><span>${row.label}<span class="hint"> ${row.detail}</span></span></label>`)}</div></div>`;
+    const draft = this.entitySearches.get(this.kind) ?? {query: '', regex: false, pattern: '', flags: 'i'};
+    const visible = rows.filter(row => this.entityMatches === null || this.entityMatches.includes(row.id));
+    return html`<div class="wide"><mg-text kind="title-small">${this.label(label)}</mg-text>
+      ${keyed(this.kind, html`<mg-search data-entities search-id=${`comparison-${this.kind}-${key}`} .label=${this.label(key === 'refs' ? 'Filter references' : 'Filter selected history commits')}
+        .query=${draft.query} .regex=${draft.regex} .pattern=${draft.pattern} .flags=${draft.flags}
+        @search-change=${(event: Event) => this.filterEntities(event.target as Search)}></mg-search>`)}
+      <div class="entities">${!visible.length ? html`<p class="hint">${this.label('No matching records')}</p>` : nothing}${visible.map(row => html`<label class="entity"><md-checkbox aria-label=${row.label} .checked=${selected.includes(row.id)} ?disabled=${this.disabled||this.busy || (!selected.includes(row.id) && selected.length >= max)} @change=${(event: Event) => this.setField(key, (event.target as HTMLInputElement).checked ? [...selected, row.id] : selected.filter(id => id !== row.id))}></md-checkbox><span>${row.label}<span class="hint"> ${row.detail}</span></span></label>`)}</div></div>`;
   }
   private form() {
     switch (this.kind) {
