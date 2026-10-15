@@ -304,7 +304,7 @@ export class CheapLfsService {
         }
         if (review.task === 'pin' && settings.provider !== 'release') {
             const adapter = await createCheapLfsOciAdapter(this.options, repository, session, settings.provider, settings.parallel, signal);
-            const mutation = await pinCheapLfsFilesToOci(adapter.context, review.paths.map(relativePath => ({ relativePath })), adapter.dependencies, signal, value => emit(value.phase, value.currentPath, value));
+            const mutation = await pinCheapLfsFilesToOci(adapter.context, review.paths.map(relativePath => ({ relativePath })), adapter.dependencies, signal, value => emit(value.phase, value.currentPath, value), retained);
             result.succeeded = mutation.files.filter(file => file.changed).map(file => file.relativePath);
             result.failures = mutation.failures.map(file => ({ path: file.relativePath, reason: safeText(file.message) }));
             result.requiredCommitPaths = [...mutation.commitPaths, ...(mutation.keyCommitPath ? [mutation.keyCommitPath] : [])];
