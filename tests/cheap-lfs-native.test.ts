@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { once } from 'node:events';
-import { mkdtemp, writeFile, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, mkdir, writeFile, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
@@ -15,6 +15,9 @@ import { serializeCheapLfsPointer, CHEAP_LFS_POINTER_VERSION } from '../src/main
 import { ensureCheapLfsOras, validateCheapLfsOrasArchive } from '../src/main/cheap-lfs/oras-bootstrap';
 import { withCheapLfsHost } from '../src/main/cheap-lfs/host';
 import { pinFileToRelease, materializePointer } from '../src/main/cheap-lfs/operations';
+import {ensureCheapLfsCloudCompressionWorkflow,CHEAP_LFS_CLOUD_COMPRESSION_WORKFLOW_PATH} from '../src/main/cheap-lfs/cloud-compression';
+import {cheapLfsCloudWorkerBase64,cheapLfsCloudWorkerSha256} from '../src/main/cheap-lfs/cloud-worker-source';
+import {parseDocument} from 'yaml';
 import type { CheapLfsHostOptions, CheapLfsAccountSession, Repository } from '../src/main/cheap-lfs/host';
 const execute: CheapLfsHostOptions['executeGit'] = request => new Promise(resolve => { const child = execFile('git', [...request.argv], { cwd: request.root, encoding: 'buffer', maxBuffer: request.maximumBytes, signal: request.signal }, (error, stdout, stderr) => resolve({ exitCode: error ? Number((error as {
         code?: unknown;
@@ -24,6 +27,10 @@ else
     child.stdin?.end(); });
 const sha = (value: Buffer) => createHash('sha256').update(value).digest('hex');
 const repository: Repository = { id: 'fixture', path: '', accountKey: 'account', defaultBranch: 'main', buildRunPreferences: {}, gitHubRepository: { dbID: 123, endpoint: 'https://api.github.com', owner: { login: 'fixture' }, name: 'payloads', fullName: 'fixture/payloads', htmlURL: null, isPrivate: false } };
+test('public compression prepares only its owned workflow with exact embedded worker bytes',async()=>{
+ const root=await mkdtemp(join(tmpdir(),'cheap-lfs-workflow-'));
+ try{await mkdir(join(root,'.github','workflows'),{recursive:true});const other=join(root,'.github','workflows','user.yml');await writeFile(other,'name: User workflow\non: workflow_dispatch\n');const prepared=await ensureCheapLfsCloudCompressionWorkflow({...repository,path:root});assert.equal(prepared.changed,true);const text=await readFile(prepared.path,'utf8');assert.equal(parseDocument(text).errors.length,0);assert.match(text,/github.event.repository.private == false \|\| false/);assert.equal(sha(Buffer.from(cheapLfsCloudWorkerBase64,'base64')),cheapLfsCloudWorkerSha256);assert.deepEqual(Buffer.from(cheapLfsCloudWorkerBase64,'base64'),await readFile(new URL('../src/main/cheap-lfs/cloud-worker.mjs',import.meta.url)));assert.equal(await readFile(other,'utf8'),'name: User workflow\non: workflow_dispatch\n');await writeFile(join(root,CHEAP_LFS_CLOUD_COMPRESSION_WORKFLOW_PATH),'name: User-owned occupied path\n');await assert.rejects(ensureCheapLfsCloudCompressionWorkflow({...repository,path:root}),/unowned/);assert.equal(await readFile(join(root,CHEAP_LFS_CLOUD_COMPRESSION_WORKFLOW_PATH),'utf8'),'name: User-owned occupied path\n')}finally{await rm(root,{recursive:true,force:true})}
+});
 test('native Release transport streams exact bytes and preserves existing destinations', async () => {
     const root = await mkdtemp(join(tmpdir(), 'cheap-lfs-http-'));
     const assets: Array<Record<string, unknown>> = [];
