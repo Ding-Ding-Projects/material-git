@@ -1,6 +1,6 @@
 # Roadmap
 
-Current state: implementation has resumed with repository tabs and native working-tree tools, reviewed repository completion batches, ignore rules, large-file payload management, and build/run/installer workflows with optional repair. The inventory retains 104 requirements and 161 unresolved surface obligations. Focused Linux evidence exists for individual lanes; final integrated acceptance is pending. Windows installation, authenticated provider behavior and independent site equivalents require their own evidence. Current scope and publication boundaries are recorded in [HANDOFF.md](HANDOFF.md). No unchecked requirement below is removed by partial implementation.
+Current state: the user requested a preservation stop after resumed repository and build workflow implementation. Stop new implementation and retain source and evidence. The reported oversized/overlapping controls remain an open defect with no verified fix; reproduce that report first when work is authorized again. The inventory retains 104 requirements and 161 unresolved surface obligations. The first integrated full suite had ten failures; focused follow-ups do not establish full acceptance. Final matrix, Windows installation, authenticated provider behavior and site publication remain unverified. See [HANDOFF.md](HANDOFF.md) for the preserved source and evidence.
 
 Check a feature only after actual behavior, meaningful verification and a current capture where visible. All open canonical scope remains below.
 
@@ -14,6 +14,7 @@ Check a feature only after actual behavior, meaningful verification and a curren
 
 The [current acceptance record](docs/local-verification.md#current-integration-acceptance) must bind the integrated source, artifact hash, tests and actual desktop captures. The earlier 24-of-378 capture interruption and `115d758` checks remain historical. New component fixtures do not complete the full product matrix.
 
+- [ ] Reproduce and fix the reported oversized/overlapping controls after work resumes, recording actual viewport, display/text scale, Electron zoom, language/theme and native before/after captures. No fix is verified at preservation closeout.
 - [ ] Complete exact-source integration checks for repository contexts, working-tree operations, completion batches, ignore rules, large-file stage/commit/restore and build/run/installer/repair workflows, including guarded drafts, cancellation, stale reviews and partial recovery. Preserve focused receipts and identify remaining provider/platform gaps.
 
 - [ ] Finish natural Git/GitHub workflows and action-specific backend/UI gaps.

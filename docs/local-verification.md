@@ -2,20 +2,26 @@
 
 ## Current integration acceptance
 
-Implementation resumed after the earlier interface preservation checkpoint. The current scope covers repository contexts/tabs, native working-tree tools, reviewed completion batches, ignore rules, large-file lifecycle and stage/commit coordination, build/run/installer management, and optional repair.
+The user requested a preservation stop after resumed integration. The reported oversized/overlapping controls remain open with no verified fix. Final full-suite and matrix acceptance are unfinished; do not treat the focused receipts below as complete acceptance.
 
-The integration owner is preparing the final combined receipt. These fields are deliberately pending:
-
-| Evidence | Current record |
+| Evidence | Preserved record |
 | --- | --- |
-| Final integrated source commit | Pending final integration receipt |
-| TypeScript and Linux production build | Pending exact-source result and build timestamp/artifact hash |
-| Complete automated suite | Pending exact-source totals, failures and platform skips |
-| Integrated repository/native workflow checks | Pending final receipt; focused lane evidence is separate |
-| Actual desktop interactions and captures | Pending final source/artifact manifest and completed matrix dimensions |
-| Final public documentation/inventory checks | Pending final integrated validation |
+| Source checkpoint before this documentation update | `01b547eecf1d53dea9aa31955600994b69f6ecf3` |
+| Latest exact build binding | Integration owner confirmation pending; do not infer a final build from a prior artifact |
+| First integrated full suite | 797 tests: 786 passes, 10 failures, one skip; 329.32 seconds |
+| Focused follow-ups | 18 tab/owner checks after `6886ef2`; 21 native integration checks; six OCI recovery checks at `7c75a82` |
+| Later full-suite sequence | No accepted final result recorded; retain its actual terminal or interrupted status |
+| Actual desktop matrix | Incomplete; no full matrix acceptance |
+| Visual issue | User reports oversized/overlapping controls in the shown screenshot; open, no verified fix |
+| Inventory | 104 rows, 161 unresolved surface obligations |
+
+Likely references for the visual report are native captures `independent-build-contexts.png` (SHA-256 `dd27941a0b60ef4b2aefedc7f2d62edfec1f16744718facde008a1c28e71386f`) and `utility-disposal-complete.png` (SHA-256 `e72912781c3d97ae7a3760ee58ff17fd4cba106c952b48bd703b3dfe5cb5ce67`). Their receipt identifies source `6c9b8ea71283f921ddc6e3d843c2620b6ca1cf82` and main artifact SHA-256 `a44864bf6a79c354bfa1c00c2fd053e19162d748074e2fe8a8b3ebde32c75833`, with no renderer errors. That proves the recorded interactions, not visual correctness. Confirm the affected screen and scale settings before attempting a fix when work resumes.
 
 Focused completion evidence exists at source `0c8840810cf506fefc5a2078c8e3e476bb854d63`: twelve native tests passed at backend revision `8cc2842`, and seventeen actual Linux Electron component captures exercised the final renderer. Disposable local bare origins covered preservation/push/integration/archive/cleanup, changed remote-tip retention, conflict retention, queued/active cancellation, shared-store exclusion, stale review and explicit transport trust. The component artifact SHA-256 was `9c08928b7cc4b76188704f921bbd11e3a6182234af1496bc53e0dbf6612a1084`. This evidence does not certify final integrated navigation or a live hosted provider.
+
+Core integration `2c1dee7` passed TypeScript and 37 focused native checks. The real Electron transport fixture used Electron `44.7.0` and Node `24.21.0` against loopback HTTP. It streamed 3,145,728 bytes with SHA-256 `a1feacf0d812ba4d0b0e463ed45bbd583cea1de55c54693116754b30b5794745`, received bytes before the source finished, destroyed the source on cancellation after 16,384 received bytes, and made zero requests to the forbidden redirect target. This demonstrates native streaming/cancellation/redirect behavior, without a hosted storage-provider claim.
+
+On `2026-10-15T23:16:03.933Z`, actual Linux x64 private acquisition and executable verification succeeded for Codex `0.163.0` (SHA-256 `399ff69c431c066e40de318fba45c2b07f45a76b19939d247ee4828fc70c4215`) and OpenCode `1.19.1` (SHA-256 `541bb0aa88d0b317967efbc947aa54506606c257d3b6ed1dee644756879fb4be`). The receipt includes required support files and licenses. No model invocation or authenticated repair was performed.
 
 Focused receipts from other lanes must retain their own tested source and limits. Native fixture transports, local bare origins and simulated services do not establish actual GitHub release/registry/Docker Hub writes, authenticated model repair, physical camera hardware or remote account permissions. No such operation is claimed by this acceptance block.
 
@@ -57,4 +63,4 @@ The subsequent Linux full suite recorded 241 passing tests with zero failures an
 
 An actual Electron receipt identifies source `ba2330e68c0f404f64f35bb9beaac4d7e28b48b0`, version `0.1.0`, Linux x64 and build timestamp `2026-10-08T13:13:40.872Z`. It recorded the real issue/pull/action/release reads, Accounts navigation, native Git selection, ten captures and zero renderer errors. The latest contextual/narrow capture pass addresses subsequent UI checks; this does not establish successful remote mutations, all native helper options, complete accessibility coverage or Windows installation.
 
-The owner-private documentation site at https://material-git.earlyray.chatgpt.site deployed successfully on 2026-10-08 at `13:04:34.624998 UTC`, with 255 articles and nine genuine source-tagged images in that deployment inventory. This confirms deployment, not anonymous access or deployment of every later translation checkpoint. The About homepage permission failure remains HTTP 403; the known installer reference remains `build-15-1` until a newer installer is independently verified.
+The historical owner-private documentation site deployed successfully on 2026-10-08 at `13:04:34.624998 UTC`, with 255 articles and nine genuine source-tagged images in that deployment inventory. This confirms deployment, not anonymous access or deployment of every later translation checkpoint. The About homepage permission failure remains HTTP 403; the known installer reference remains `build-15-1` until a newer installer is independently verified.

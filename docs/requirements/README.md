@@ -2,7 +2,7 @@
 
 All 104 canonical obligations are represented using public-neutral identifiers. This is a complete inventory of required rows, not a claim of complete implementation. App, documentation site and repository applicability are assessed separately; only genuine narrow clauses are marked not applicable. Open/unknown/blocked states remain release obligations.
 
-The current inventory retains **161 unresolved surface obligations** across the 104 rows. Resumed repository, large-file and build-tool implementation is described in the [handoff](../../HANDOFF.md); final integrated acceptance is [pending](../local-verification.md#current-integration-acceptance). Implementation alone does not change an obligation to complete.
+The current inventory retains **161 unresolved surface obligations** across the 104 rows. Preserved repository, large-file and build-tool implementation is described in the [handoff](../../HANDOFF.md). Work has stopped at the user’s request; the reported oversized/overlapping controls are open and final integrated acceptance is [unfinished](../local-verification.md#current-integration-acceptance). Implementation alone does not change an obligation to complete.
 
 Source support, built GUI integration, live API permission and installed Windows behavior are separate evidence dimensions. A source file, schema count, mocked test or old screenshot does not close a live workflow. All 104 Cantonese articles now translate their own requirement, current support and remaining work. Article review does not establish complete desktop/site localization or live feature support.
 
