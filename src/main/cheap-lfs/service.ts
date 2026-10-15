@@ -409,7 +409,7 @@ export class CheapLfsService {
         if (staged.exitCode !== 0 || createHash('sha256').update(staged.stdout).digest('hex') !== file.sha256)
             throw Error('Staged Cheap LFS pointer or key differs from its reviewed bytes');
     } }
-    async finishStage(id: string, staged: boolean) { return this.finishCommit(id, staged); }
+    async finishStage(id: string, staged: boolean, signal?: AbortSignal) { return this.finishCommit(id, staged, signal); }
     async autoRestore(worktreeId: string, signal?: AbortSignal, beforeRestore?:()=>Promise<void>): Promise<CheapLfsResult | null> { const grant = await this.options.resolveWorktree(worktreeId), settings = await this.settings(grant.root); if (!settings.autoRestore)
         return null; const provisional: Repository = { id: worktreeId, path: grant.root, accountKey: '', defaultBranch: grant.branch, buildRunPreferences: {}, gitHubRepository: null }; const entries = await withCheapLfsHost(this.options, signal, () => listAllCheapLfsPointers(provisional)); const selected = entries.filter(entry => entry.workingTreeState === 'pointer').map(entry => entry.relativePath); if (!selected.length)
         return null; const operationId = randomUUID(), controller = new AbortController(), abort = () => controller.abort(); signal?.addEventListener('abort', abort, { once: true }); if (signal?.aborted)
@@ -528,9 +528,9 @@ export class CheapLfsService {
     } }); }
     async verifyCommit(id: string, commitSha: string) { const pending = this.commits.get(id); if (!pending)
         throw Error('Cheap LFS commit preparation expired'); await verifyCheapLfsCommit(pending.source.grant.root, commitSha, pending.proof, this.options.executeGit); pending.verifiedCommit = commitSha; }
-    async finishCommit(id: string, committed: boolean) {
+    async finishCommit(id: string, committed: boolean, signal?: AbortSignal) {
         const pending=this.commits.get(id);this.commits.delete(id);if(!pending)return;
-        if(committed&&pending.verifiedCommit){const annotations=pending.pins.flatMap(pin=>{const pointer=parseCheapLfsPointer(pin.pointerText);return pointer?[{relativePath:pin.relativePath,sha256:pointer.sha256,releaseTag:pointer.releaseTag,assetName:pointer.assetName,partNames:pointer.parts?.map(part=>part.name)}]:[]});await annotateCheapLfsPinnedAssets(new CheapLfsReleaseGateway(pending.source.session),pending.source.repository,annotations,pending.verifiedCommit).catch(()=>undefined)}
+        if(committed&&pending.verifiedCommit){const annotations=pending.pins.flatMap(pin=>{const pointer=parseCheapLfsPointer(pin.pointerText);return pointer?[{relativePath:pin.relativePath,sha256:pointer.sha256,releaseTag:pointer.releaseTag,assetName:pointer.assetName,partNames:pointer.parts?.map(part=>part.name)}]:[]});await annotateCheapLfsPinnedAssets(new CheapLfsReleaseGateway(pending.source.session),pending.source.repository,annotations,pending.verifiedCommit,AbortSignal.any([...(signal?[signal]:[]),AbortSignal.timeout(30000)])).catch(()=>undefined)}
         return this.settlePins(pending.source,pending.pins);
     }
     private async settlePins(source:Source,pins:ICheapLfsRetainedPin[]){

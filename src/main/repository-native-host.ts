@@ -46,24 +46,71 @@ export function createRepositorySecrets(directory:string,vault:SecretVault){
 
 interface AccountOptions {
  state:()=>AuthState;resolveHost:(hostname:string)=>ApprovedHost;
+ stateRevision?:()=>number;
  credentials:Pick<DownloadDependencies,'accountFingerprint'|'token'>;
  fetch:(url:string|URL,init?:NativeRequestInit)=>Promise<Response>;
 }
 async function boundedIdentity(response:Response){if(!response.ok||!response.body){await response.body?.cancel();throw Error('Selected account could not be verified');}const reader=response.body.getReader(),parts:Uint8Array[]=[];let bytes=0;try{for(;;){const part=await reader.read();if(part.done)break;bytes+=part.value.length;if(bytes>65536)throw Error('Account identity exceeds its limit');parts.push(part.value);}return JSON.parse(Buffer.concat(parts).toString('utf8')) as {login?:unknown};}finally{await reader.cancel().catch(()=>{});}}
+function anonymousState(state:AuthState,revision:number|undefined){return JSON.stringify([revision,state.selectedHostname,state.status,state.accounts]);}
+function anonymousRepositorySession(options:AccountOptions,initial:AuthState){
+ const snapshot=anonymousState(initial,options.stateRevision?.()),key='anonymous:'+createHash('sha256').update(snapshot).digest('hex'),verified=new Set<string>();let invalid=false;
+ const assertCurrent=async()=>{const state=options.state();if(invalid||anonymousState(state,options.stateRevision?.())!==snapshot){invalid=true;throw Error('The selected account changed. Review again.');}};
+ const approved=(url:URL)=>url.origin==='https://api.github.com'&&!url.username&&!url.password&&!url.hash;
+ const repositoryPath=(url:URL)=>url.pathname.match(/^\/repos\/([-A-Za-z0-9_.]+)\/([-A-Za-z0-9_.]+)(\/releases(?:\/(?:tags\/[^/]+|assets\/[1-9]\d*|[1-9]\d*(?:\/assets)?))?)?$/);
+ return {key,login:'',hostname:'github.com',apiOrigin:'https://api.github.com',uploadOrigin:'https://uploads.github.com',anonymous:true,assertCurrent,
+  async registryCredentials(signal?:AbortSignal):Promise<{username:string;token:string}>{signal?.throwIfAborted();throw Error('Sign in to request registry credentials');},
+  async request(input:string,init:{method:string;headers?:Readonly<Record<string,string>>;body?:string|Readable;signal?:AbortSignal}){
+   init.signal?.throwIfAborted();await assertCurrent();
+   if(init.method!=='GET'||init.body!==undefined)throw Error('Anonymous provider sessions allow only public GET requests');
+   let url=new URL(input);const headers=new Headers(init.headers);
+   for(const name of ['authorization','cookie','proxy-authorization'])if(headers.has(name))throw Error('Anonymous provider requests cannot supply credentials');
+   if([...url.searchParams.keys()].some(name=>/^(?:access_token|token|authorization|client_secret)$/i.test(name)))throw Error('Anonymous provider requests cannot supply credentials');
+   if(!approved(url))throw Error('Anonymous reads require the approved GitHub.com API');
+   const repository=repositoryPath(url),fullName=repository?`${repository[1]}/${repository[2]}`.toLowerCase():null;
+   const packagePath=url.pathname.match(/^\/(?:users|orgs)\/([-A-Za-z0-9_.]+)\/packages\/container\/[^/]+$/);
+   if(!repository&&!(packagePath&&[...verified].some(name=>name.startsWith(packagePath[1].toLowerCase()+'/'))))throw Error('Verify a public repository before reading its provider records');
+   if(repository?.[3]&&!verified.has(fullName!))throw Error('Verify public repository metadata before reading releases');
+   const metadata=!!repository&&!repository[3],asset=!!repository?.[3]?.match(/^\/releases\/assets\/[1-9]\d*$/);
+   const signal=AbortSignal.any([...(init.signal?[init.signal]:[]),AbortSignal.timeout(30*60*1000)]);
+   for(let hop=0;hop<=5;hop++){
+    signal.throwIfAborted();await assertCurrent();const response=await options.fetch(url,{method:'GET',headers,redirect:'manual',credentials:'omit',signal});
+    try{signal.throwIfAborted();await assertCurrent();}catch(error){await response.body?.cancel();throw error;}
+    if([301,302,303,307,308].includes(response.status)){
+     await response.body?.cancel();const location=response.headers.get('location');if(!asset||!location||hop===5)throw Error('Anonymous provider redirect was not approved');const next=new URL(location,url);
+     const sameRepository=approved(next)&&repositoryPath(next)?.slice(1,3).join('/').toLowerCase()===fullName;
+     const assetHost=['release-assets.githubusercontent.com','objects.githubusercontent.com','github.com','productionresultssa0.blob.core.windows.net'].includes(next.hostname)&&!next.port;
+     if(next.protocol!=='https:'||next.username||next.password||next.hash||!sameRepository&&!assetHost)throw Error('Anonymous provider redirect was not approved');url=next;continue;
+    }
+    if(metadata&&response.ok){
+     if(!response.body)throw Error('Public repository metadata is unavailable');const reader=response.body.getReader(),parts:Uint8Array[]=[];let total=0;
+     try{for(;;){const part=await reader.read();if(part.done)break;total+=part.value.length;if(total>1024*1024)throw Error('Public repository metadata exceeds its limit');parts.push(part.value);}}finally{await reader.cancel().catch(()=>{});}
+     signal.throwIfAborted();await assertCurrent();const bytes=Buffer.concat(parts),record=JSON.parse(bytes.toString('utf8')) as {id?:unknown;full_name?:unknown;private?:unknown};
+     if(!Buffer.from(bytes.toString('utf8')).equals(bytes)||!record||record.private!==false||typeof record.full_name!=='string'||record.full_name.toLowerCase()!==fullName||!Number.isSafeInteger(record.id)||Number(record.id)<1)throw Error('Anonymous reads require verified public repository metadata');
+     verified.add(fullName!);return new Response(bytes,{status:response.status,statusText:response.statusText,headers:response.headers});
+    }
+    if(!response.body)return response;
+    const reader=response.body.getReader();
+    return new Response(new ReadableStream<Uint8Array>({async pull(controller){try{signal.throwIfAborted();await assertCurrent();const part=await reader.read();signal.throwIfAborted();await assertCurrent();if(part.done)controller.close();else controller.enqueue(part.value);}catch(error){await reader.cancel(error).catch(()=>{});controller.error(error);}},cancel:reason=>reader.cancel(reason)}),{status:response.status,statusText:response.statusText,headers:response.headers});
+   }
+   throw Error('Anonymous provider redirect limit exceeded');
+  }
+ };
+}
 /** Credentials are resolved and checked natively; only approved provider requests receive them. */
 export function createRepositoryAccountProvider(options:AccountOptions){return async()=>{
- const initial=options.state(),hostname=initial.selectedHostname;
+ const initial=options.state(),hostname=initial.selectedHostname,revision=options.stateRevision?.();
  const selected=initial.accounts.find(account=>account.host===hostname&&account.active&&account.state==='success');
+ if(!selected&&hostname==='github.com'&&!['checking','starting','waiting'].includes(initial.status))return anonymousRepositorySession(options,initial);
  if(!hostname||!selected)throw Error('Sign in and select an active GitHub account first');
  const host=options.resolveHost(hostname),key=await options.credentials.accountFingerprint(hostname),login=selected.login;
- const assertCurrent=async()=>{const state=options.state();if(state.selectedHostname!==hostname||!state.accounts.some(account=>account.host===hostname&&account.active&&account.state==='success'&&account.login===login)||await options.credentials.accountFingerprint(hostname)!==key)throw Error('The selected account changed. Review again.');};
- const credential=async()=>{await assertCurrent();const token=await options.credentials.token(hostname,key);if(!token)throw Error('Selected provider credential is unavailable');const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),30000);try{const identity=await boundedIdentity(await options.fetch(host.restOrigin.replace(/\/$/,'')+'/user',{headers:{Authorization:`Bearer ${token}`,Accept:'application/vnd.github+json'},redirect:'manual',signal:controller.signal}));if(identity.login!==login)throw Error('Credential no longer belongs to the selected account');await assertCurrent();return token;}finally{clearTimeout(timer);}};
+ const assertCurrent=async()=>{const state=options.state();if(options.stateRevision?.()!==revision||state.selectedHostname!==hostname||!state.accounts.some(account=>account.host===hostname&&account.active&&account.state==='success'&&account.login===login)||await options.credentials.accountFingerprint(hostname)!==key)throw Error('The selected account changed. Review again.');};
+ const credential=async(signal?:AbortSignal)=>{signal?.throwIfAborted();await assertCurrent();signal?.throwIfAborted();const token=await options.credentials.token(hostname,key);signal?.throwIfAborted();if(!token)throw Error('Selected provider credential is unavailable');const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),30000);try{const identity=await boundedIdentity(await options.fetch(host.restOrigin.replace(/\/$/,'')+'/user',{headers:{Authorization:`Bearer ${token}`,Accept:'application/vnd.github+json'},redirect:'manual',signal:signal?AbortSignal.any([signal,controller.signal]):controller.signal}));if(identity.login!==login)throw Error('Credential no longer belongs to the selected account');await assertCurrent();return token;}finally{clearTimeout(timer);}};
  const approved=(url:URL)=>[host.restOrigin,host.uploadsOrigin].filter(Boolean).some(base=>{const allowed=new URL(base!);return url.origin===allowed.origin&&(allowed.pathname==='/'||url.pathname===allowed.pathname||url.pathname.startsWith(allowed.pathname.replace(/\/$/,'')+'/'));});
  return {key,login,hostname,apiOrigin:host.restOrigin,uploadOrigin:host.uploadsOrigin??host.restOrigin,anonymous:false,assertCurrent,
-  async registryCredentials(){return {username:login,token:await credential()};},
+  async registryCredentials(signal?:AbortSignal){return {username:login,token:await credential(signal)};},
   async request(input:string,init:{method:string;headers?:Readonly<Record<string,string>>;body?:string|Readable;signal?:AbortSignal}){
-   let url=new URL(input);if(url.protocol!=='https:'||url.username||url.password||!approved(url))throw Error('Provider address is outside the approved account host');
-   const token=await credential(),headers=new Headers(init.headers);for(const name of ['authorization','cookie','proxy-authorization'])if(headers.has(name))throw Error('Provider caller cannot supply credentials');headers.set('Authorization',`Bearer ${token}`);
+   init.signal?.throwIfAborted();let url=new URL(input);if(url.protocol!=='https:'||url.username||url.password||!approved(url))throw Error('Provider address is outside the approved account host');
+   const token=await credential(init.signal),headers=new Headers(init.headers);for(const name of ['authorization','cookie','proxy-authorization'])if(headers.has(name))throw Error('Provider caller cannot supply credentials');headers.set('Authorization',`Bearer ${token}`);
    const signal=AbortSignal.any([...(init.signal?[init.signal]:[]),AbortSignal.timeout(30*60*1000)]);
    for(let hop=0;hop<=5;hop++){await assertCurrent();const response=await options.fetch(url,{...init,headers,redirect:'manual',signal});if(![301,302,303,307,308].includes(response.status))return response;await response.body?.cancel();const location=response.headers.get('location');if(init.method!=='GET'||init.body||!location||hop===5)throw Error('Provider mutation redirects are not followed');const next=new URL(location,url);const external=hostname==='github.com'&&['release-assets.githubusercontent.com','objects.githubusercontent.com','github.com','productionresultssa0.blob.core.windows.net'].includes(next.hostname);if(next.protocol!=='https:'||next.username||next.password||!approved(next)&&!external)throw Error('Provider download redirect was not approved');if(next.origin!==url.origin)headers.delete('Authorization');url=next;}
    throw Error('Provider redirect limit exceeded');

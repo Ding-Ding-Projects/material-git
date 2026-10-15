@@ -53,6 +53,9 @@ export function createElectronFetch(network: Pick<Net, 'request'>, options: {aut
       } catch (error) {cleanup(); request.abort(); reject(error);}
     });
     try {
+      // Electron otherwise buffers the complete body before sending it. Native
+      // streams use chunked framing; Content-Length cannot be sent alongside it.
+      if(body){request.chunkedEncoding=true;requestHeaders.delete('content-length');}
       for (const [name, value] of requestHeaders) {
         request.setHeader(name, value);
       }
