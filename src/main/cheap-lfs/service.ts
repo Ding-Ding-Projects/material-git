@@ -281,7 +281,7 @@ export class CheapLfsService {
                 const registration = await prepareCheapLfsEncryptedBuilder(cheapLfsPrivateIdentityFromRepository(repository));
                 if (registration.kind === 'registration-required') {
                     result.builder = { name: registration.registration.builderName, projectId: registration.registration.projectId, secrets: registration.registration.secrets.map(secret => secret.name) };
-                    result.message = 'Public builder registration is prepared. Compression waits for the separately provisioned builder and secrets.';
+                    result.message = 'Private cloud compression is unavailable. These are registration requirements only; the pinned reference does not implement external encrypted builder provisioning or execution. No compression was started.';
                     return result;
                 }
                 throw Error('Private builder registration is unavailable');
