@@ -49,6 +49,7 @@ import {
   CheapLfsWorkingTreePointerState,
   ICheapLfsFileSystem,
   ICheapLfsPointerCandidate,
+  ICheapLfsRetainedPin,
   defaultCheapLfsFileSystem,
 } from './operations'
 import {
@@ -1242,14 +1243,15 @@ async function prepareTargets(
 
 async function cleanupPreparedTargets(
   targets: ReadonlyArray<IPreparedTarget>,
-  fs: ICheapLfsOciFileSystem
+  fs: ICheapLfsOciFileSystem,
+  retained: ReadonlySet<ICheapLfsOwnedFile> = new Set()
 ): Promise<void> {
   if (fs.trackedPaths === undefined) {
     return
   }
   let firstError: unknown = null
   for (const target of targets) {
-    if (target.ownedSource === undefined) {
+    if (target.ownedSource === undefined || retained.has(target.ownedSource)) {
       continue
     }
     try {
@@ -1322,13 +1324,17 @@ async function revalidateMigrationSources(
 
 async function cleanupMigrationSources(
   sources: ReadonlyMap<string, IMigrationSource>,
-  fs: ICheapLfsOciFileSystem
+  fs: ICheapLfsOciFileSystem,
+  retained: ReadonlySet<ICheapLfsOwnedFile> = new Set()
 ): Promise<void> {
   if (fs.trackedPaths === undefined) {
     return
   }
   let firstError: unknown = null
   for (const source of sources.values()) {
+    if (retained.has(source.owned)) {
+      continue
+    }
     try {
       await fs.trackedPaths.cleanupOwned(source.owned)
     } catch (error) {
@@ -1523,13 +1529,19 @@ function failedMutationResult(
  * is carried forward and unchanged layers are reused. Pointer files move to
  * the verified immutable manifest after publish; verified materialized raw
  * files retain their still-valid committed pointer so local bytes stay local.
+ *
+ * When supplied, `retainedPins` receives ownership of verified source copies
+ * for applied pointer replacements, including partial outcomes. The caller
+ * must settle these copies after success, failure or cancellation; untouched
+ * input copies are cleaned here. No registry download is needed for recovery.
  */
 export async function pinCheapLfsFilesToOci(
   context: ICheapLfsOciRepositoryContext,
   targets: ReadonlyArray<ICheapLfsOciPinTarget>,
   operationDependencies: ICheapLfsOciOperationDependencies,
   signal?: AbortSignal,
-  onProgress?: (progress: ICheapLfsOciOperationProgress) => void
+  onProgress?: (progress: ICheapLfsOciOperationProgress) => void,
+  retainedPins?: ICheapLfsRetainedPin[]
 ): Promise<ICheapLfsOciMutationResult> {
   validateContext(context)
   abortIfNeeded(signal)
@@ -1575,6 +1587,7 @@ export async function pinCheapLfsFilesToOci(
     return failedMutationResult(context, failures)
   }
 
+  const retainedSources = new Set<ICheapLfsOwnedFile>()
   let migrationSources: ReadonlyMap<string, IMigrationSource> = new Map()
   try {
     let key: IResolvedPublishKey | null = null
@@ -1837,6 +1850,21 @@ export async function pinCheapLfsFilesToOci(
       if (mutationSucceeded) {
         if (changed) {
           changedPaths.push(mutation.relativePath)
+          // Transfer only the verified source of a durably applied pointer.
+          // The caller restores these bytes even when staging/commit is aborted.
+          // Copies for untouched inputs remain owned by this operation.
+          const owned = preparedTargetsByPath.get(mutation.relativePath)?.ownedSource
+            ?? migrationSources.get(mutation.relativePath)?.owned
+          if (retainedPins !== undefined && owned !== undefined) {
+            retainedPins.push({
+              relativePath: mutation.relativePath,
+              pointerText,
+              owned,
+              sha256: mutation.sha256,
+              sizeInBytes: mutation.sizeInBytes,
+            })
+            retainedSources.add(owned)
+          }
         }
         files.push({
           relativePath: mutation.relativePath,
@@ -1866,9 +1894,9 @@ export async function pinCheapLfsFilesToOci(
     }
   } finally {
     try {
-      await cleanupMigrationSources(migrationSources, deps.fileSystem)
+      await cleanupMigrationSources(migrationSources, deps.fileSystem, retainedSources)
     } finally {
-      await cleanupPreparedTargets(preparedTargets, deps.fileSystem)
+      await cleanupPreparedTargets(preparedTargets, deps.fileSystem, retainedSources)
     }
   }
 }
