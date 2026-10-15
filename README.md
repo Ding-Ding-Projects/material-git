@@ -1,23 +1,27 @@
 # Material Git
 
-A Windows desktop workspace for Git repositories and GitHub. Navigate real repositories, issues, pull requests, Actions, releases and related records through contextual tasks. Local Git support is being expanded around changes, history, branches and repository operations.
+A Windows desktop workspace for Git repositories and GitHub. Navigate repositories, changes, linked working trees, issues, pull requests, Actions and releases through contextual tasks. Current source adds independent repository tabs, reviewed repository completion batches, ignore rules, large-file payload management, and build/run/installer workflows.
 
 Install the unsigned Windows application from [build-16-1](https://github.com/Ding-Ding-Projects/material-git/releases/tag/build-16-1). [Documentation site](https://material-git.earlyray.chatgpt.site) · [Feature status](docs/requirements/README.md) · [Roadmap](ROADMAP.md) · [Handoff](HANDOFF.md).
 
-**Full Git/GitHub action parity is not verified.** Upstream command and schema inventories do not prove working GUI behavior. The published release may precede changes documented in source. The Material control refresh preserves the existing domain workflows. Its Linux evidence is recorded separately from the historical gallery and Windows release. A current recording and exhaustive feature coverage remain open.
+**Implementation has resumed; full Git/GitHub action parity remains unverified.** The inventory still records 104 requirements and 161 unresolved surface obligations. Source support, focused Linux evidence, integrated desktop acceptance and Windows installation are tracked separately. The published installer predates the current implementation. See the [current acceptance record](docs/local-verification.md#current-integration-acceptance) for pending final checks and historical evidence.
 
 ## Desktop interface
 
 The current desktop uses official Material Web controls, locally bundled Material Symbols, tonal light/dark surfaces, searchable choice dialogs and a reusable color editor. Tabs keep grouping, pinning and docking; enlarged text preserves scroll access to the work area. [Component provenance](design/material-provenance.md) distinguishes official controls from application compositions.
 
-The current interface build at source `115d758` passed TypeScript and Linux compilation; its workbench and tab regressions passed 38 and five checks respectively. Verification stopped for preservation closeout before the complete matrix finished. Fresh captures from that build are maintained separately from the [historical gallery](docs/images/README.md); only captures with their reviewed source/build receipt establish the shown state. See [verification status](HANDOFF.md#verification-boundaries).
+Repository tabs keep their native repository identity and guarded drafts. Native repository selection or explicit reconnection establishes access; a saved path alone cannot grant it. Working-tree tools, completion, ignore rules and build tools operate on the selected repository context. The [verification record](docs/local-verification.md#current-integration-acceptance) separates focused native/Electron checks from the pending final integrated suite and capture matrix. Historical screenshots retain their original source receipts.
 
 <details>
 <summary>Tasks, support and limits</summary>
 
 The desktop uses real lists/details, guided choices, typed native actions and mutation review. Advanced API forms, extensions, aliases, cloud workspaces and local Copilot have distinct integration tasks. Local tools include bounded regex evaluation, supported conversion adapters and an Ollama subset.
 
-The [GitHub audit](docs/coverage/github-actions-audit.md), [Git audit](docs/coverage/git-actions-audit.md) and [104-feature inventory](docs/coverage/features.json) distinguish backend/UI gaps, dependencies, permissions and missing evidence. History restore, export formats, bulk actions, universal localization/appearance and final platform verification remain open.
+[Working-tree management](docs/repository-worktrees.md) inspects and operates on native-approved linked directories. [Repository completion](docs/articles/repository-completion.md) reviews exact branch contributions, commit messages, safe publication, integration, private recovery archives and eligible cleanup. Batches run at most three independent repositories, preserve shared-store exclusion, and report cancellation and partial outcomes. Existing default working trees and shared stashes are retained.
+
+The [ignore builder](docs/ignore-builder.md) previews rules against actual paths before saving. Large-file workflows preserve reviewed pointers and payloads; they are distinct from standard Git LFS. [Build and installer management](docs/build-and-installers.md) discovers recipes across supported project types, reviews executable commands and expected outputs, records artifacts, and offers optional [Codex/OpenCode analysis or repair](docs/features/build-repair.md). Detection does not prove every language toolchain or installer platform. Authenticated storage-provider writes and model execution need separate evidence.
+
+The [GitHub audit](docs/coverage/github-actions-audit.md), [Git audit](docs/coverage/git-actions-audit.md) and [104-feature inventory](docs/coverage/features.json) distinguish implementation gaps, dependencies, permissions and missing evidence. Universal history restore, export coverage, bulk actions, localization/appearance and platform verification remain open.
 
 Credentials and personal vocabulary are excluded from ordinary exports/history. Git hooks, aliases, filters and external helpers require execution trust; argument arrays alone do not neutralize them. Remote actions depend on actual permissions. Linux checks do not establish Windows installation, secure storage or updates.
 
