@@ -5,7 +5,7 @@ import {homedir} from 'node:os';
 import type {GitIgnoreAction,GitIgnoreDocument,GitIgnoreMatch,GitIgnorePreview,GitIgnoreRequest,GitIgnoreResponse} from '../shared/git-ignore';
 
 export interface IgnoreGrant {root:string;gitDir:string;commonDir:string;bare:boolean}
-export interface GitIgnoreOptions {resolve:(worktreeId:string)=>IgnoreGrant;run:(root:string,argv:string[],input?:string)=>Promise<{output:string;error?:string;exitCode:number|null}>;temporaryDirectory:string;now?:()=>number}
+export interface GitIgnoreOptions {resolve:(worktreeId:string)=>IgnoreGrant|Promise<IgnoreGrant>;run:(root:string,argv:string[],input?:string)=>Promise<{output:string;error?:string;exitCode:number|null}>;temporaryDirectory:string;now?:()=>number}
 interface Source {file:string;label:string;content:string;fingerprint:string;exists:boolean;mode:number}
 interface Context {grant:IgnoreGrant;rootIdentity:string;root:Source;sources:Source[];index:string;indexFingerprint:string;ignoreCase:string;tracked:Set<string>;samples:string[];directory:Set<string>;revision:string;total:number}
 interface Review {worktreeId:string;context:Context;content:string;expiresAt:number}
@@ -22,14 +22,14 @@ function fileSource(file:string,label:string):Source {
 /** Uses only native-approved worktree grants. Preview never writes to the real working tree. */
 export class GitIgnoreService {
  private reviews=new Map<string,Review>();private active=new Set<string>();private now:()=>number;private closed=false;
- constructor(private options:GitIgnoreOptions){this.now=options.now||Date.now;}
+ constructor(private options:GitIgnoreOptions){this.now=options.now||Date.now;mkdirSync(options.temporaryDirectory,{recursive:true,mode:0o700});if(realpathSync(options.temporaryDirectory)!==path.resolve(options.temporaryDirectory))throw Error('Ignore preview storage cannot traverse symbolic links.');}
  get activeOperations(){return this.active.size;}
  dispose(){this.closed=true;this.reviews.clear();}
- private resolve(id:string){if(this.closed)throw Error('Ignore service is closed.');const grant=this.options.resolve(id);if(grant.bare)throw Error('Ignore rules require a working tree.');if(realpathSync(grant.root)!==grant.root||realpathSync(grant.gitDir)!==grant.gitDir||realpathSync(grant.commonDir)!==grant.commonDir)throw Error('The approved working tree changed. Open it again.');const stat=lstatSync(grant.root);if(!stat.isDirectory()||stat.isSymbolicLink())throw Error('The approved working tree is no longer a directory.');return {grant,identity:`${grant.root}:${stat.dev}:${stat.ino}`};}
+ private async resolve(id:string){if(this.closed)throw Error('Ignore service is closed.');const grant=await this.options.resolve(id);if(this.closed)throw Error('Ignore service is closed.');if(grant.bare)throw Error('Ignore rules require a working tree.');if(realpathSync(grant.root)!==grant.root||realpathSync(grant.gitDir)!==grant.gitDir||realpathSync(grant.commonDir)!==grant.commonDir)throw Error('The approved working tree changed. Open it again.');const stat=lstatSync(grant.root);if(!stat.isDirectory()||stat.isSymbolicLink())throw Error('The approved working tree is no longer a directory.');return {grant,identity:`${grant.root}:${stat.dev}:${stat.ino}`};}
  private async run(root:string,argv:string[],input?:string,allowNoMatch=false){const result=await this.options.run(root,argv,input);if(result.exitCode!==0&&!(allowNoMatch&&result.exitCode===1))throw Error(result.error||'Native Git inspection failed.');return result.output;}
  private inside(grant:IgnoreGrant,relative:string){const target=path.join(grant.root,relative);let current=grant.root;for(const segment of relative.split('/').slice(0,-1)){current=path.join(current,segment);if(existsSync(current)){const info=lstatSync(current);if(info.isSymbolicLink()||!info.isDirectory())throw Error('Sample ancestors cannot traverse links or non-directory paths.');}}return target;}
  private async context(id:string,requested?:string[]):Promise<Context>{
-  const {grant,identity}=this.resolve(id),root=fileSource(path.join(grant.root,'.gitignore'),'.gitignore');
+  const {grant,identity}=await this.resolve(id),root=fileSource(path.join(grant.root,'.gitignore'),'.gitignore');
   const index=await this.run(grant.root,['ls-files','--stage','-z']),tracked=new Set(index.split('\0').filter(Boolean).map(row=>row.slice(row.indexOf('\t')+1)));
   let candidates:string[];
   if(requested){if(!Array.isArray(requested)||requested.length>MAX_SAMPLES)throw Error('Choose at most 200 sample paths.');candidates=requested.map(samplePath);}else{const listed=await this.run(grant.root,['ls-files','--cached','--others','--exclude-standard','-z']);const ignored=await this.run(grant.root,['ls-files','--others','--ignored','--exclude-standard','-z']);candidates=[...new Set([...listed.split('\0'),...ignored.split('\0')].filter(Boolean))];}
@@ -72,7 +72,7 @@ export class GitIgnoreService {
    if(action==='save'){if(request.confirmed!==true)throw Error('Review the exact ignore edits before saving.');const review=this.reviews.get(request.reviewId||'');if(!review||review.worktreeId!==id||review.expiresAt<this.now())throw Error('Ignore review expired or was already used. Review again.');this.reviews.delete(request.reviewId!);const current=await this.context(id,review.context.samples);if(current.revision!==review.context.revision)throw Error('Ignore sources, sample kinds or the index changed. Review again.');if(review.content===current.root.content)return {kind:'saved',content:review.content,revision:current.revision};
     const target=path.join(current.grant.root,'.gitignore'),temporary=path.join(current.grant.root,'.material-git-ignore-'+randomUUID()+'.tmp');let descriptor:number|undefined;
     try{descriptor=openSync(temporary,constants.O_CREAT|constants.O_EXCL|constants.O_WRONLY,current.root.exists?current.root.mode:0o644);writeFileSync(descriptor,review.content,'utf8');fsyncSync(descriptor);closeSync(descriptor);descriptor=undefined;
-     if(this.resolve(id).identity!==current.rootIdentity||indexFingerprint(current.grant)!==current.indexFingerprint||fileSource(target,'.gitignore').fingerprint!==current.root.fingerprint||current.sources.some(source=>fileSource(source.file,source.label).fingerprint!==source.fingerprint))throw Error('An ignore source changed before save. Review again.');renameSync(temporary,target);
+     const final=await this.resolve(id);if(final.identity!==current.rootIdentity||indexFingerprint(current.grant)!==current.indexFingerprint||fileSource(target,'.gitignore').fingerprint!==current.root.fingerprint||current.sources.some(source=>fileSource(source.file,source.label).fingerprint!==source.fingerprint))throw Error('An ignore source changed before save. Review again.');renameSync(temporary,target);
     }finally{if(descriptor!==undefined)closeSync(descriptor);rmSync(temporary,{force:true});}
     const saved=fileSource(target,'.gitignore');if(saved.content!==review.content)throw Error('Ignore save could not be verified. Reload the working file.');return {kind:'saved',content:saved.content,revision:saved.fingerprint};
    }
