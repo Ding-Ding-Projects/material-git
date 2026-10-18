@@ -1,6 +1,6 @@
 # Roadmap
 
-Current state: the October 18 closeout includes the reviewed design handoff at `b2869ea` under a neutral filename and preserves the unfinished public documentation source at task source `a958012`. Local builder and focused source checks passed at that task source. The public documentation delivery remains incomplete: GitHub Pages is unconfigured, `homepageUrl` is empty, the Wiki source is uninitialized, and current application captures are absent. No live deployment, full-site interaction acceptance, or application update is claimed. Preserve the existing 104-row inventory with its 161 unresolved surface obligations. See [HANDOFF.md](HANDOFF.md) for exact evidence and next steps.
+Current state: the October 18 closeout includes the reviewed design handoff at `b2869ea` under a neutral filename and preserves the unfinished public documentation branch at `b2c98be` (source checks remain bound to `a958012`). Local builder and focused source checks passed at that task source. The public documentation delivery remains incomplete: GitHub Pages is unconfigured, `homepageUrl` is empty, the Wiki source is uninitialized, and current application captures are absent. No live deployment, full-site interaction acceptance, or application update is claimed. Preserve the existing 104-row inventory with its 161 unresolved surface obligations. See [HANDOFF.md](HANDOFF.md) for exact evidence and next steps.
 
 Check a feature only after actual behavior, meaningful verification and a current capture where visible. All open canonical scope remains below.
 

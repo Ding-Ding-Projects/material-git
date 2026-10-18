@@ -2,7 +2,7 @@
 
 ## October 18 closeout state
 
-The closeout commit on `main` includes the reviewed design handoff from `b2869ea9a822921f76f509f4a0fd8fc49f83f4df` under the neutral path `design/public-documentation-reference.md`. It does not integrate the unfinished public documentation source. That source remains preserved at `a958012f252944709b6222fa9c3f37fe9e563a16` on `ai/feature/20261018-public-docs-delivery`.
+The closeout commit on `main` includes the reviewed design handoff from `b2869ea9a822921f76f509f4a0fd8fc49f83f4df` under the neutral path `design/public-documentation-reference.md`. It does not integrate the unfinished public documentation source. The current task ref is `ai/feature/20261018-public-docs-delivery` at `b2c98be1dbd00d842a33002d455d7221560ff53d`; its documented builder checks remain bound to source `a958012f252944709b6222fa9c3f37fe9e563a16`.
 
 At the task source, the local static builder, `npm run check`, `site/build.test.mjs` (5/5), and `site/document-links.test.mjs` (2/2) passed. The build produced 291 documentation articles, zero Wiki articles, and 21 historical captures. Its receipt reports `currentCaptureSource: null`, `currentCaptureCount: 0`, `historicalCaptureCount: 21`, and `wikiStatus: unavailable`. These results cover local source and build behavior only.
 
