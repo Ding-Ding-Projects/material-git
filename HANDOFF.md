@@ -1,5 +1,17 @@
 # Handoff
 
+## October 18 closeout state
+
+This closeout is limited to preserving reviewed work and recording its actual state. The public documentation delivery remains incomplete; this update does not claim a live deployment, complete public content, application acceptance, or a new release.
+
+The task-owned documentation source at `a958012f252944709b6222fa9c3f37fe9e563a16` passed the local static builder, `npm run check`, `site/build.test.mjs` (5/5), and `site/document-links.test.mjs` (2/2). The build produced 291 documentation articles, zero Wiki articles, and 21 historical captures. Its receipt reports `currentCaptureSource: null`, `currentCaptureCount: 0`, `historicalCaptureCount: 21`, and `wikiStatus: unavailable`. These results cover the local source and build only.
+
+GitHub Pages is not configured; the Pages endpoint returned HTTP 404, and the repository `homepageUrl` remains empty. The Wiki is enabled, but its Git source has not been initialized; no Wiki content is included. The 21 existing captures are historical, and there is no verified current application capture. The successful Windows release run `39103223620` did not publish a new release; the latest release remains 0.44.1 from `e1fc51556f064add017578e7f42bf3a8f95a26ce`. The installed application remains 0.16.1. The supported updater launch was rejected by host policy before process start, and no installation files changed.
+
+The reviewed design handoff is now named `design/public-documentation-reference.md`. Its source review is separate from site implementation or runtime evidence. The task branch remains incomplete and must be retained. Do not add a README URL until a live home page has been verified.
+
+The next safe step is to resume public-content, Wiki, capture, deployment, and About-field work only when those requirements are in scope and their external access is available. Keep issue #3 open while any of those conditions remain unmet.
+
 Material Git remains an incomplete Git/GitHub desktop with a separate documentation site. The user requested an immediate preservation stop after resumed implementation. Stop new feature and GUI work, retain source and evidence, and perform only the authorized preservation closeout. No final full-suite, matrix or product acceptance is established.
 
 ## Open interface issue and next authorized work

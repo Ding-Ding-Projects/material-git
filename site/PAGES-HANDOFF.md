@@ -1,28 +1,27 @@
-# Public Pages preparation checkpoint
+# Public documentation delivery handoff
 
-Work stopped at the user's request. This checkpoint is unfinished and has not been deployed.
+## Current state
 
-The intended public home is <https://ding-ding-projects.github.io/material-git/>. The intended gallery is <https://ding-ding-projects.github.io/material-git/#gallery>. The existing private site's audience must remain unchanged.
+The task-owned documentation source at `a958012f252944709b6222fa9c3f37fe9e563a16` has local build and source-check evidence. It is not deployed. The task ref remains incomplete and is retained.
 
-## Prepared changes
+## Verified source checks
 
-- A main-branch GitHub Pages artifact workflow builds the site and deploys the uploaded artifact. It has not run. The build gate rejects deployment without an explicitly identified current capture source and matching images.
-- Site social metadata and the canonical URL point to the intended Pages address. Script, stylesheet and icon URLs remain relative.
-- The builder now checks image hashes and source/date receipts, emits an output asset manifest and build receipt, and rejects known private hosting addresses and machine paths in documentation.
-- A Markdown renderer prepares internal article routes and heading identifiers. Client-side anchor navigation still needs implementation and verification.
-- The wiki status explicitly records an unavailable public snapshot. An anonymous Git query to the public wiki returned “Repository not found.” This does not establish that no private or unpublished wiki exists.
+- `node scripts/build-site.mjs` generated 291 documentation articles, zero Wiki articles, and 21 historical captures.
+- `npm run check` passed.
+- `site/build.test.mjs` passed 5/5.
+- `site/document-links.test.mjs` passed 2/2.
+- The build receipt records `currentCaptureSource: null`, `currentCaptureCount: 0`, `historicalCaptureCount: 21`, and `wikiStatus: unavailable`.
 
-## Pending before publication
+These results do not establish browser interaction, deployment, live assets, current application captures, or full documentation acceptance.
 
-1. Review the code and run the focused site build and tests. No build, browser run, or screenshot inspection was completed for this checkpoint.
-2. Integrate the documentation owner's removal of private hosting addresses from public articles. The current documentation causes the new privacy guard to reject a build; do not disable the guard.
-3. Inspect all 21 historical image originals for account identity and machine paths. Preserve their original source `e464ff70f195dbd9584614b92a9547074e49200d` and capture dates. Exclude unsuitable images from the deployed gallery while retaining the historical records appropriately.
-4. Label historical images visibly in the gallery and remove historical imagery from any current product presentation. The existing site component has not yet been updated for these distinctions.
-5. Add only reviewed, source-bound final native captures and matching receipt entries. `currentSourceCommit` remains null deliberately. No final capture was received or fabricated.
-6. Complete internal article/anchor navigation and the interactive guide, diagram controls and visitor-owned progress checks. Preserve the inventory's 104 requirements and 161 unresolved surface obligations.
-7. Build the exact static artifact and verify it under the `/material-git/` base in an isolated headless browser: desktop and emulated mobile, console/network errors, named controls, keyboard paths, overflow, article inventory, anchors, image loading and source provenance. Retain reviewed captures and owned-process teardown evidence.
-8. Obtain the publishing owner's review before enabling Pages, deploying, changing repository About metadata, or pushing this work. Verify the live home, assets, gallery, deployment revision and exact About URL before claiming delivery. README/HANDOFF updates belong to their assigned owner.
+## External blockers
 
-The latest reported application issue is oversized and overlapping GUI controls. It remains open. This site checkpoint does not reproduce, diagnose or fix that issue.
+- GitHub Pages is not configured. The Pages endpoint returned HTTP 404.
+- The repository About field `homepageUrl` remains empty.
+- The Wiki is enabled, but its Git source has not been initialized. The local build contains no Wiki articles.
+- The available 21 captures are historical; the current capture source is null and the current capture count is zero.
+- No live home page, required assets, complete deployed navigation, visitor-state persistence, or exact About-field readback has been verified.
 
-The historical installer baseline remains separately identified. No new Windows, authenticated provider, live hosting or universal feature-certification claim is made.
+## Safe next steps
+
+Retain the task-owned source as unfinished recovery work. Resume implementation and publication only when those deliverables are in scope and the required Wiki and application-capture inputs are available. Do not change repository visibility, publish private source, bypass the privacy check, or add a README link before verifying the exact deployed home URL.
