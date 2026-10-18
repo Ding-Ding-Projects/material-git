@@ -8,6 +8,8 @@ import path from 'node:path';
 // Build script deliberately remains a JavaScript module.
 // @ts-expect-error JavaScript build helper has no declaration file.
 import { documentedPostInstallArguments, postInstallArguments, runGitPostInstall } from '../scripts/git-post-install.mjs';
+// @ts-expect-error JavaScript build helper has no declaration file.
+import { verifyGitPayload } from '../scripts/fetch-git.mjs';
 
 test('portable post-install isolates its path and preserves the self-deleting source batch during launch', async () => {
  const directory = await mkdtemp(path.join(tmpdir(), 'git post-install fixture & '));
@@ -64,4 +66,11 @@ test('silent subprocess failure reports bounded safe output and preserves the pi
   assert.equal(existsSync(original),true);
   assert.equal(existsSync(wrapper),false);
  } finally { await rm(directory,{recursive:true,force:true}); }
+});
+
+test('packaged Git verification resolves a relative payload root before using it as the process directory', {
+ skip: process.platform !== 'win32' || !existsSync(path.join(process.cwd(), 'vendor/git/cmd/git.exe')),
+}, async () => {
+ const result = await verifyGitPayload('vendor/git');
+ assert.ok(result.gitVersion.includes('git version 2.56.0.windows.2'));
 });

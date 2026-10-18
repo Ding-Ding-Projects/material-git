@@ -91,13 +91,14 @@ export async function fetchGit(platform = process.platform) {
 /** Verify the unpacked full Windows payload before activation and after packaging. */
 export async function verifyGitPayload(directory) {
  if (process.platform !== 'win32') throw new Error('Native PortableGit verification requires Windows. Linux archive inspection cannot prove Windows execution.');
- await assertGitPayloadPolicy(directory);
+ const payloadRoot = path.resolve(directory);
+ await assertGitPayloadPolicy(payloadRoot);
  const expected = ['cmd/git.exe', 'usr/bin/bash.exe', 'usr/bin/gpg.exe', 'usr/bin/perl.exe', 'usr/bin/ssh.exe', 'ucrt64/libexec/git-core/git-subtree', 'LICENSE.txt', 'README.portable'];
- for (const relative of expected) if (!(await stat(path.join(directory, relative))).isFile() || !(await stat(path.join(directory, relative))).size) throw new Error(`PortableGit required payload missing: ${relative}`);
- const env = { ...process.env, GIT_CONFIG_GLOBAL: path.join(directory, '.verification-empty-global'), GIT_CONFIG_NOSYSTEM: '1', GIT_TERMINAL_PROMPT: '0', GIT_PAGER: 'cat' };
+ for (const relative of expected) if (!(await stat(path.join(payloadRoot, relative))).isFile() || !(await stat(path.join(payloadRoot, relative))).size) throw new Error(`PortableGit required payload missing: ${relative}`);
+ const env = { ...process.env, GIT_CONFIG_GLOBAL: path.join(payloadRoot, '.verification-empty-global'), GIT_CONFIG_SYSTEM: path.join(payloadRoot, '.verification-empty-system'), GIT_CONFIG_NOSYSTEM: '1', GIT_TERMINAL_PROMPT: '0', GIT_PAGER: 'cat' };
  for (const key of Object.keys(env)) if (/^(?:GIT_EXEC_PATH$|GIT_DIR$|GIT_WORK_TREE$|GIT_CONFIG_PARAMETERS$|GIT_CONFIG_KEY_|GIT_CONFIG_VALUE_)/.test(key)) delete env[key];
  env.GIT_CONFIG_COUNT = '0';
- const run = (relative, argv) => spawnSync(path.join(directory, relative), argv, { encoding: 'utf8', shell: false, windowsHide: true, timeout: 30000, maxBuffer: 2 * 1024 * 1024, cwd: directory, env });
+ const run = (relative, argv) => spawnSync(path.join(payloadRoot, relative), argv, { encoding: 'utf8', shell: false, windowsHide: true, timeout: 30000, maxBuffer: 2 * 1024 * 1024, cwd: payloadRoot, env });
  const git = run('cmd/git.exe', ['--version']);
  if (git.error || git.status !== 0 || !git.stdout.includes('git version 2.56.0.windows.2')) throw new Error(`PortableGit version verification failed: ${git.error?.message ?? git.stderr ?? git.stdout}`);
  const bash = run('usr/bin/bash.exe', ['--noprofile', '--norc', '--version']);
