@@ -1,6 +1,6 @@
 # Roadmap
 
-Current priority: implement missing applicable functionality across the complete feature inventory before the general defect backlog and further Windows release retries. Each feature still passes meaningful checks and is genuinely merged/pushed independently. Current active lanes and precise publication boundaries are recorded in [HANDOFF.md](HANDOFF.md). No unchecked requirement below is removed by a partial implementation.
+Current state: the user requested a preservation stop after resumed repository and build workflow implementation. Stop new implementation and retain source and evidence. The reported oversized/overlapping controls remain an open defect with no verified fix; reproduce that report first when work is authorized again. The inventory retains 104 requirements and 161 unresolved surface obligations. The first integrated full suite had ten failures; focused follow-ups do not establish full acceptance. Final matrix, Windows installation, authenticated provider behavior and site publication remain unverified. See [HANDOFF.md](HANDOFF.md) for the preserved source and evidence.
 
 Check a feature only after actual behavior, meaningful verification and a current capture where visible. All open canonical scope remains below.
 
@@ -12,9 +12,14 @@ Check a feature only after actual behavior, meaningful verification and a curren
 
 ## Delivery priorities
 
+The [current acceptance record](docs/local-verification.md#current-integration-acceptance) must bind the integrated source, artifact hash, tests and actual desktop captures. The earlier 24-of-378 capture interruption and `115d758` checks remain historical. New component fixtures do not complete the full product matrix.
+
+- [ ] Reproduce and fix the reported oversized/overlapping controls after work resumes, recording actual viewport, display/text scale, Electron zoom, language/theme and native before/after captures. No fix is verified at preservation closeout.
+- [ ] Complete exact-source integration checks for repository contexts, working-tree operations, completion batches, ignore rules, large-file stage/commit/restore and build/run/installer/repair workflows, including guarded drafts, cancellation, stale reviews and partial recovery. Preserve focused receipts and identify remaining provider/platform gaps.
+
 - [ ] Finish natural Git/GitHub workflows and action-specific backend/UI gaps.
 - [ ] Verify final built interactions, draft protection, inline recovery and permission errors.
-- [ ] Complete the remaining recording and interaction/language/theme/scale matrix. All nine obsolete core images have been replaced by 21 reviewed captures bound to source `e464ff70`; the full per-feature matrix remains open.
+- [ ] Complete the remaining recording and interaction/language/theme/scale matrix. Preserve the 21 historical captures bound to source `e464ff70` alongside the separately recorded current interface evidence; the full per-feature matrix remains open.
 - [ ] Verify independent site equivalents and preserve owner-private audience.
 - [ ] Prove fresh Windows install/offline dependencies, vault/update behavior and release artifacts.
 - [ ] Resolve authorized About homepage HTTP403 and external wiki/Discussion/Project/publication evidence.
@@ -34,7 +39,7 @@ Check a feature only after actual behavior, meaningful verification and a curren
 
 ## appearance
 
-- [ ] [Material Design 3 conformance](docs/requirements/appearance/material-design.md) — app: partial, site: unknown. Audit every rendered surface, genuine registrations and a negative replacement regression.
+- [ ] [Material Design 3 conformance](docs/requirements/appearance/material-design.md) — app: partial, site: unknown. Official controls, symbols, searchable choices, color fields, secondary tabs and shared/shadow-local defaults have been refreshed. Complete the per-surface anatomy and negative-replacement audit with the remaining integrated interaction/capture matrix; no Expressive certification is claimed.
 - [ ] [Workflow navigation and window chrome](docs/requirements/appearance/workflow-navigation.md) — app: partial, site: unknown. Capture and drive every navigation/window control at final revision; no catalog, marketing hero or generic form may substitute for a domain.
 - [ ] [Material Design 3 motion with a complete reduced-motion path](docs/requirements/appearance/motion.md) — app: partial, site: unknown. Verify OS preference composition, rainbow/confirmation/ladder alternatives and persisted schedules.
 - [ ] [Per-element appearance editor](docs/requirements/appearance/appearance-editor.md) — app: partial, site: unknown. Audit each property/state/layer, undo/redo, presets, copy/import, keyboard/context access and unsupported explanations.

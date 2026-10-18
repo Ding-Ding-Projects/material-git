@@ -1,6 +1,11 @@
 import {contextBridge,ipcRenderer} from 'electron';
 import type {MaterialBridge,Operation} from '../shared/types';
 const api:MaterialBridge={
+ buildTools:request=>ipcRenderer.invoke('material:build-tools',request),
+ repositoryFinish:(action,payload)=>ipcRenderer.invoke('material:repository-finish',action,payload),
+ cheapLfs:(action,payload)=>ipcRenderer.invoke('material:cheap-lfs',action,payload),
+ onCheapLfsProgress:callback=>{const listener=(_event:unknown,progress:Parameters<typeof callback>[0])=>callback(progress);ipcRenderer.on('material:cheap-lfs-progress',listener);return()=>ipcRenderer.removeListener('material:cheap-lfs-progress',listener);},
+ gitIgnore:(action,payload)=>ipcRenderer.invoke('material:git-ignore',action,payload),
  exportAppearance:payload=>ipcRenderer.invoke('material:appearance-export',payload),
  downloads:request=>ipcRenderer.invoke('material:downloads',request),
  onDownload:callback=>{const listener=(_event:unknown,job:Parameters<typeof callback>[0])=>callback(job);ipcRenderer.on('material:download-update',listener);return()=>ipcRenderer.removeListener('material:download-update',listener);},

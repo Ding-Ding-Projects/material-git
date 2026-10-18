@@ -10,8 +10,19 @@ const suffixes:Record<AppearanceState,string>={default:'',hover:':hover',focus:'
 function roots(root:ParentNode):ParentNode[]{const found=[root];for(const node of root.querySelectorAll('*'))if(node.shadowRoot)found.push(...roots(node.shadowRoot));return found;}
 export function readAppearanceCache():Record<string,AppearanceRecord>{const raw=localStorage.getItem(storageKey);if(!raw)return{};return validateAppearanceMap(parsePreferenceJson(raw,2097152));}
 function mergeRecords(base:AppearanceRecord,override:AppearanceRecord):AppearanceRecord{const result={...base};for(const state of appearanceStates)if(override[state])result[state]={...base[state],...override[state]};return result;}
-function applyRecord(target:HTMLElement,id:string,record:AppearanceRecord,original=false){const root=target.getRootNode()as Document|ShadowRoot;target.dataset.mgAppearance=id;const styleId='mg-appearance-'+id;let sheet=root.getElementById(styleId)as HTMLStyleElement|null;if(!sheet){sheet=document.createElement('style');sheet.id=styleId;(root instanceof Document?root.head:root).append(sheet);}sheet.textContent=original?'':Object.entries(record).map(([state,v])=>`[data-mg-appearance="${id}"]${suffixes[state as AppearanceState]}{${appearanceCss(v!)} }`).join('\n');}
-export function restoreAppearance(root:ParentNode=document):void{restoreRainbow();let base:Record<string,AppearanceRecord>;try{base=readAppearanceCache();}catch{base={};}for(const scope of roots(root))for(const target of scope.querySelectorAll<HTMLElement>('*')){const id=target.dataset.designId||target.dataset.appearanceId||appearanceTargetId(target);if(!id||!/^[a-zA-Z0-9._-]{1,128}$/.test(id))continue;if(base[id]||scheduled[id]||target.dataset.mgAppearance)applyRecord(target,id,mergeRecords(base[id]??{},scheduled[id]??{}));}}
+function applyRecord(target:HTMLElement,id:string,record:AppearanceRecord,original=false){const root=target.getRootNode()as Document|ShadowRoot;if(target.dataset.mgAppearance!==id)target.dataset.mgAppearance=id;const styleId='mg-appearance-'+id;let sheet=root.getElementById(styleId)as HTMLStyleElement|null;if(!sheet){sheet=document.createElement('style');sheet.id=styleId;(root instanceof Document?root.head:root).append(sheet);}const text=original?'':Object.entries(record).map(([state,v])=>`[data-mg-appearance="${id}"]${suffixes[state as AppearanceState]}{${appearanceCss(v!)} }`).join('\n');if(sheet.textContent!==text)sheet.textContent=text;}
+export function restoreAppearance(root:ParentNode=document):void{
+ restoreRainbow();let base:Record<string,AppearanceRecord>;try{base=readAppearanceCache();}catch{base={};}
+ // Only generated saved identities require deriving a structural path for every node.
+ // Previously marked targets remain candidates so clearing a cache or schedule restores defaults.
+ const generated=Object.keys(base).concat(Object.keys(scheduled)).some(id=>id.startsWith('element-'));
+ const selector=generated?'*':'[data-design-id],[data-appearance-id],[data-mg-appearance]';
+ for(const scope of roots(root))for(const target of scope.querySelectorAll<HTMLElement>(selector)){
+  const id=target.dataset.designId||target.dataset.appearanceId||(generated?appearanceTargetId(target):target.dataset.mgAppearance);
+  if(!id||!/^[a-zA-Z0-9._-]{1,128}$/.test(id))continue;
+  if(base[id]||scheduled[id]||target.dataset.mgAppearance)applyRecord(target,id,mergeRecords(base[id]??{},scheduled[id]??{}));
+ }
+}
 /** Temporary schedule styles never enter the local base cache; empty overrides restore base. */
 export function applyScheduledAppearance(overrides:Record<string,AppearanceRecord>,root:ParentNode=document):void{scheduled=validateAppearanceMap(overrides);restoreAppearance(root);}
 export class MaterialAppearance extends LitElement {

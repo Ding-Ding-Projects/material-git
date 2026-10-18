@@ -1,0 +1,451 @@
+import {log} from './host'
+// Adapted from Desktop Material, MIT, revision 80e0209a12f41df8a6a80ef52925b52ab9ecb1b0.
+// See THIRD_PARTY.md in this directory for provenance and adaptation notes.
+import { createHash } from 'crypto'
+import { lstat, open, realpath } from 'fs/promises'
+import { basename, dirname, join, resolve } from 'path'
+import {
+  CheapLfsGhcrVerifiedVisibility,
+  CheapLfsRegistryRepositoryKeyPath,
+  cheapLfsRegistryRepositoryKeyId,
+  cheapLfsRegistryRepositoryKeyTextSha256,
+  resolveCheapLfsRegistryRepositoryKeyForId,
+} from './ghcr-key'
+import {
+  CHEAP_LFS_OCI_MAXIMUM_POINTER_TEXT_BYTES,
+  ICheapLfsGhcrPointer,
+  parseCheapLfsGhcrPointer,
+} from './ghcr-pointer'
+import { validateCheapLfsTrackedPath } from './pointer'
+import { defaultCheapLfsTrackedPathStore } from './tracked-path-store'
+import { git } from './host'
+
+export interface ICheapLfsRequiredCommitFile {
+  readonly relativePath: typeof CheapLfsRegistryRepositoryKeyPath
+  /** SHA-256 of the exact canonical file text, without a prefix. */
+  readonly contentSha256: string
+  /** Whether HEAD does not already carry these exact canonical bytes. */
+  readonly changesTree: boolean
+  /**
+   * Exact selected pointer bytes which name this key. Commit hooks may update
+   * the index, so proving only the key would allow a hook to substitute a
+   * pointer bound to another key or image after the working-tree review.
+   */
+  readonly boundPointerFiles: ReadonlyArray<{
+    readonly relativePath: string
+    readonly contentSha256: string
+  }>
+}
+
+/**
+ * Live status metadata for one selected Git change. A deletion is the only
+ * selected change that may safely bypass path-based pointer classification:
+ * it cannot introduce new pointer bytes, and Git repositories cloned from
+ * another platform can legitimately contain names Windows cannot materialize.
+ */
+export interface ICheapLfsCommitSelection {
+  readonly relativePath: string
+  readonly deleted: boolean
+}
+
+export class CheapLfsCommitKeyError extends Error {
+  public constructor(
+    message: string,
+    public readonly pointerPaths: ReadonlyArray<string>
+  ) {
+    super(message)
+    this.name = 'CheapLfsCommitKeyError'
+  }
+}
+
+/**
+ * A working-tree entry larger than the bounded OCI pointer text cannot be an
+ * OCI pointer, so a cheap `lstat` can skip the full-file SHA-256 that
+ * `proveDestination` computes. Pure so the size guard is unit-testable.
+ */
+export function isOversizedForOciPointer(sizeInBytes: number): boolean {
+  return sizeInBytes > CHEAP_LFS_OCI_MAXIMUM_POINTER_TEXT_BYTES
+}
+
+/**
+ * Reduce an `lstat` result to a size the oversized guard can trust. A size is
+ * only returned for a regular file: for a symlink, directory, or missing entry
+ * the probe returns `null` so the caller falls through to the full prover,
+ * which applies the canonical symlink/redirect refusals unchanged. Pure so the
+ * regular-file gate is unit-testable.
+ */
+export function regularFileProbeSize(stats: {
+  readonly isFile: () => boolean
+  readonly size: number
+}): number | null {
+  return stats.isFile() ? stats.size : null
+}
+
+/** Injectable cheap size probe so the fast-skip guard is unit-testable. */
+export type CheapLfsPointerSizeProbe = (
+  repositoryPath: string,
+  relativePath: string
+) => Promise<number | null>
+
+const lstatPointerSizeProbe: CheapLfsPointerSizeProbe = async (
+  repositoryPath,
+  relativePath
+) => {
+  try {
+    // Canonicalize the repository root first (8.3 short names, mapped drives)
+    // so only a symlink/junction INSIDE the repository trips the parent check.
+    const root = await realpath(resolve(repositoryPath))
+    const absolutePath = join(root, ...relativePath.split('/'))
+    // lstat only spares the final component; a parent that is itself a
+    // symlink/junction would be silently followed. Fall through to the full
+    // fail-closed prover (which refuses redirected parents) in that case.
+    const parent = dirname(absolutePath)
+    const resolvedParent = await realpath(parent)
+    if (resolvedParent.toLowerCase() !== parent.toLowerCase()) {
+      return null
+    }
+    return regularFileProbeSize(await lstat(absolutePath))
+  } catch {
+    return null
+  }
+}
+
+async function readSelectedOciPointer(
+  repositoryPath: string,
+  relativePath: string,
+  cheapLfsEligible: boolean,
+  probeSize: CheapLfsPointerSizeProbe = lstatPointerSizeProbe
+): Promise<{
+  readonly pointer: ICheapLfsGhcrPointer
+  readonly contentSha256: string
+} | null> {
+  // Bail before proveDestination fully hashes a multi-gigabyte selected file:
+  // a regular file over the pointer-text bound is provably not an OCI pointer.
+  // A `null` probe (symlink/dir/missing/error) falls through to the full prover
+  // so every existing refusal and TOCTOU proof still runs.
+  const probedSize = await probeSize(repositoryPath, relativePath)
+  if (probedSize !== null && isOversizedForOciPointer(probedSize)) {
+    return null
+  }
+  if (probedSize === null) {
+    // A submodule gitlink is selected as its directory path. A directory can
+    // never be committed as a pointer blob, so it needs no key proof — and it
+    // must not reach the prover, whose file-shaped refusals abort the commit.
+    try {
+      const root = await realpath(resolve(repositoryPath))
+      const stats = await lstat(join(root, ...relativePath.split('/')))
+      if (stats.isDirectory()) {
+        return null
+      }
+    } catch {
+      // Missing/unreadable: fall through to the fail-closed prover unchanged.
+    }
+  }
+  const proof = cheapLfsEligible
+    ? await defaultCheapLfsTrackedPathStore.proveDestination(
+        repositoryPath,
+        relativePath
+      )
+    : await defaultCheapLfsTrackedPathStore.proveManagedPath(
+        repositoryPath,
+        relativePath,
+        relativePath
+      )
+  if (
+    !proof.exists ||
+    proof.sizeInBytes <= 0 ||
+    proof.sizeInBytes > CHEAP_LFS_OCI_MAXIMUM_POINTER_TEXT_BYTES
+  ) {
+    return null
+  }
+  const text = await defaultCheapLfsTrackedPathStore.readText(
+    proof,
+    CHEAP_LFS_OCI_MAXIMUM_POINTER_TEXT_BYTES
+  )
+  const pointer = parseCheapLfsGhcrPointer(text)
+  return pointer === null
+    ? null
+    : {
+        pointer,
+        contentSha256: createHash('sha256').update(text, 'utf8').digest('hex'),
+      }
+}
+
+/**
+ * Bounded, prover-free sniff for a Windows-hostile selected path. The
+ * fail-closed prover refuses hostile spellings outright, which used to abort
+ * the ENTIRE commit for any oddly-named raw file. A hostile path may commit as
+ * a plain Git file only when its content is PROVABLY not an OCI pointer:
+ * regular file (no symlinked parent, lstat-final), and either over the pointer
+ * text bound or bounded-read text that does not parse as a pointer. Anything
+ * else — pointer, symlink, redirected parent, unreadable — stays fail-closed.
+ */
+export async function unsafeSelectedPathIsProvablyNotPointer(
+  repositoryPath: string,
+  relativePath: string
+): Promise<boolean> {
+  try {
+    const root = await realpath(resolve(repositoryPath))
+    const absolutePath = join(
+      root,
+      ...relativePath.replace(/\\/g, '/').split('/')
+    )
+    const parent = dirname(absolutePath)
+    if ((await realpath(parent)).toLowerCase() !== parent.toLowerCase()) {
+      return false
+    }
+    const stats = await lstat(absolutePath)
+    if (!stats.isFile()) {
+      return false
+    }
+    if (isOversizedForOciPointer(stats.size)) {
+      return true
+    }
+    // Re-verify the bound at read time so a file that grows between lstat and
+    // read cannot smuggle a pointer suffix past the sniff.
+    const handle = await open(absolutePath, 'r')
+    try {
+      const bound = CHEAP_LFS_OCI_MAXIMUM_POINTER_TEXT_BYTES
+      const buffer = Buffer.alloc(bound + 1)
+      const { bytesRead } = await handle.read(buffer, 0, bound + 1, 0)
+      if (bytesRead > bound) {
+        return true
+      }
+      const text = buffer.subarray(0, bytesRead).toString('utf8')
+      return parseCheapLfsGhcrPointer(text) === null
+    } finally {
+      await handle.close()
+    }
+  } catch {
+    return false
+  }
+}
+
+interface ISelectedCommitPath {
+  readonly relativePath: string
+  readonly cheapLfsEligible: boolean
+}
+
+/**
+ * Selected Git files include control-plane paths such as `.github/*` and
+ * `.gitignore` which Cheap LFS deliberately refuses to track. Permit those
+ * exact spellings only for bounded pointer classification. The surrogate
+ * retains every character and descendant segment, so all other Windows/path
+ * safety rules still come from the canonical Cheap LFS validator; `.git`
+ * itself remains inaccessible.
+ */
+function validateSelectedCommitPath(
+  relativePathInput: string
+): ISelectedCommitPath | null {
+  const trackedPath = validateCheapLfsTrackedPath(relativePathInput)
+  if (trackedPath !== null) {
+    return { relativePath: trackedPath, cheapLfsEligible: true }
+  }
+  if (typeof relativePathInput !== 'string') {
+    return null
+  }
+  const normalized = relativePathInput.replace(/\\/g, '/')
+  const segments = normalized.split('/')
+  const firstSegment = segments[0]
+  if (
+    firstSegment === undefined ||
+    !/^\.git/i.test(firstSegment) ||
+    /^\.git$/i.test(firstSegment)
+  ) {
+    return null
+  }
+  const safetySurrogate = [
+    `selected-control-path${firstSegment}`,
+    ...segments.slice(1),
+  ].join('/')
+  if (validateCheapLfsTrackedPath(safetySurrogate) === null) {
+    return null
+  }
+  return { relativePath: normalized, cheapLfsEligible: false }
+}
+
+/**
+ * Resolve the one canonical key file that every selected private OCI pointer
+ * names. Legacy pointers without a key identity fail closed offline; callers
+ * may materialize/re-pin them (or add a bounded config-pull migration) first.
+ */
+export async function resolveCheapLfsCommitKeyRequirement(
+  repositoryPath: string,
+  selectedRelativePaths: ReadonlyArray<string | ICheapLfsCommitSelection>,
+  visibility: CheapLfsGhcrVerifiedVisibility
+): Promise<ICheapLfsRequiredCommitFile | null> {
+  const entries = new Array<{
+    readonly relativePath: string
+    readonly pointer: ICheapLfsGhcrPointer
+    readonly contentSha256: string
+  }>()
+  const selectedPathSpellings = new Map<string, ISelectedCommitPath>()
+  for (const selectedPath of selectedRelativePaths) {
+    const relativePath =
+      typeof selectedPath === 'string'
+        ? selectedPath
+        : selectedPath.relativePath
+    if (typeof selectedPath !== 'string' && selectedPath.deleted) {
+      continue
+    }
+    const validated = validateSelectedCommitPath(relativePath)
+    if (validated === null) {
+      // A hostile spelling no longer aborts the whole commit when its content
+      // is provably not a pointer — it commits as a plain Git file, excluded
+      // from all Cheap LFS processing (never pinned, never key-proved).
+      if (
+        await unsafeSelectedPathIsProvablyNotPointer(
+          repositoryPath,
+          relativePath
+        )
+      ) {
+        log.warn(
+          `Cheap LFS: committing Windows-hostile path as a plain Git file with no Cheap LFS processing: ${relativePath}`
+        )
+        continue
+      }
+      throw new CheapLfsCommitKeyError(
+        `Cheap LFS cannot prove a private registry key for an unsafe selected path: ${relativePath}`,
+        [relativePath]
+      )
+    }
+    const collisionKey = validated.relativePath.toLowerCase()
+    const existingSpelling = selectedPathSpellings.get(collisionKey)
+    if (
+      existingSpelling !== undefined &&
+      existingSpelling.relativePath !== validated.relativePath
+    ) {
+      throw new CheapLfsCommitKeyError(
+        'Cheap LFS refused selected paths whose Windows spellings collide case-insensitively.',
+        [existingSpelling.relativePath, validated.relativePath]
+      )
+    }
+    selectedPathSpellings.set(collisionKey, validated)
+  }
+  for (const selectedPath of selectedPathSpellings.values()) {
+    const { relativePath, cheapLfsEligible } = selectedPath
+    const selectedPointer = await readSelectedOciPointer(
+      repositoryPath,
+      relativePath,
+      cheapLfsEligible
+    )
+    if (selectedPointer !== null) {
+      if (!cheapLfsEligible) {
+        throw new CheapLfsCommitKeyError(
+          `Cheap LFS cannot prove a private registry key for an unsafe selected path: ${relativePath}`,
+          [relativePath]
+        )
+      }
+      entries.push({ relativePath, ...selectedPointer })
+    }
+  }
+  if (entries.length === 0) {
+    return null
+  }
+  const pointerPaths = entries.map(entry => entry.relativePath)
+  const pointers = entries.map(entry => entry.pointer)
+  if (visibility === 'unknown') {
+    throw new CheapLfsCommitKeyError(
+      'Cheap LFS cannot commit an OCI pointer until repository visibility is verified.',
+      pointerPaths
+    )
+  }
+  if (visibility === 'verified-public') {
+    if (pointers.some(pointer => pointer.keyId !== undefined)) {
+      throw new CheapLfsCommitKeyError(
+        'A public repository cannot commit a private Cheap LFS OCI pointer or its repository key.',
+        pointerPaths
+      )
+    }
+    return null
+  }
+
+  const keyIds = new Set(pointers.map(pointer => pointer.keyId))
+  if (keyIds.has(undefined)) {
+    throw new CheapLfsCommitKeyError(
+      'This legacy private Cheap LFS OCI pointer has no key identity. Materialize and pin it again before committing, or retry where its bounded image config can be verified.',
+      pointerPaths
+    )
+  }
+  if (keyIds.size !== 1) {
+    throw new CheapLfsCommitKeyError(
+      'The selected private Cheap LFS OCI pointers require different repository keys.',
+      pointerPaths
+    )
+  }
+  const expectedKeyId = [...keyIds][0]!
+  let resolved
+  try {
+    resolved = await resolveCheapLfsRegistryRepositoryKeyForId({
+      repositoryPath,
+      keyId: expectedKeyId,
+    })
+  } catch (error) {
+    throw new CheapLfsCommitKeyError(
+      error instanceof Error ? error.message : String(error),
+      pointerPaths
+    )
+  }
+  if (resolved.path === null || resolved.key === null) {
+    throw new CheapLfsCommitKeyError(
+      'Cheap LFS could not resolve the canonical tracked repository key.',
+      pointerPaths
+    )
+  }
+  try {
+    const expectedPath = join(
+      resolve(repositoryPath),
+      ...CheapLfsRegistryRepositoryKeyPath.split('/')
+    )
+    if (basename(resolved.path) !== 'cheap-lfs-registry-key-v1') {
+      throw new CheapLfsCommitKeyError(
+        'The selected private pointer requires the canonical tracked Cheap LFS repository key; a legacy key is not migrated during commit validation.',
+        pointerPaths
+      )
+    }
+    let actualCanonical: string
+    let expectedCanonical: string
+    try {
+      ;[actualCanonical, expectedCanonical] = await Promise.all([
+        realpath(resolved.path),
+        realpath(expectedPath),
+      ])
+    } catch {
+      throw new CheapLfsCommitKeyError(
+        'Cheap LFS could not prove the canonical tracked repository key without changing the checkout.',
+        pointerPaths
+      )
+    }
+    if (
+      actualCanonical.toLowerCase() !== expectedCanonical.toLowerCase() ||
+      cheapLfsRegistryRepositoryKeyId(resolved.key) !== expectedKeyId
+    ) {
+      throw new CheapLfsCommitKeyError(
+        'The canonical tracked Cheap LFS repository key does not match the selected private pointer.',
+        pointerPaths
+      )
+    }
+    const contentSha256 = cheapLfsRegistryRepositoryKeyTextSha256(resolved.key)
+    const head = await git(
+      ['show', `HEAD:${CheapLfsRegistryRepositoryKeyPath}`],
+      repositoryPath,
+      'readCheapLfsCommitKeyFromHead',
+      { successExitCodes: new Set([0, 1, 128]), maxBuffer: 4 * 1024 }
+    )
+    const headSha256 =
+      head.exitCode === 0
+        ? createHash('sha256').update(head.stdout, 'utf8').digest('hex')
+        : null
+    return {
+      relativePath: CheapLfsRegistryRepositoryKeyPath,
+      contentSha256,
+      changesTree: headSha256 !== contentSha256,
+      boundPointerFiles: entries.map(entry => ({
+        relativePath: entry.relativePath,
+        contentSha256: entry.contentSha256,
+      })),
+    }
+  } finally {
+    resolved.key.fill(0)
+  }
+}

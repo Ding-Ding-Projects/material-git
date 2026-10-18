@@ -1,0 +1,159 @@
+import { createHash, randomUUID } from 'node:crypto';
+import { createReadStream, createWriteStream, constants } from 'node:fs';
+import { lstat, unlink, open } from 'node:fs/promises';
+import { Readable, Transform } from 'node:stream';
+import { pipeline } from 'node:stream/promises';
+import type { CheapLfsAccountSession, Repository, IGitHubReleaseMutationReview, IGitHubReleaseAssetUploadRange, IGitHubReleaseTransferProgressEvent } from './host';
+import { GitHubReleasesError } from './host';
+import type { ICheapLfsReleasesGateway } from './operations';
+import { parseGitHubRelease, parseGitHubReleaseAsset, parseGitHubReleaseAssetList, getGitHubReleaseFingerprint, getGitHubReleaseIdentityFingerprint, getGitHubReleaseAssetIdentityFingerprint, getGitHubReleaseAssetFingerprint, normalizeGitHubReleaseAssetName, normalizeGitHubReleaseAssetLabel, validateGitHubReleaseTag, type IGitHubRelease, type IGitHubReleaseAsset, type IGitHubReleaseDraft } from './github-releases';
+import { isCheapLfsReleaseBucket } from './asset-version';
+export async function readBoundedJson(response: Response, maximum = 8 * 1024 * 1024): Promise<unknown> { if (!response.body)
+    throw Error('Provider returned no response body'); const reader = response.body.getReader(); const chunks: Uint8Array[] = []; let total = 0; try {
+    for (;;) {
+        const { value, done } = await reader.read();
+        if (done)
+            break;
+        total += value.byteLength;
+        if (total > maximum)
+            throw Error('Provider response exceeded its bounded size');
+        chunks.push(value);
+    }
+    return JSON.parse(Buffer.concat(chunks).toString('utf8'));
+}
+finally {
+    await reader.cancel().catch(() => undefined);
+} }
+const identity = (repository: Repository) => JSON.stringify([repository.id, repository.accountKey, repository.gitHubRepository?.dbID, repository.gitHubRepository?.fullName, repository.gitHubRepository?.endpoint]);
+/** Streaming account-bound transport. It never changes or removes a pre-existing asset. */
+export class CheapLfsReleaseGateway implements ICheapLfsReleasesGateway {
+    private owned = new Set<number>();
+    constructor(private session: CheapLfsAccountSession) { }
+    private base(repository: Repository) { const remote = repository.gitHubRepository; if (!remote || remote.endpoint !== this.session.apiOrigin || repository.accountKey !== this.session.key || !/^[-A-Za-z0-9_.]+\/[-A-Za-z0-9_.]+$/.test(remote.fullName))
+        throw Error('Cheap LFS provider context changed'); return `${this.session.apiOrigin.replace(/\/$/, '')}/repos/${remote.fullName}`; }
+    private async send(url: string, method = 'GET', body?: string | Readable, signal?: AbortSignal, headers: Record<string, string> = {}) { signal?.throwIfAborted(); await this.session.assertCurrent(); const parsed = new URL(url); if (parsed.protocol !== 'https:' || parsed.username || parsed.password || ![this.session.apiOrigin, this.session.uploadOrigin].some(origin => new URL(origin).origin === parsed.origin))
+        throw Error('Cheap LFS refused an unapproved provider address'); if (method !== 'GET' && this.session.anonymous)
+        throw Error('Sign in to upload large files'); const response = await this.session.request(url, { method, body, signal, headers: { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', ...headers } }); await this.session.assertCurrent(); if (!response.ok) {
+        await response.body?.cancel();
+        throw new GitHubReleasesError('provider', `Cheap LFS provider request returned HTTP ${response.status}`, response.status);
+    } return response; }
+    private async json(repository: Repository, path: string, method = 'GET', value?: unknown, signal?: AbortSignal) { return readBoundedJson(await this.send(this.base(repository) + path, method, value === undefined ? undefined : JSON.stringify(value), signal, value === undefined ? {} : { 'Content-Type': 'application/json' })); }
+    async getReleaseByTag(repository: Repository, tag: string, signal?: AbortSignal) { validateGitHubReleaseTag(tag); try {
+        return parseGitHubRelease(await this.json(repository, `/releases/tags/${encodeURIComponent(tag)}`, 'GET', undefined, signal));
+    }
+    catch (error) {
+        if (!(error instanceof GitHubReleasesError) || error.status !== 404)
+            throw error;
+        return null;
+    } }
+    async create(repository: Repository, draft: IGitHubReleaseDraft, publishImmediately: boolean, signal?: AbortSignal) { if (!publishImmediately || draft.prerelease)
+        throw Error('Cheap LFS creates normal published storage releases'); const result = parseGitHubRelease(await this.json(repository, '/releases', 'POST', { tag_name: validateGitHubReleaseTag(draft.tagName), target_commitish: draft.targetCommitish, name: draft.name, body: draft.body, draft: false, prerelease: false, make_latest: 'false' }, signal)); if (result.draft || result.prerelease || !isCheapLfsReleaseBucket(result) || result.tagName !== draft.tagName)
+        throw Error('Provider did not create the exact managed storage release'); return result; }
+    async listAssets(repository: Repository, releaseId: number, page = 1, signal?: AbortSignal) { if (!Number.isSafeInteger(releaseId) || releaseId < 1 || !Number.isInteger(page) || page < 1 || page > 10)
+        throw Error('Invalid bounded Release inventory'); return parseGitHubReleaseAssetList(await this.json(repository, `/releases/${releaseId}/assets?per_page=100&page=${page}`, 'GET', undefined, signal), page); }
+    private async complete(repository: Repository, releaseId: number, signal?: AbortSignal) { const assets: IGitHubReleaseAsset[] = []; for (let page = 1; page <= 10; page++) {
+        const result = await this.listAssets(repository, releaseId, page, signal);
+        assets.push(...result.assets);
+        if (result.nextPage === null)
+            break;
+    } if (new Set(assets.map(x => x.id)).size !== assets.length)
+        throw Error('Release inventory changed during pagination'); return assets; }
+    createMutationReview(repository: Repository, release: IGitHubRelease, asset: IGitHubReleaseAsset | null = null): IGitHubReleaseMutationReview { return { repositoryFingerprint: identity(repository), accountKey: this.session.key, accountGeneration: 0, releaseId: release.id, releaseFingerprint: getGitHubReleaseFingerprint(release), releaseIdentityFingerprint: getGitHubReleaseIdentityFingerprint(release), reviewedAssets: release.assets.map(x => ({ id: x.id, fingerprint: getGitHubReleaseAssetIdentityFingerprint(x) })), assetId: asset?.id ?? null, assetFingerprint: asset ? getGitHubReleaseAssetFingerprint(asset) : null }; }
+    private async verify(repository: Repository, review: IGitHubReleaseMutationReview, signal?: AbortSignal) { if (review.repositoryFingerprint !== identity(repository) || review.accountKey !== this.session.key || this.session.anonymous)
+        throw Error('Reviewed account or repository changed'); const release = parseGitHubRelease(await this.json(repository, `/releases/${review.releaseId}`, 'GET', undefined, signal), review.releaseId); if (getGitHubReleaseIdentityFingerprint(release) !== review.releaseIdentityFingerprint || !isCheapLfsReleaseBucket(release))
+        throw Error('Reviewed storage release changed'); const assets = await this.complete(repository, release.id, signal); for (const prior of review.reviewedAssets)
+        if (!assets.some(asset => asset.id === prior.id && getGitHubReleaseAssetIdentityFingerprint(asset) === prior.fingerprint))
+            throw Error('Reviewed storage asset changed'); if (review.assetId !== null && !assets.some(asset => asset.id === review.assetId && getGitHubReleaseAssetFingerprint(asset) === review.assetFingerprint))
+        throw Error('Reviewed target asset changed'); return { ...release, assets }; }
+    async publish(repository: Repository, review: IGitHubReleaseMutationReview, signal?: AbortSignal) { await this.verify(repository, review, signal); const result = parseGitHubRelease(await this.json(repository, `/releases/${review.releaseId}`, 'PATCH', { draft: false, prerelease: false, make_latest: 'false' }, signal)); if (result.draft || result.prerelease)
+        throw Error('Storage release was not published normally'); return result; }
+    async uploadAsset(repository: Repository, review: IGitHubReleaseMutationReview, sourcePath: string, name: string, label: string | null, signal: AbortSignal, onProgress?: (progress: IGitHubReleaseTransferProgressEvent) => void, range?: IGitHubReleaseAssetUploadRange, expectedDigest?: string) {
+        name = normalizeGitHubReleaseAssetName(name);
+        label = label === null ? null : normalizeGitHubReleaseAssetLabel(label);
+        const before = await this.verify(repository, review, signal);
+        if (before.draft || before.assets.some(asset => asset.name === name) || before.assets.length >= 1000)
+            throw Error('Storage asset name is occupied or the bucket is full');
+        const stat = await lstat(sourcePath);
+        if (!stat.isFile() || stat.isSymbolicLink() || stat.nlink !== 1)
+            throw Error('Upload requires an owned regular file');
+        const offset = range?.offset ?? 0, length = range?.length ?? stat.size;
+        if (!Number.isSafeInteger(offset) || !Number.isSafeInteger(length) || offset < 0 || length <= 0 || offset + length > stat.size || length > 500 * 1024 * 1024)
+            throw Error('Invalid upload range');
+        const hash = createHash('sha256');
+        let bytes = 0;
+        const operationId = randomUUID();
+        const sourceHandle = await open(sourcePath, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0));
+        const opened = await sourceHandle.stat();
+        if (opened.dev !== stat.dev || opened.ino !== stat.ino) {
+            await sourceHandle.close();
+            throw Error('Upload source identity changed');
+        }
+        const source = sourceHandle.createReadStream({ start: offset, end: offset + length - 1, highWaterMark: 1024 * 1024 });
+        const meter = new Transform({ transform(chunk, _encoding, callback) { bytes += chunk.length; if (bytes > length) {
+                callback(Error('Upload range grew'));
+                return;
+            } hash.update(chunk); onProgress?.({ operationId, direction: 'upload', transferredBytes: Math.min(bytes, length - 1), totalBytes: length }); callback(null, chunk); } });
+        source.on('error', error => meter.destroy(error));
+        source.pipe(meter);
+        const abort = () => { source.destroy(Error('Upload canceled')); meter.destroy(Error('Upload canceled')); };
+        signal.addEventListener('abort', abort, { once: true });
+        let created: IGitHubReleaseAsset | undefined;
+        try {
+            const url = new URL(`${this.session.uploadOrigin.replace(/\/$/, '')}/repos/${repository.gitHubRepository!.fullName}/releases/${review.releaseId}/assets`);
+            url.searchParams.set('name', name);
+            if (label !== null)
+                url.searchParams.set('label', label);
+            const response = await this.send(url.href, 'POST', meter, signal, { 'Content-Type': 'application/octet-stream', 'Content-Length': String(length) });
+            created = parseGitHubReleaseAsset(await readBoundedJson(response));
+            if (before.assets.some(asset => asset.id === created!.id))
+                throw Error('Provider returned a pre-existing asset');
+            this.owned.add(created.id);
+            const after = await lstat(sourcePath), localDigest = `sha256:${hash.digest('hex')}`;
+            if (bytes !== length || !meter.readableEnded || after.dev !== stat.dev || after.ino !== stat.ino || after.size !== stat.size || after.mtimeMs !== stat.mtimeMs || created.name !== name || created.label !== label || created.state !== 'uploaded' || created.sizeInBytes !== length || (expectedDigest && localDigest !== expectedDigest && localDigest !== `sha256:${expectedDigest}`) || (created.digest && created.digest !== localDigest))
+                throw Error('Uploaded asset did not match the exact source receipt');
+            onProgress?.({ operationId, direction: 'upload', transferredBytes: length, totalBytes: length });
+            return { asset: created, bytes, localDigest };
+        }
+        catch (error) {
+            if (created && this.owned.has(created.id)) {
+                try {
+                    const removed = await this.send(this.base(repository) + `/releases/assets/${created.id}`, 'DELETE');
+                    await removed.body?.cancel();
+                    this.owned.delete(created.id);
+                }
+                catch { /* Exact accepted asset remains visible for recovery. */ }
+            }
+            throw error;
+        }
+        finally {
+            signal.removeEventListener('abort', abort);
+            source.destroy();
+            meter.destroy();
+            await sourceHandle.close().catch(() => undefined);
+        }
+    }
+    async deleteAsset(repository: Repository, review: IGitHubReleaseMutationReview, signal?: AbortSignal) { if (review.assetId === null || !this.owned.has(review.assetId))
+        throw Error('Cleanup may remove only assets created by this operation'); await this.verify(repository, review, signal); const response = await this.send(this.base(repository) + `/releases/assets/${review.assetId}`, 'DELETE', undefined, signal); await response.body?.cancel(); this.owned.delete(review.assetId); }
+    async updateAssetLabel(repository: Repository, review: IGitHubReleaseMutationReview, label: string, signal?: AbortSignal) { await this.verify(repository, review, signal); return parseGitHubReleaseAsset(await this.json(repository, `/releases/assets/${review.assetId}`, 'PATCH', { label: normalizeGitHubReleaseAssetLabel(label) }, signal), review.assetId!); }
+    async downloadAsset(repository: Repository, _releaseId: number, asset: IGitHubReleaseAsset, destination: string, signal: AbortSignal, onProgress?: (progress: IGitHubReleaseTransferProgressEvent) => void) { if (asset.state !== 'uploaded' || asset.sizeInBytes > 5 * 1024 * 1024 * 1024)
+        throw Error('Asset is not a completed bounded payload'); const response = await this.send(this.base(repository) + `/releases/assets/${asset.id}`, 'GET', undefined, signal, { Accept: 'application/octet-stream' }); if (!response.body)
+        throw Error('Asset response has no stream'); let bytes = 0; const handle = await open(destination, 'wx', 0o600).catch(async (error) => { await response.body?.cancel().catch(() => undefined); throw error; }); const owned = await handle.stat(); const operationId = randomUUID(), output = handle.createWriteStream(); const meter = new Transform({ transform(chunk, _encoding, callback) { bytes += chunk.length; if (bytes > asset.sizeInBytes) {
+            callback(Error('Download exceeded recorded size'));
+            return;
+        } onProgress?.({ operationId, direction: 'download', transferredBytes: bytes, totalBytes: asset.sizeInBytes }); callback(null, chunk); } }); try {
+        await pipeline(Readable.fromWeb(response.body as never), meter, output, { signal });
+        if (bytes !== asset.sizeInBytes)
+            throw Error('Download length did not match its receipt');
+        return { path: destination, bytes };
+    }
+    catch (error) {
+        output.destroy();
+        const current = await lstat(destination).catch(() => null);
+        if (current?.dev === owned.dev && current?.ino === owned.ino)
+            await unlink(destination).catch(() => undefined);
+        throw error;
+    }
+    finally {
+        await handle.close().catch(() => undefined);
+    } }
+}

@@ -2,7 +2,7 @@ import type { AppSettings } from './types.js';
 export const defaults: AppSettings = {
  language:'en',theme:'system',seed:'#46b98b',density:'comfortable',fontScale:1,fontFamily:'system-ui',motion:true,
  englishHumor:5,cantoneseHumor:5,emojis:true,displayName:'Material Git',narrator:false,narrationLanguage:'en',
- englishVoice:'',cantoneseVoice:'',speechRate:1,speechPitch:1,focus:false,lowStimulation:false,timeAwareness:false,oneThing:false,momentum:false,currentTask:'',screenReaderActive:false,quietNarration:false,logoPreset:'git',logoImage:'',fontWeight:400,fontStyle:'normal',letterSpacing:0,lineHeight:1.5,borderRadius:8
+ englishVoice:'',cantoneseVoice:'',speechRate:1,speechPitch:1,focus:false,lowStimulation:false,timeAwareness:false,oneThing:false,momentum:false,currentTask:'',screenReaderActive:false,quietNarration:false,logoPreset:'git',logoImage:'',fontWeight:400,fontStyle:'normal',letterSpacing:0,lineHeight:1.5,borderRadius:12
 };
 const choices: Partial<Record<keyof AppSettings, readonly string[]>> = {language:['en','yue','both'],theme:['dark','light','system'],density:['comfortable','compact'],narrationLanguage:['en','yue','both'],logoPreset:['git','branches','merge','custom'],fontStyle:['normal','italic']};
 const ranges: Partial<Record<keyof AppSettings, [number,number]>> = {fontScale:[0.75,2],englishHumor:[1,5],cantoneseHumor:[1,5],speechRate:[0.5,2],speechPitch:[0,2],fontWeight:[100,900],letterSpacing:[-2,10],lineHeight:[1,3],borderRadius:[0,64]};

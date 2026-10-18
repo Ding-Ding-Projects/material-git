@@ -1,0 +1,98 @@
+import { createHash, randomUUID } from 'node:crypto';
+import { lstat, mkdir, readFile, realpath, rename, rm, writeFile } from 'node:fs/promises';
+import { join, resolve } from 'node:path';
+import { gunzipSync } from 'node:zlib';
+import { unzipSync } from 'fflate';
+const licenseHash = 'eccb04b94c71454ea03f00ecb518b997952c4f2f23aca50baab98230f5c8dc00';
+export const cheapLfsOrasArtifacts = {
+    'linux-x64': { archive: 'oras_1.3.2_linux_amd64.tar.gz', archiveSha256: '9229ccc6d17bb282039ad4a69abb16dcb887a5bce567c075d731d9b3c7ad8eaf', executable: 'oras', executableSha256: '22dc6b05994a786f36bc57de47c48562543f3fa0cc62366a9a9574b422a13ab2', bytes: 11825278 },
+    'linux-arm64': { archive: 'oras_1.3.2_linux_arm64.tar.gz', archiveSha256: '8db4a223bd6034deff198e791ea7cb3af0840df25b7e9f370e2f1f3fd20d389b', executable: 'oras', executableSha256: '1b694cbaabcd31c8807176b36eed45ae6ba8cdde0694b7fbff5edc55db2fa4f6', bytes: 10944638 },
+    'win32-x64': { archive: 'oras_1.3.2_windows_amd64.zip', archiveSha256: 'c896f26245f11e6385d52010bb0a65a4e500e1f3244680a6556ed05462fa1c0d', executable: 'oras.exe', executableSha256: '1fd2a8672c9a6e5aade53380dd405781271e802529edef6e8d9509d508b8482b', bytes: 12280832 },
+} as const;
+const hash = (bytes: Uint8Array) => createHash('sha256').update(bytes).digest('hex');
+function tarFiles(archive: Buffer) { const contents = gunzipSync(archive, { maxOutputLength: 32 * 1024 * 1024 }), files: Record<string, Uint8Array> = {}; for (let offset = 0; offset + 512 <= contents.length;) {
+    const header = contents.subarray(offset, offset + 512);
+    if (header.every(byte => byte === 0))
+        break;
+    const name = header.subarray(0, 100).toString('utf8').replace(/\0.*$/s, '');
+    const sizeText = header.subarray(124, 136).toString('ascii').replace(/\0.*$/s, '').trim();
+    if (!/^[0-7]+$/.test(sizeText))
+        throw Error('Invalid ORAS archive size');
+    const size = parseInt(sizeText, 8);
+    if (!['oras', 'LICENSE'].includes(name) || ![0, 48].includes(header[156]) || Object.hasOwn(files, name) || offset + 512 + size > contents.length)
+        throw Error('Unexpected ORAS archive entry');
+    files[name] = contents.subarray(offset + 512, offset + 512 + size);
+    offset += 512 + Math.ceil(size / 512) * 512;
+} return files; }
+export function validateCheapLfsOrasArchive(bytes: Buffer, platform: keyof typeof cheapLfsOrasArtifacts) { const selected = cheapLfsOrasArtifacts[platform]; if (bytes.length > 16 * 1024 * 1024 || hash(bytes) !== selected.archiveSha256)
+    throw Error('ORAS archive integrity verification failed'); const files = selected.archive.endsWith('.zip') ? unzipSync(bytes) : tarFiles(bytes); const binary = files[selected.executable], license = files.LICENSE; if (!binary || binary.length !== selected.bytes || hash(binary) !== selected.executableSha256 || !license || hash(license) !== licenseHash)
+    throw Error('ORAS executable or license did not match the pinned release'); return { binary: Buffer.from(binary), license: Buffer.from(license) }; }
+async function download(url: string, signal?: AbortSignal, transport: typeof fetch = fetch) { let next = new URL(url); for (let redirects = 0; redirects <= 3; redirects++) {
+    if (next.protocol !== 'https:' || next.username || next.password || !['github.com', 'release-assets.githubusercontent.com', 'objects.githubusercontent.com'].includes(next.hostname))
+        throw Error('ORAS download redirected to an unapproved address');
+    const response = await transport(next, { redirect: 'manual', signal, headers: { Accept: 'application/octet-stream' } });
+    if ([301, 302, 303, 307, 308].includes(response.status)) {
+        const location = response.headers.get('location');
+        await response.body?.cancel();
+        if (!location || redirects === 3)
+            throw Error('ORAS download exceeded its redirect bound');
+        next = new URL(location, next);
+        continue;
+    }
+    if (!response.ok || !response.body) {
+        await response.body?.cancel();
+        throw Error('Pinned ORAS download is unavailable');
+    }
+    const chunks: Uint8Array[] = [];
+    let size = 0;
+    const reader = response.body.getReader();
+    try {
+        for (;;) {
+            const read = await reader.read();
+            if (read.done)
+                break;
+            size += read.value.length;
+            if (size > 16 * 1024 * 1024)
+                throw Error('ORAS archive exceeds its trusted download bound');
+            chunks.push(read.value);
+        }
+        return Buffer.concat(chunks);
+    }
+    finally {
+        await reader.cancel().catch(() => undefined);
+    }
+} throw Error('ORAS download did not complete'); }
+const acquisitions = new Map<string, Promise<{
+    path: string;
+    sha256: string;
+}>>();
+/** Reuse verified bytes, or acquire the exact official release into an app-owned cache. */
+export async function ensureCheapLfsOras(cacheDirectory: string, options: {
+    platform?: NodeJS.Platform;
+    architecture?: string;
+    signal?: AbortSignal;
+    archiveBytes?: Buffer;
+    fetch?: typeof fetch;
+} = {}): Promise<{
+    path: string;
+    sha256: string;
+}> { const platform = options.platform ?? process.platform, architecture = options.architecture ?? process.arch; const key = `${platform}-${platform === 'win32' && architecture === 'arm64' ? 'x64' : architecture}`; if (!Object.hasOwn(cheapLfsOrasArtifacts, key))
+    throw Error('Pinned ORAS runtime is unavailable for this platform'); const selected = cheapLfsOrasArtifacts[key as keyof typeof cheapLfsOrasArtifacts]; const destination = join(resolve(cacheDirectory), `oras-1.3.2-${key}`); const running = acquisitions.get(destination); if (running)
+    return running; const task = (async () => { await mkdir(cacheDirectory, { recursive: true, mode: 0o700 }); if (await realpath(cacheDirectory) !== resolve(cacheDirectory))
+    throw Error('ORAS cache is redirected'); const verify = async () => { const path = join(destination, selected.executable); const stat = await lstat(path); if (!stat.isFile() || stat.isSymbolicLink() || stat.nlink !== 1 || stat.size !== selected.bytes || await realpath(path) !== path || hash(await readFile(path)) !== selected.executableSha256 || hash(await readFile(join(destination, 'LICENSE'))) !== licenseHash)
+    throw Error('Cached ORAS runtime failed verification; preserve it and repair the runtime cache'); return { path, sha256: `sha256:${selected.executableSha256}` }; }; if (await lstat(destination).catch(() => null))
+    return verify(); const archive = options.archiveBytes ?? await download(`https://github.com/oras-project/oras/releases/download/v1.3.2/${selected.archive}`, options.signal, options.fetch); options.signal?.throwIfAborted(); const verified = validateCheapLfsOrasArchive(archive, key as keyof typeof cheapLfsOrasArtifacts); const temporary = destination + '.' + randomUUID(); await mkdir(temporary, { mode: 0o700 }); try {
+    await writeFile(join(temporary, selected.executable), verified.binary, { flag: 'wx', mode: 0o700 });
+    await writeFile(join(temporary, 'LICENSE'), verified.license, { flag: 'wx', mode: 0o600 });
+    options.signal?.throwIfAborted();
+    await rename(temporary, destination);
+    return await verify();
+}
+finally {
+    await rm(temporary, { recursive: true, force: true });
+} })(); acquisitions.set(destination, task); try {
+    return await task;
+}
+finally {
+    acquisitions.delete(destination);
+} }

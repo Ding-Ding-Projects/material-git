@@ -1,6 +1,7 @@
 /** Public, credential-free workspace records. Command drafts and provider output are never stored. */
 export type WorkspaceAction='status'|'save'|'notify'|'notifications'|'label'|'restore'|'prune'|'export'|'import-preview'|'import-apply'|'record-revisions'|'record-diff'|'record-restore'|'record-label'|'record-prune'|'record-appearance'|'discard';
-export interface WorkspaceTab {id:string;label:string;pinned:boolean;group:string}
+export type WorkspaceTabTarget={kind:'local';key:string}|{kind:'github';hostname:string;repository:string}|{kind:'utility';lane:string};
+export interface WorkspaceTab {id:string;label:string;pinned:boolean;group:string;target?:WorkspaceTabTarget;lane?:string}
 export interface WorkspaceGroup {id:string;label:string;color:string;collapsed:boolean;pinned:boolean}
 export interface WorkspaceState {version:1;tabs:WorkspaceTab[];groups:WorkspaceGroup[];activeTab:string;lane:string;dock:'left'|'right'|'top'|'bottom';explorerWidth:number;dockHeight:number;explorerVisible:boolean;dockVisible:boolean;split:'none'|'vertical'|'horizontal';splitRatio:number;paletteSize:'card'|'window'}
 export type NotificationCategory='status'|'error'|'warning'|'destructive'|'financial'|'security'|'accessibility'|'progress';
@@ -9,19 +10,28 @@ export interface WorkspaceRevision {id:string;at:string;action:string;label:stri
 export interface WorkspaceEnvelope {schema:'material-git-records';version:1;encoding:'UTF-8';kind:'workspace'|'notifications'|'revisions';records:WorkspaceState|WorkspaceNotification[]|WorkspaceRevision[]}
 export interface WorkspaceResponse {state?:WorkspaceState;notifications?:WorkspaceNotification[];revisions?:WorkspaceRevision[];warning?:string;managedRevisions?:ManagedRecordRevision[];diff?:{before:unknown;after:unknown};export?:WorkspaceEnvelope;preview?:{kind:WorkspaceEnvelope['kind'];count:number;state?:WorkspaceState;notifications?:WorkspaceNotification[]}}
 export const workspaceDefaults:WorkspaceState={version:1,tabs:[],groups:[],activeTab:'',lane:'home',dock:'left',explorerWidth:250,dockHeight:210,explorerVisible:true,dockVisible:true,split:'none',splitRatio:50,paletteSize:'card'};
-const lanes=['git','home','commands','jobs','accounts','history','api','cli-config','tools','security','updates','settings','docs','about','notifications','records','importer','integrations','assistant','downloads','repositories','issues','pull-requests','pulls','actions','releases','projects','extensions','aliases','codespaces','copilot','discussions','search','repository-security','organizations','gists'];
+const lanes=['git-ignore','large-files','repository-operations','build-tools','installers','git','home','commands','jobs','accounts','history','api','cli-config','tools','security','updates','settings','docs','about','notifications','records','importer','integrations','assistant','downloads','repositories','issues','pull-requests','pulls','actions','releases','projects','extensions','aliases','codespaces','copilot','discussions','search','repository-security','organizations','gists'];
 const object=(v:unknown):Record<string,unknown>=>{if(!v||typeof v!=='object'||Array.isArray(v))throw Error('Expected a record.');return v as Record<string,unknown>;};
 const keys=(v:Record<string,unknown>,names:string[])=>{if(Object.keys(v).some(k=>!names.includes(k)))throw Error('Unrecognized record fields; drafts and credentials cannot be imported.');};
 export function safeText(v:unknown,max=160):string{if(typeof v!=='string'||v.length>max||/[\u0000-\u001f\u007f]/.test(v)||/gh[pousr]_[A-Za-z0-9_]{8,}|github_pat_|Bearer\s|(?:password|token|secret|authorization)\s*[:=]/i.test(v))throw Error('Text is invalid or may contain a credential.');return v;}
 const bool=(v:unknown)=>{if(typeof v!=='boolean')throw Error('Expected a boolean.');return v;};
 const number=(v:unknown,min:number,max:number)=>{if(typeof v!=='number'||!Number.isFinite(v)||v<min||v>max)throw Error('Number outside the supported range.');return v;};
 const choice=<T extends string>(v:unknown,choices:T[]):T=>{if(!choices.includes(v as T))throw Error('Unsupported choice.');return v as T;};
+export function validateTabTarget(value:unknown):WorkspaceTabTarget{
+ const r=object(value);
+ if(r.kind==='local'){keys(r,['kind','key']);if(typeof r.key!=='string'||!/^[a-f0-9]{64}$/.test(r.key))throw Error('Invalid local repository identity.');return {kind:'local',key:r.key};}
+ if(r.kind==='github'){keys(r,['kind','hostname','repository']);const hostname=safeText(r.hostname,253).toLowerCase(),repository=safeText(r.repository,201).toLowerCase();if(!/^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$/.test(hostname)||! /^(?![.-])[a-z0-9_.-]+\/(?![.-])[a-z0-9_.-]+$/.test(repository))throw Error('Invalid GitHub repository identity.');return {kind:'github',hostname,repository};}
+ if(r.kind==='utility'){keys(r,['kind','lane']);return {kind:'utility',lane:choice(r.lane,lanes)};}
+ throw Error('Unsupported tab target.');
+}
 export function validateWorkspace(value:unknown):WorkspaceState{
  const v=object(value);keys(v,Object.keys(workspaceDefaults));if(v.version!==1)throw Error('Unsupported workspace version.');
  if(!Array.isArray(v.tabs)||v.tabs.length>100||!Array.isArray(v.groups)||v.groups.length>40)throw Error('Workspace supports at most 100 tabs and 40 groups.');
  const groups=v.groups.map(row=>{const r=object(row);keys(r,['id','label','color','collapsed','pinned']);if(typeof r.color!=='string'||!/^#[a-f0-9]{6}$/i.test(r.color))throw Error('Invalid group color.');return {id:safeText(r.id,100),label:safeText(r.label,100),color:r.color,collapsed:bool(r.collapsed),pinned:bool(r.pinned)};});
- const tabs=v.tabs.map(row=>{const r=object(row);keys(r,['id','label','pinned','group']);return {id:safeText(r.id,160),label:safeText(r.label,160),pinned:bool(r.pinned),group:safeText(r.group,100)};});
+ const tabs=v.tabs.map(row=>{const r=object(row);keys(r,['id','label','pinned','group','target','lane']);return {id:safeText(r.id,160),label:safeText(r.label,160),pinned:bool(r.pinned),group:safeText(r.group,100),...(r.target===undefined?{}:{target:validateTabTarget(r.target)}),...(r.lane===undefined?{}:{lane:choice(r.lane,lanes)})};});
  if(groups.some(g=>!g.id||!g.label)||tabs.some(t=>!t.id||!t.label||t.group&&!groups.some(g=>g.id===t.group))||new Set(tabs.map(t=>t.id)).size!==tabs.length||new Set(groups.map(g=>g.id)).size!==groups.length)throw Error('Duplicate, empty or missing workspace identity.');
+ for(const tab of tabs){if(tab.target?.kind==='local'&&tab.lane!==undefined&&tab.lane!=='git'||tab.target?.kind==='utility'&&tab.lane!==undefined&&tab.lane!==tab.target.lane)throw Error('Tab lane does not match its target.');}
+ const identities=tabs.filter(t=>t.target).map(t=>JSON.stringify(t.target));if(new Set(identities).size!==identities.length)throw Error('Destination already has a tab.');
  const activeTab=safeText(v.activeTab,160);if(activeTab&&!tabs.some(t=>t.id===activeTab))throw Error('Active tab is missing.');
  return {version:1,tabs,groups,activeTab,lane:choice(v.lane,lanes),dock:choice(v.dock,['left','right','top','bottom']),explorerWidth:number(v.explorerWidth,190,380),dockHeight:number(v.dockHeight,100,360),explorerVisible:bool(v.explorerVisible),dockVisible:bool(v.dockVisible),split:choice(v.split,['none','vertical','horizontal']),splitRatio:number(v.splitRatio,20,80),paletteSize:choice(v.paletteSize,['card','window'])};
 }

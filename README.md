@@ -1,17 +1,27 @@
 # Material Git
 
-A Windows desktop workspace for Git repositories and GitHub. Navigate real repositories, issues, pull requests, Actions, releases and related records through contextual tasks. Local Git support is being expanded around changes, history, branches and repository operations.
+A Windows desktop workspace for Git repositories and GitHub. Navigate repositories, changes, linked working trees, issues, pull requests, Actions and releases through contextual tasks. Current source adds independent repository tabs, reviewed repository completion batches, ignore rules, large-file payload management, and build/run/installer workflows.
 
-Install the unsigned Windows application from [build-16-1](https://github.com/Ding-Ding-Projects/material-git/releases/tag/build-16-1). [Documentation site](https://material-git.earlyray.chatgpt.site) · [Feature status](docs/requirements/README.md) · [Roadmap](ROADMAP.md) · [Handoff](HANDOFF.md).
+Install the unsigned Windows application from [build-16-1](https://github.com/Ding-Ding-Projects/material-git/releases/tag/build-16-1). [Intended public documentation site](https://ding-ding-projects.github.io/material-git/) · [Feature status](docs/requirements/README.md) · [Roadmap](ROADMAP.md) · [Handoff](HANDOFF.md).
 
-**Full Git/GitHub action parity is not verified.** Upstream command and schema inventories do not prove working GUI behavior. The published release may precede changes documented in source. Current screenshots and recording for the domain remake await final build verification.
+**Work is paused for preservation at the user’s request.** The user reports oversized and overlapping controls in the shown screenshots; the issue is open, with no verified fix. Full Git/GitHub action parity remains unverified. The inventory still records 104 requirements and 161 unresolved surface obligations. Source support, focused Linux evidence, integrated desktop acceptance and Windows installation are tracked separately. The published installer predates the current implementation. See the [current acceptance record](docs/local-verification.md#current-integration-acceptance) for the failed full-suite result, focused follow-ups and unfinished acceptance.
+
+## Desktop interface
+
+The current desktop uses official Material Web controls, locally bundled Material Symbols, tonal light/dark surfaces, searchable choice dialogs and a reusable color editor. Tabs keep grouping, pinning and docking; enlarged text preserves scroll access to the work area. [Component provenance](design/material-provenance.md) distinguishes official controls from application compositions.
+
+Repository tabs keep their native repository identity and guarded drafts. Native repository selection or explicit reconnection establishes access; a saved path alone cannot grant it. Working-tree tools, completion, ignore rules and build tools operate on the selected repository context. The [verification record](docs/local-verification.md#current-integration-acceptance) records the exact Linux build and passed TypeScript check alongside the failed first suite, interrupted follow-up suite and incomplete capture matrix. Historical screenshots retain their original source receipts.
 
 <details>
 <summary>Tasks, support and limits</summary>
 
 The desktop uses real lists/details, guided choices, typed native actions and mutation review. Advanced API forms, extensions, aliases, cloud workspaces and local Copilot have distinct integration tasks. Local tools include bounded regex evaluation, supported conversion adapters and an Ollama subset.
 
-The [GitHub audit](docs/coverage/github-actions-audit.md), [Git audit](docs/coverage/git-actions-audit.md) and [104-feature inventory](docs/coverage/features.json) distinguish backend/UI gaps, dependencies, permissions and missing evidence. History restore, export formats, bulk actions, universal localization/appearance and final platform verification remain open.
+[Working-tree management](docs/repository-worktrees.md) inspects and operates on native-approved linked directories. [Repository completion](docs/articles/repository-completion.md) reviews exact branch contributions, commit messages, safe publication, integration, private recovery archives and eligible cleanup. Batches run at most three independent repositories, preserve shared-store exclusion, and report cancellation and partial outcomes. Existing default working trees and shared stashes are retained.
+
+The [ignore builder](docs/ignore-builder.md) previews rules against actual paths before saving. [Cheap LFS workflows](docs/cheap-lfs.md) preserve reviewed pointers and payloads; they are distinct from standard Git LFS. Private cloud compression is unavailable; viewing external builder requirements does not provision or run a builder. [Build and installer management](docs/build-and-installers.md) discovers recipes across supported project types, reviews executable commands and expected outputs, records artifacts, and offers optional [Codex/OpenCode analysis or repair](docs/features/build-repair.md). Detection does not prove every language toolchain or installer platform. Authenticated storage-provider writes and model execution need separate evidence.
+
+The [GitHub audit](docs/coverage/github-actions-audit.md), [Git audit](docs/coverage/git-actions-audit.md) and [104-feature inventory](docs/coverage/features.json) distinguish implementation gaps, dependencies, permissions and missing evidence. Universal history restore, export coverage, bulk actions, localization/appearance and platform verification remain open.
 
 Credentials and personal vocabulary are excluded from ordinary exports/history. Git hooks, aliases, filters and external helpers require execution trust; argument arrays alone do not neutralize them. Remote actions depend on actual permissions. Linux checks do not establish Windows installation, secure storage or updates.
 
@@ -49,9 +59,9 @@ Windows CI builds/packages/publishes. It does not run tests or lint; notes must 
 
 [Documentation index](docs/README.md) · [Authentication](docs/authentication.md) · [Security](docs/security.md) · [Workspace records](docs/workspace.md) · [API workspace](docs/api-explorer.md) · [Design provenance](design/material-provenance.md).
 
-The [reviewed screenshot ledger](docs/images/README.md) records 21 genuine Linux desktop captures from source `e464ff7`, with exact per-image capture times, dimensions and SHA-256 hashes. The gallery covers real domain records, provider empty states, export-format choices, verified native download completion, converter adapter limits and light/dark/Cantonese/bilingual/narrow presentation. These images describe that source artifact, independently of the separately published Windows installer. Settled native account and Download Start frames are included; superseded loading, empty-queue and transition frames remain excluded. Final destination coverage, recording and the full language/scale matrix remain open.
+The [historical screenshot ledger](docs/images/README.md) preserves 21 genuine Linux desktop captures from source `e464ff7`, with exact per-image capture times, dimensions and SHA-256 hashes. That earlier gallery covers real domain records, provider empty states, export-format choices, verified native download completion, converter adapter limits and light/dark/Cantonese/bilingual/narrow presentation. These images describe their recorded source artifact, not the current control refresh or the separately published Windows installer. Settled native account and Download Start frames are included; superseded loading, empty-queue and transition frames remain excluded. Final destination coverage, recording and the full language/scale matrix remain open.
 
-The site is https://material-git.earlyray.chatgpt.site and currently owner-private. Repository About homepage PATCH returned HTTP 403 with the connected credential; permission/deployment verification belong to the publishing owner. Source visibility and site audience are independent.
+The intended public documentation address is https://ding-ding-projects.github.io/material-git/; deployment and About readback are pending. The older site remains owner-private with its audience unchanged. Its earlier About homepage PATCH returned HTTP 403. A prepared public-site checkpoint remains unmerged and undeployed; three bundled articles still require removal of the old private address before its privacy guard can pass.
 
 </details>
 

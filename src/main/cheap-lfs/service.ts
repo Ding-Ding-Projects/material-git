@@ -1,0 +1,544 @@
+import { CheapLfsIgnoredService } from './ignored-service';
+import { captureCheapLfsCommitProof, verifyCheapLfsCommit, type CheapLfsCommitProof } from './commit';
+import { createHash, randomUUID } from 'node:crypto';
+import { lstat, mkdir, readFile, rename, writeFile, unlink, open, readdir, realpath } from 'node:fs/promises';
+import { join, basename } from 'node:path';
+import type { CheapLfsAction, CheapLfsPayload, CheapLfsResponse, CheapLfsSettings, CheapLfsFile, CheapLfsReview, CheapLfsResult, CheapLfsProgress } from '../../shared/cheap-lfs';
+import { defaultCheapLfsSettings } from '../../shared/cheap-lfs';
+import { withCheapLfsHost, CheapLfsPinThresholdBytes, type CheapLfsHostOptions, type CheapLfsWorktreeGrant, type CheapLfsAccountSession, type Repository, type Account } from './host';
+import { CheapLfsReleaseGateway, readBoundedJson } from './release-gateway';
+import { defaultCheapLfsTrackedPathStore as tracked, type ICheapLfsTrackedFileProof } from './tracked-path-store';
+import { annotateCheapLfsPinnedAssets, listAllCheapLfsPointers, pinFileToRelease, materializePointer, materializeCheapLfsPointers, createCheapLfsMaterializeCache, defaultCheapLfsFileSystem, restoreCheapLfsPinnedPayloads, discardCheapLfsRetainedPins, sanitizeCheapLfsFailureReason, isCheapLfsPayloadProvenStored, type ICheapLfsRetainedPin, type ICheapLfsManagedPointerEntry } from './operations';
+import { validateCheapLfsTrackedPath, parseCheapLfsPointer, serializeCheapLfsPointer, isEncryptedCheapLfsPointer } from './pointer';
+import { serializeCheapLfsGhcrPointer } from './ghcr-pointer';
+import { isCheapLfsOwnedArtifactPath } from './owned-artifacts';
+import { createCheapLfsOciAdapter } from './oci-adapter';
+import { pinCheapLfsFilesToOci, materializeCheapLfsOciFile, removeCheapLfsOciFile } from './oci-operations';
+import { resolveCheapLfsCommitKeyRequirement, type ICheapLfsRequiredCommitFile } from './commit-key';
+import { manualPinFilesToRelease, getCheapLfsReleaseUploadURL } from './manual-upload';
+import { ensureCheapLfsCloudCompressionWorkflow, getCheapLfsCloudCompressionPolicy, getCheapLfsCloudCompressionRoute } from './cloud-compression';
+import { cheapLfsPrivateIdentityFromRepository, prepareCheapLfsEncryptedBuilder } from './encrypted-builder';
+interface Source {
+    grant: CheapLfsWorktreeGrant;
+    session: CheapLfsAccountSession;
+    repository: Repository;
+    account: Account;
+    settings: CheapLfsSettings;
+}
+interface Plan {
+    review: CheapLfsReview;
+    source: Source;
+    proofs: ICheapLfsTrackedFileProof[];
+    expires: number;
+}
+interface CommitSession {
+    source: Source;
+    pins: ICheapLfsRetainedPin[];
+    required: ICheapLfsRequiredCommitFile | null;
+    proof: CheapLfsCommitProof;
+    verifiedCommit?: string;
+}
+export interface CheapLfsCommitPreparation {
+    id: string;
+    paths: string[];
+    preserveIndexPaths: string[];
+    excludedPaths: string[];
+    requiredPaths: string[];
+    requiredKey: ICheapLfsRequiredCommitFile | null;
+    failures: {
+        path: string;
+        reason: string;
+    }[];
+}
+export interface CheapLfsCommitReview {
+    reviewId: string;
+    provider: string;
+    repository: string;
+    bytes: number;
+    autoPin: boolean;
+    requiresPassword: boolean;
+    paths: string[];
+    expiresAt: string;
+}
+interface CommitReviewPlan {
+    source: Source;
+    paths: string[];
+    expires: number;
+}
+const idPattern = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
+const safeText = (error: unknown) => sanitizeCheapLfsFailureReason(error instanceof Error ? error.message : 'Large-file operation failed');
+const sourceHash = (root: string) => createHash('sha256').update(root).digest('hex');
+const object = (value: unknown): Record<string, unknown> => { if (!value || typeof value !== 'object' || Array.isArray(value))
+    throw Error('Expected a structured large-file request'); return value as Record<string, unknown>; };
+const paths = (value: unknown): string[] => { if (!Array.isArray(value) || value.length > 4096)
+    throw Error('Choose at most 4,096 tracked paths'); const result = value.map(path => { if (typeof path !== 'string' || validateCheapLfsTrackedPath(path) !== path || isCheapLfsOwnedArtifactPath(path))
+    throw Error('Choose exact safe tracked paths'); return path; }); if (new Set(result.map(x => x.toLowerCase())).size !== result.length)
+    throw Error('Duplicate or case-colliding tracked paths'); return result; };
+const settingsOf = (value: unknown): CheapLfsSettings => { const input = object(value); if (Object.keys(input).some(key => !Object.hasOwn(defaultCheapLfsSettings, key)))
+    throw Error('Unknown large-file setting'); const result = { ...defaultCheapLfsSettings, ...input }; if (!['release', 'ghcr', 'docker-hub'].includes(result.provider) || typeof result.releaseTag !== 'string' || !/^[-A-Za-z0-9_.]{1,100}$/.test(result.releaseTag) || result.releaseTag === '.' || result.releaseTag === '..')
+    throw Error('Choose a valid provider and release tag'); for (const key of ['autoPin', 'parallel', 'autoRestore', 'encrypt', 'encryptionAcknowledged', 'privateCompression'] as const)
+    if (typeof result[key] !== 'boolean')
+        throw Error('Invalid large-file preference'); if (result.encrypt && !result.encryptionAcknowledged)
+    throw Error('Acknowledge irreversible password loss before enabling encryption'); return result; };
+/** All mutations are native-owned, single-use reviews bound to the approved working tree and account. */
+export class CheapLfsService {
+    private plans = new Map<string, Plan>();
+    private active = new Map<string, {
+        worktreeId: string;
+        controller: AbortController;
+    }>();
+    private queues = new Map<string, Promise<unknown>>();
+    private commits = new Map<string, CommitSession>();
+    private closed = false;
+    private commitReviews = new Map<string, CommitReviewPlan>();
+    private ignored: CheapLfsIgnoredService;
+    constructor(private options: CheapLfsHostOptions) { this.ignored = new CheapLfsIgnoredService(options); }
+    cancelAll() { for (const value of this.active.values())
+        value.controller.abort(); }
+    async dispose() { this.closed = true; this.cancelAll(); await Promise.allSettled([...this.queues.values()]); for (const session of this.commits.values())
+        await this.settlePins(session.source,session.pins); this.commits.clear(); this.plans.clear(); this.commitReviews.clear(); }
+    private secretKey(root: string) { return `cheap-lfs-release-${sourceHash(root)}`; }
+    private async settings(root: string) { try {
+        return settingsOf(JSON.parse(await readFile(join(this.options.preferencesDirectory, sourceHash(root) + '.json'), 'utf8')));
+    }
+    catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT')
+            return { ...defaultCheapLfsSettings };
+        throw Error('Large-file preferences are invalid; restore or reset their record');
+    } }
+    private async saveSettings(root: string, value: CheapLfsSettings) { await mkdir(this.options.preferencesDirectory, { recursive: true, mode: 0o700 }); const file = join(this.options.preferencesDirectory, sourceHash(root) + '.json'), temporary = file + '.' + randomUUID(); try {
+        await writeFile(temporary, JSON.stringify(value), { flag: 'wx', mode: 0o600 });
+        await rename(temporary, file);
+    }
+    finally {
+        await unlink(temporary).catch(() => undefined);
+    } }
+    private async source(worktreeId: string, signal?: AbortSignal): Promise<Source> { if (typeof worktreeId !== 'string' || worktreeId.length > 100)
+        throw Error('Open an approved working tree'); signal?.throwIfAborted(); const grant = await this.options.resolveWorktree(worktreeId), session = await this.options.selectedAccount(worktreeId); signal?.throwIfAborted(); const remote = grant.remoteUrl; const match = remote?.match(/^https:\/\/([^/]+)\/([-A-Za-z0-9_.]+)\/([-A-Za-z0-9_.]+?)(?:\.git)?\/?$/) || remote?.match(/^git@([^:]+):([-A-Za-z0-9_.]+)\/([-A-Za-z0-9_.]+?)(?:\.git)?$/); if (!match || match[1] !== session.hostname)
+        throw Error('Choose a GitHub remote matching the selected account host'); const fullName = `${match[2]}/${match[3]}`; await session.assertCurrent(); const response = await session.request(`${session.apiOrigin}/repos/${fullName}`, { method: 'GET', signal }); if (!response.ok) {
+        await response.body?.cancel();
+        throw Error('Repository access and visibility could not be verified');
+    } const record = object(await readBoundedJson(response)); if(session.anonymous&&record.private!==false)throw Error('Anonymous large-file access requires a verified public repository'); if (typeof record.full_name !== 'string' || record.full_name.toLowerCase() !== fullName.toLowerCase() || !Number.isSafeInteger(record.id) || Number(record.id) < 1 || typeof record.private !== 'boolean')
+        throw Error('Remote repository identity changed'); const owner = object(record.owner); if (typeof owner.login !== 'string' || typeof record.name !== 'string')
+        throw Error('Repository identity is incomplete'); await session.assertCurrent(); const settings = await this.settings(grant.root); const repository: Repository = { id: worktreeId, path: grant.root, accountKey: session.key, defaultBranch: typeof record.default_branch === 'string' ? record.default_branch : 'main', buildRunPreferences: { cheapLfsStorageProvider: settings.provider, cheapLfsCloudCompression: settings.privateCompression }, gitHubRepository: { dbID: Number(record.id), endpoint: session.apiOrigin, owner: { login: owner.login }, name: record.name, fullName: record.full_name, htmlURL: `https://${session.hostname}/${record.full_name}`, isPrivate: record.private } }; return { grant, session, repository, settings, account: { key: session.key, endpoint: session.apiOrigin, login: session.login, anonymous: session.anonymous } }; }
+    private async provenMaterialized(source: Source, entries: ReadonlyArray<ICheapLfsManagedPointerEntry>) { const proven: ICheapLfsManagedPointerEntry[] = []; for (const entry of entries) {
+        if (entry.workingTreeState === 'pointer')
+            continue;
+        if (isCheapLfsPayloadProvenStored(entry)) {
+            proven.push(entry);
+            continue;
+        }
+        if (entry.workingTreeSizeInBytes !== entry.pointer.sizeInBytes)
+            continue;
+        const proof = await tracked.proveExisting(source.grant.root, entry.relativePath);
+        const digest = entry.kind === 'release' ? entry.pointer.sha256 : entry.pointer.object.replace(/^sha256:/, '');
+        if (proof.sizeInBytes === entry.pointer.sizeInBytes && proof.sha256 === digest)
+            proven.push(entry);
+    } return proven; }
+    private async inventory(source: Pick<Source,'grant'|'repository'>) { const managed = await listAllCheapLfsPointers(source.repository); const files: CheapLfsFile[] = managed.map(entry => ({ path: entry.relativePath, provider: entry.provider, size: entry.pointer.sizeInBytes, sha256: entry.kind === 'release' ? entry.pointer.sha256 : entry.pointer.object.replace(/^sha256:/, ''), state: entry.workingTreeState, encrypted: entry.kind === 'release' ? isEncryptedCheapLfsPointer(entry.pointer) : !!entry.pointer.keyId, compressed: entry.kind === 'release' && !!entry.pointer.parts?.some(part => part.deflatedSizeInBytes !== undefined) })); const known = new Set(files.map(x => x.path)); const listed = await this.options.executeGit({ root: source.grant.root, argv: ['ls-files', '-z', '--cached', '--others', '--exclude-standard'], maximumBytes: 8 * 1024 * 1024 }); if (listed.exitCode !== 0)
+        throw Error('Cannot inventory approved tracked paths'); for (const relativePath of new Set(listed.stdout.toString('utf8').split('\0').filter(Boolean))) {
+        if (known.has(relativePath) || validateCheapLfsTrackedPath(relativePath) !== relativePath || isCheapLfsOwnedArtifactPath(relativePath))
+            continue;
+        const info = await lstat(join(source.grant.root, relativePath)).catch(() => null);
+        if (info?.isFile() && !info.isSymbolicLink() && info.size > CheapLfsPinThresholdBytes)
+            files.push({ path: relativePath, provider: 'unmanaged', size: info.size, sha256: null, state: 'unmanaged', encrypted: false, compressed: false });
+        if (files.length > 4096)
+            throw Error('Large-file inventory exceeds 4,096 paths');
+    } return { managed, files }; }
+    private progress(worktreeId: string, operationId: string, phase: string, path: string | null, detail?: unknown) { const value = detail as Record<string, unknown> | undefined; const count = (key: string) => typeof value?.[key] === 'number' ? value[key] as number : 0; const progress: CheapLfsProgress = { worktreeId, operationId, phase, path, completedBytes: count('transferredBytes') || count('processedBytes'), totalBytes: count('totalBytes'), completedFiles: count('completedFiles'), totalFiles: count('totalFiles'), detail }; this.options.emitProgress?.(progress); }
+    private async password(source: Pick<Source,'grant'>, payload: CheapLfsPayload, required: boolean) { if (payload.password !== undefined && (typeof payload.password !== 'string' || payload.password.length > 4096))
+        throw Error('Invalid password input'); let value = payload.password ? Buffer.from(payload.password, 'utf8') : await this.options.readSecret?.(this.secretKey(source.grant.root)) ?? null; if (required && (!value || value.length === 0)) {
+        value?.fill(0);
+        throw Error('Enter the repository password in the protected password field before this operation');
+    } return value; }
+    async handle(action: CheapLfsAction, payload: CheapLfsPayload = {}): Promise<CheapLfsResponse> { object(payload); if (JSON.stringify(payload).length > 512 * 1024 || Object.keys(payload).some(key => !['worktreeId', 'operationId', 'task', 'paths', 'reviewId', 'confirmed', 'settings', 'password', 'savePassword', 'username', 'destination', 'passwordConfirmation'].includes(key)))
+        throw Error('Invalid large-file request'); if (this.closed)
+        throw Error('Large-file service is closed'); if(action==='recovery-inventory'){const grant=await this.options.resolveWorktree(payload.worktreeId!);return {kind:'recovery-inventory',recoveries:await this.recoveryInventory(grant.root)}} if (action.startsWith('ignored-')) {
+        if (action !== 'ignored-apply')
+            return this.ignored.handle(action, payload);
+        if (typeof payload.operationId !== 'string' || !idPattern.test(payload.operationId) || this.active.has(payload.operationId) || typeof payload.worktreeId !== 'string')
+            throw Error('Choose a new owned operation');
+        const operationId = payload.operationId, worktreeId = payload.worktreeId, controller = new AbortController();
+        this.active.set(operationId, { worktreeId, controller });
+        const previous = this.queues.get(worktreeId) ?? Promise.resolve();
+        const task = previous.catch(() => undefined).then(() => this.ignored.handle(action, payload, controller.signal));
+        this.queues.set(worktreeId, task);
+        try {
+            return await task;
+        }
+        finally {
+            this.active.delete(operationId);
+            if (this.queues.get(worktreeId) === task)
+                this.queues.delete(worktreeId);
+        }
+    } if (action === 'cancel') {
+        if (payload.operationId) {
+            if (!idPattern.test(payload.operationId))
+                throw Error('Choose an owned operation');
+            const active = this.active.get(payload.operationId);
+            if (active && active.worktreeId === payload.worktreeId)
+                active.controller.abort();
+        }
+        else
+            for (const active of this.active.values())
+                if (active.worktreeId === payload.worktreeId)
+                    active.controller.abort();
+        return { kind: 'cancelled' };
+    } const worktreeId = payload.worktreeId!; if (action === 'apply')
+        return this.apply(payload);if(['inspect','settings','forget-password','registry-credentials','choose-files'].includes(action))return this.handleLocal(action,payload); const source = await this.source(worktreeId); return withCheapLfsHost(this.options, undefined, async () => { if (action !== 'review')
+        throw Error('Unknown large-file operation'); const task = payload.task; if (!task || !['pin', 'restore', 'remove', 'manual-upload', 'compression'].includes(task))
+        throw Error('Choose a large-file task'); const selected = paths(payload.paths ?? []); if (task !== 'compression' && selected.length === 0)
+        throw Error('Choose at least one file'); if (task === 'manual-upload' && (source.settings.provider !== 'release' || source.settings.encrypt))
+        throw Error('Manual upload requires unencrypted Release storage'); if (task === 'remove' && selected.length !== 1)
+        throw Error('Review one removal at a time'); const proofs: ICheapLfsTrackedFileProof[] = []; for (const path of selected)
+        proofs.push(await tracked.proveExisting(source.grant.root, path)); const inventory = await listAllCheapLfsPointers(source.repository, undefined, selected); const requiresPassword = task === 'pin' ? source.settings.provider === 'release' && source.settings.encrypt : inventory.some(entry => entry.kind === 'release' && isEncryptedCheapLfsPointer(entry.pointer)); const expires = Date.now() + 300000; const review: CheapLfsReview = { kind: 'review', reviewId: randomUUID(), worktreeId, task, paths: selected, provider: source.settings.provider, repository: source.repository.gitHubRepository!.fullName, bytes: proofs.reduce((sum, proof) => sum + proof.sizeInBytes, 0), warnings: [...(task === 'pin' || task === 'manual-upload' ? ['Verified source bytes are uploaded before pointer files replace local files. Historical assets remain available.'] : []), ...(task === 'remove' ? ['Removes the reviewed local file. Historical provider payloads remain available.'] : []), ...(requiresPassword ? ['Losing this password makes encrypted payloads unrecoverable. Pointers disclose plaintext size and digest.'] : []), ...(source.settings.provider !== 'release' && source.repository.gitHubRepository!.isPrivate ? ['The exact private registry key must be committed with all returned pointer paths.'] : [])], expiresAt: new Date(expires).toISOString(), requiresPassword }; for (const [id, plan] of this.plans)
+        if (plan.expires < Date.now())
+            this.plans.delete(id); if (this.plans.size >= 32)
+        throw Error('Finish or wait for an existing review'); this.plans.set(review.reviewId, { review, source, proofs, expires }); return review; }); }
+    private async handleLocal(action:CheapLfsAction,payload:CheapLfsPayload):Promise<CheapLfsResponse>{const worktreeId=payload.worktreeId!,grant=await this.options.resolveWorktree(worktreeId);let source:Pick<Source,'grant'|'repository'|'settings'>={grant,settings:await this.settings(grant.root),repository:{id:worktreeId,path:grant.root,accountKey:'',defaultBranch:grant.branch,buildRunPreferences:{},gitHubRepository:null}};return withCheapLfsHost(this.options,undefined,async()=>{if (action === 'registry-credentials') {
+        if (!this.options.writeSecret || !this.options.deleteSecret)
+            throw Error('Protected registry credential storage is unavailable');
+        if (payload.confirmed !== true)
+            throw Error('Confirm the registry credential change');
+        if (payload.username === undefined) {
+            await this.options.deleteSecret('cheap-lfs-docker-hub');
+            return { kind: 'result', operationId: randomUUID(), succeeded: [], failures: [], cancelled: false, message: 'Docker Hub credentials removed.' };
+        }
+        if (typeof payload.username !== 'string' || !/^[-a-z0-9_]{2,64}$/.test(payload.username) || typeof payload.password !== 'string' || payload.password.length < 1 || payload.password.length > 16384 || /[\r\n\0]/.test(payload.password))
+            throw Error('Enter the Docker Hub username and access token in the protected fields');
+        const secret = Buffer.from(JSON.stringify({ username: payload.username, token: payload.password }));
+        try {
+            await this.options.writeSecret('cheap-lfs-docker-hub', secret);
+        }
+        finally {
+            secret.fill(0);
+        }
+        return { kind: 'result', operationId: randomUUID(), succeeded: [], failures: [], cancelled: false, message: 'Docker Hub credentials saved in protected storage.' };
+    } if (action === 'choose-files') {
+        if (!this.options.chooseFiles)
+            throw Error('Native file selection unavailable');
+        const selected = paths(await this.options.chooseFiles(worktreeId));
+        for (const path of selected)
+            await tracked.proveExisting(source.grant.root, path);
+        return { kind: 'chosen-files', paths: selected };
+    } if (action === 'inspect') {
+        let providerAvailable=false,providerNotice='Connect a GitHub remote to enable provider operations. Local inventory and settings remain available.';if(source.grant.remoteUrl){try{source=await this.source(worktreeId);providerAvailable=true;providerNotice='Provider identity and visibility verified. Transfer permission and quota are checked when used.'}catch(error){providerNotice=safeText(error)}}const { files } = await this.inventory(source);
+        return { kind: 'inventory', worktreeId, repository: source.repository.gitHubRepository?.fullName??basename(source.grant.root), visibility: source.repository.gitHubRepository?(source.repository.gitHubRepository.isPrivate?'private':'public'):'unknown',providerAvailable,providerNotice, files, settings: source.settings, vaultAvailable: !!(this.options.readSecret && this.options.writeSecret && this.options.deleteSecret), orasAvailable: !!(this.options.orasExecutable && this.options.orasExecutableSha256) };
+    } if (action === 'settings') {
+        const next = settingsOf(payload.settings);
+        if (next.encrypt && !source.settings.encrypt) {
+            if (typeof payload.password !== 'string' || payload.password !== payload.passwordConfirmation)
+                throw Error('Confirm the encryption password twice before enabling encryption');
+            const password = await this.password(source, payload, true);
+            try {
+                if (payload.savePassword) {
+                    if (!this.options.writeSecret)
+                        throw Error('Protected password storage is unavailable');
+                    await this.options.writeSecret(this.secretKey(source.grant.root), password!);
+                }
+            }
+            finally {
+                password?.fill(0);
+            }
+        }
+        await this.saveSettings(source.grant.root, next);
+        return { kind: 'settings', settings: next };
+    } if (action === 'forget-password') {
+        if (payload.confirmed !== true || !this.options.deleteSecret)
+            throw Error('Confirm removal from the protected password store');
+        await this.options.deleteSecret(this.secretKey(source.grant.root));
+        return { kind: 'result', operationId: randomUUID(), succeeded: [], failures: [], cancelled: false, message: 'Saved password removed.' };
+    }  throw Error('Unknown local large-file operation')})}
+    private async apply(payload: CheapLfsPayload): Promise<CheapLfsResult> { if (payload.confirmed !== true || typeof payload.reviewId !== 'string')
+        throw Error('Confirm the exact reviewed large-file operation'); const plan = this.plans.get(payload.reviewId); this.plans.delete(payload.reviewId); if (!plan || plan.expires < Date.now() || payload.worktreeId !== plan.review.worktreeId)
+        throw Error('Large-file review expired or changed'); const operationId = payload.operationId ?? randomUUID(); if (!idPattern.test(operationId) || this.active.has(operationId))
+        throw Error('Choose an unused operation UUID'); const controller = new AbortController(), worktreeId = plan.review.worktreeId; this.active.set(operationId, { worktreeId, controller }); const prior = this.queues.get(worktreeId) ?? Promise.resolve(); const task = prior.catch(() => undefined).then(() => withCheapLfsHost(this.options, controller.signal, async () => { controller.signal.throwIfAborted(); await plan.source.session.assertCurrent(); const current = await this.source(worktreeId, controller.signal); if (current.grant.fingerprint !== plan.source.grant.fingerprint || current.session.key !== plan.source.session.key || current.repository.gitHubRepository!.dbID !== plan.source.repository.gitHubRepository!.dbID || current.repository.gitHubRepository!.isPrivate !== plan.source.repository.gitHubRepository!.isPrivate || JSON.stringify(current.settings) !== JSON.stringify(plan.source.settings))
+        throw Error('Working tree, selected account, visibility or settings changed. Review again.'); for (const proof of plan.proofs)
+        await tracked.revalidate(proof); const password = await this.password(current, payload, plan.review.requiresPassword); try {
+        const result = await this.perform(current, plan.review, operationId, controller.signal, password ?? undefined);
+        if (payload.savePassword && password && result.failures.length === 0 && !result.cancelled) {
+            if (!this.options.writeSecret)
+                throw Error('Protected password storage unavailable');
+            await this.options.writeSecret(this.secretKey(current.grant.root), password);
+        }
+        return result;
+    }
+    finally {
+        password?.fill(0);
+    } })); this.queues.set(worktreeId, task); try {
+        return await task;
+    }
+    finally {
+        this.active.delete(operationId);
+        if (this.queues.get(worktreeId) === task)
+            this.queues.delete(worktreeId);
+    } }
+    private async perform(source: Source, review: CheapLfsReview, operationId: string, signal: AbortSignal, password?: Buffer, retained?: ICheapLfsRetainedPin[]): Promise<CheapLfsResult> {
+        const { repository, account, settings, session } = source, gateway = new CheapLfsReleaseGateway(session), result: CheapLfsResult = { kind: 'result', operationId, succeeded: [], failures: [], cancelled: false, message: '', requiredCommitPaths: [] };
+        const emit = (phase: string, path: string | null, detail?: unknown) => this.progress(review.worktreeId, operationId, phase, path, detail);
+        if (review.task === 'compression') {
+            const policy = getCheapLfsCloudCompressionPolicy(repository), route = getCheapLfsCloudCompressionRoute(policy);
+            if (route === 'encrypted-public-builder') {
+                const registration = await prepareCheapLfsEncryptedBuilder(cheapLfsPrivateIdentityFromRepository(repository));
+                if (registration.kind === 'registration-required') {
+                    result.builder = { name: registration.registration.builderName, projectId: registration.registration.projectId, secrets: registration.registration.secrets.map(secret => secret.name) };
+                    result.message = 'Private cloud compression is unavailable. These are registration requirements only; the pinned reference does not implement external encrypted builder provisioning or execution. No compression was started.';
+                    return result;
+                }
+                throw Error('Private builder registration is unavailable');
+            }
+            if (route !== 'in-repo-workflow')
+                throw Error('Compression requires confirmed public visibility or explicit private opt-in');
+            const prepared = await ensureCheapLfsCloudCompressionWorkflow(repository);
+            result.message = 'Reviewed compression workflow prepared locally. Commit and publish the workflow through the repository review.';
+            return result;
+        }
+        if (review.task === 'manual-upload') {
+            if (!this.options.openExternal || !this.options.openDirectory)
+                throw Error('Native browser and directory handoff is unavailable');
+            const pinned = await manualPinFilesToRelease(gateway, repository, account, review.paths.map(path => ({ absoluteFilePath: join(repository.path, path), trackedRelativePath: path, releaseTag: settings.releaseTag, targetCommitish: source.grant.head })), signal, { onStage: stage => emit(stage, null), onPreparationProgress: value => emit('preparing', value.currentPath, value), onReady: async (handoff, plan) => { await this.options.openExternal!(getCheapLfsReleaseUploadURL(repository, plan.release)); await this.options.openDirectory!(handoff.uploadDirectoryPath); } });
+            result.succeeded = pinned.map(file => file.relativePath);
+            result.requiredCommitPaths = [...result.succeeded];
+            result.message = 'Browser-uploaded bytes verified and pointer files prepared.';
+            return result;
+        }
+        if (review.task === 'pin' && settings.provider !== 'release') {
+            const adapter = await createCheapLfsOciAdapter(this.options, repository, session, settings.provider, settings.parallel, signal);
+            const mutation = await pinCheapLfsFilesToOci(adapter.context, review.paths.map(relativePath => ({ relativePath })), adapter.dependencies, signal, value => emit(value.phase, value.currentPath, value), retained);
+            result.succeeded = mutation.files.filter(file => file.changed).map(file => file.relativePath);
+            result.failures = mutation.failures.map(file => ({ path: file.relativePath, reason: safeText(file.message) }));
+            result.requiredCommitPaths = [...mutation.commitPaths, ...(mutation.keyCommitPath ? [mutation.keyCommitPath] : [])];
+            result.message = 'Verified immutable OCI snapshot prepared. Commit every required pointer and key together.';
+            return result;
+        }
+        if (review.task === 'pin') {
+            if (!source.grant.head)
+                throw Error('Create and publish the initial commit through repository review before uploading Release payloads');
+            const remoteCommit = await session.request(`${session.apiOrigin}/repos/${repository.gitHubRepository!.fullName}/commits/${source.grant.head}`, { method: 'GET', signal });
+            if (!remoteCommit.ok) {
+                await remoteCommit.body?.cancel();
+                throw Error('Publish and verify the reviewed branch tip before creating a storage release');
+            }
+            await remoteCommit.body?.cancel();
+            let index = 0;
+            const workers = Array.from({ length: Math.min(settings.parallel ? 3 : 1, review.paths.length) }, (_, lane) => (async () => { for (;;) {
+                if (signal.aborted)
+                    return;
+                const path = review.paths[index++];
+                if (path === undefined)
+                    return;
+                try {
+                    const pin = await pinFileToRelease(gateway, repository, account, { absoluteFilePath: join(repository.path, path), trackedRelativePath: path, releaseTag: lane === 0 ? settings.releaseTag : `${settings.releaseTag}-parallel-${lane + 1}`, targetCommitish: source.grant.head, encryptionPassword: password, retainSourceForRestore: !!retained }, signal, value => emit('uploading', path, value), undefined, stage => emit(stage, path), bytes => emit('hashing', path, { processedBytes: bytes }));
+                    if (pin.retainedSource)
+                        retained?.push({ relativePath: path, pointerText: serializeCheapLfsPointer(pin.pointer), owned: pin.retainedSource.owned, sha256: pin.retainedSource.sha256, sizeInBytes: pin.retainedSource.sizeInBytes });
+                    result.succeeded.push(path);
+                }
+                catch (error) {
+                    result.failures.push({ path, reason: safeText(error) });
+                }
+            } })());
+            await Promise.all(workers);
+            result.cancelled = signal.aborted;
+            result.requiredCommitPaths = [...result.succeeded];
+            result.message = 'Release uploads settled; successful pointers are ready for commit.';
+            return result;
+        }
+        const entries = await listAllCheapLfsPointers(repository, undefined, review.paths);
+        if (entries.length !== review.paths.length)
+            throw Error('Selected paths no longer contain valid Cheap LFS metadata');
+        if (review.task === 'remove') {
+            const entry = entries[0];
+            if (entry.kind === 'oci') {
+                const adapter = await createCheapLfsOciAdapter(this.options, repository, session, entry.provider, settings.parallel, signal);
+                const removed = await removeCheapLfsOciFile(adapter.context, entry.relativePath, adapter.dependencies, signal, value => emit(value.phase, value.currentPath, value));
+                result.succeeded = removed.removed ? [entry.relativePath] : [];
+                result.failures = removed.failures.map(file => ({ path: file.relativePath, reason: safeText(file.message) }));
+                result.requiredCommitPaths = [...removed.commitPaths, ...(removed.keyCommitPath ? [removed.keyCommitPath] : [])];
+            }
+            else {
+                const proof = await tracked.proveExisting(repository.path, entry.relativePath);
+                await tracked.revalidate(proof);
+                signal.throwIfAborted();
+                const removal = await this.options.executeGit({ root: repository.path, argv: ['rm', '--force', '--', entry.relativePath], maximumBytes: 1024 * 1024, signal });
+                if (removal.exitCode !== 0)
+                    throw Error('Reviewed local removal failed');
+                result.succeeded.push(entry.relativePath);
+            }
+            result.message = 'Reviewed local path removed; historical payloads retained.';
+            return result;
+        }
+        const releases = entries.filter((entry): entry is Extract<ICheapLfsManagedPointerEntry, {
+            kind: 'release';
+        }> => entry.kind === 'release' && entry.workingTreeState === 'pointer');
+        const cache = createCheapLfsMaterializeCache();
+        const restored = await materializeCheapLfsPointers(releases, (path, cancel, progress) => materializePointer(gateway, repository, account, path, cancel, progress, undefined, cache, password), signal, value => emit('restoring', value.currentPath, value));
+        result.succeeded.push(...restored.materialized.map(file => review.paths.find(path => join(repository.path, path) === file.path) ?? file.path));
+        result.failures.push(...restored.failures.map(file => ({ path: file.relativePath, reason: safeText(file.message) })));
+        for (const entry of entries.filter(entry => entry.kind === 'oci' && entry.workingTreeState === 'pointer')) {
+            if (signal.aborted)
+                break;
+            try {
+                const adapter = await createCheapLfsOciAdapter(this.options, repository, session, entry.provider as 'ghcr' | 'docker-hub', settings.parallel, signal);
+                await materializeCheapLfsOciFile(adapter.context, entry.relativePath, adapter.dependencies, signal, value => emit(value.phase, value.currentPath, value));
+                result.succeeded.push(entry.relativePath);
+            }
+            catch (error) {
+                result.failures.push({ path: entry.relativePath, reason: safeText(error) });
+            }
+        }
+        result.cancelled = signal.aborted;
+        result.message = `Restored ${result.succeeded.length} files; ${result.failures.length} files remain unchanged.`;
+        return result;
+    }
+    async reviewCommit(input: {
+        worktreeId: string;
+        paths: string[];
+    }): Promise<CheapLfsCommitReview> { const source = await this.source(input.worktreeId), selected = paths(input.paths); const inventory = await withCheapLfsHost(this.options, undefined, () => listAllCheapLfsPointers(source.repository, undefined, selected)); const materialized = new Set((await this.provenMaterialized(source, inventory)).map(entry => entry.relativePath)); let bytes = 0; for (const path of selected) {
+        if (materialized.has(path))
+            continue;
+        const info = await lstat(join(source.grant.root, path)).catch(() => null);
+        if (info?.isFile() && (info.size > CheapLfsPinThresholdBytes || inventory.some(entry => entry.relativePath === path && entry.workingTreeState !== 'pointer')))
+            bytes += info.size;
+    } for (const [id, plan] of this.commitReviews)
+        if (plan.expires < Date.now())
+            this.commitReviews.delete(id); if (this.commitReviews.size >= 32)
+        throw Error('Finish an existing large-file commit review'); const reviewId = randomUUID(), expires = Date.now() + 300000; this.commitReviews.set(reviewId, { source, paths: selected, expires }); return { reviewId, provider: source.settings.provider, repository: source.repository.gitHubRepository!.fullName, bytes, autoPin: source.settings.autoPin, requiresPassword: bytes > 0 && source.settings.provider === 'release' && source.settings.encrypt, paths: selected, expiresAt: new Date(expires).toISOString() }; }
+    async prepareStage(input: Parameters<CheapLfsService['prepareCommit']>[0]) { return this.prepareCommit(input); }
+    async verifyIndex(id: string) { const pending = this.commits.get(id); if (!pending)
+        throw Error('Large-file stage preparation expired'); for (const file of pending.proof.files) {
+        const staged = await this.options.executeGit({ root: pending.source.grant.root, argv: ['show', `:${file.relativePath}`], maximumBytes: 4 * 1024 * 1024 });
+        if (staged.exitCode !== 0 || createHash('sha256').update(staged.stdout).digest('hex') !== file.sha256)
+            throw Error('Staged Cheap LFS pointer or key differs from its reviewed bytes');
+    } }
+    async finishStage(id: string, staged: boolean, signal?: AbortSignal) { return this.finishCommit(id, staged, signal); }
+    async autoRestore(worktreeId: string, signal?: AbortSignal, beforeRestore?:()=>Promise<void>): Promise<CheapLfsResult | null> { const grant = await this.options.resolveWorktree(worktreeId), settings = await this.settings(grant.root); if (!settings.autoRestore)
+        return null; const provisional: Repository = { id: worktreeId, path: grant.root, accountKey: '', defaultBranch: grant.branch, buildRunPreferences: {}, gitHubRepository: null }; const entries = await withCheapLfsHost(this.options, signal, () => listAllCheapLfsPointers(provisional)); const selected = entries.filter(entry => entry.workingTreeState === 'pointer').map(entry => entry.relativePath); if (!selected.length)
+        return null; const operationId = randomUUID(), controller = new AbortController(), abort = () => controller.abort(); signal?.addEventListener('abort', abort, { once: true }); if (signal?.aborted)
+        controller.abort(); this.active.set(operationId, { worktreeId, controller }); const previous = this.queues.get(worktreeId) ?? Promise.resolve(); const task = previous.catch(() => undefined).then(() => withCheapLfsHost(this.options, controller.signal, async () => { controller.signal.throwIfAborted(); await beforeRestore?.(); controller.signal.throwIfAborted(); const source = await this.source(worktreeId, controller.signal); if (source.grant.fingerprint !== grant.fingerprint)
+        throw Error('Repository changed before automatic restore'); const password = await this.password(source, {}, false); try {
+        return await this.perform(source, { kind: 'review', reviewId: operationId, worktreeId, task: 'restore', paths: selected, provider: settings.provider, repository: source.repository.gitHubRepository!.fullName, bytes: 0, warnings: [], expiresAt: new Date().toISOString(), requiresPassword: false }, operationId, controller.signal, password ?? undefined);
+    }
+    finally {
+        password?.fill(0);
+    } })); this.queues.set(worktreeId, task); try {
+        return await task;
+    }
+    finally {
+        signal?.removeEventListener('abort', abort);
+        this.active.delete(operationId);
+        if (this.queues.get(worktreeId) === task)
+            this.queues.delete(worktreeId);
+    } }
+    async needsCommitCoordination(root: string, selected?: string[]): Promise<boolean> { const settings = await this.settings(root); let result = selected; if (!result) {
+        const listed = await this.options.executeGit({ root, argv: ['ls-files', '-z', '--cached', '--others', '--exclude-standard'], maximumBytes: 8 * 1024 * 1024 });
+        if (listed.exitCode !== 0)
+            throw Error('Cannot inspect commit coordination requirements');
+        result = listed.stdout.toString('utf8').split('\0').filter(Boolean);
+    } for (const path of new Set(result)) {
+        if (path === '.desktop-material/cheap-lfs-registry-key-v1' || path === '.desktop-material/cheap-lfs-ghcr-key-v1')
+            return true;
+        if (validateCheapLfsTrackedPath(path) !== path || isCheapLfsOwnedArtifactPath(path))
+            continue;
+        const info = await lstat(join(root, path)).catch(() => null);
+        if (!info?.isFile() || info.isSymbolicLink())
+            continue;
+        if (settings.autoPin && info.size > CheapLfsPinThresholdBytes)
+            return true;
+        if (info.size <= 1024 * 1024) {
+            const handle = await open(join(root, path), 'r');
+            try {
+                const head = Buffer.alloc(128);
+                const { bytesRead } = await handle.read(head, 0, head.length, 0);
+                const header = head.subarray(0, bytesRead).toString('utf8');
+                if (header.startsWith('version desktop-material/cheap-lfs/') || header.startsWith('version https://desktop-material.app/cheap-lfs/'))
+                    return true;
+            }
+            finally {
+                await handle.close();
+            }
+        }
+    } const repository: Repository = { id: 'local-coordination', path: root, accountKey: '', defaultBranch: '', buildRunPreferences: {}, gitHubRepository: null }; return (await withCheapLfsHost(this.options, undefined, () => listAllCheapLfsPointers(repository, undefined, result))).length > 0; }
+    async prepareCommit(input: {
+        worktreeId: string;
+        reviewId?: string;
+        paths: string[];
+        partialPaths?: string[];
+        signal?: AbortSignal;
+        password?: Buffer;
+    }): Promise<CheapLfsCommitPreparation> { const source = await this.source(input.worktreeId, input.signal); const selected = paths(input.paths), pins: ICheapLfsRetainedPin[] = []; if (input.reviewId) {
+        const reviewed = this.commitReviews.get(input.reviewId);
+        this.commitReviews.delete(input.reviewId);
+        if (reviewed)
+            await reviewed.source.session.assertCurrent();
+        if (!reviewed || reviewed.expires < Date.now() || reviewed.source.grant.fingerprint !== source.grant.fingerprint || reviewed.source.session.key !== source.session.key || JSON.stringify(reviewed.source.repository.gitHubRepository) !== JSON.stringify(source.repository.gitHubRepository) || JSON.stringify(reviewed.source.settings) !== JSON.stringify(source.settings) || JSON.stringify(reviewed.paths) !== JSON.stringify(selected))
+            throw Error('Large-file commit review changed or expired');
+    } return withCheapLfsHost(this.options, input.signal, async () => { const stored = await listAllCheapLfsPointers(source.repository, undefined, selected), unchanged = new Set<string>(), preserveIndexPaths: string[] = [], indexProofs: Array<{
+        relativePath: string;
+        sha256: string;
+    }> = []; for (const entry of await this.provenMaterialized(source, stored)) {
+        const expected = entry.kind === 'release' ? serializeCheapLfsPointer(entry.pointer) : serializeCheapLfsGhcrPointer(entry.pointer);
+        const index = await this.options.executeGit({ root: source.grant.root, argv: ['show', `:${entry.relativePath}`], maximumBytes: 4 * 1024 * 1024 });
+        if (index.exitCode !== 0 || index.stdout.toString('utf8') !== expected)
+            throw Error('Materialized payload has no exact staged pointer; pin it before committing');
+        const head = await this.options.executeGit({ root: source.grant.root, argv: ['show', `HEAD:${entry.relativePath}`], maximumBytes: 4 * 1024 * 1024 });
+        if (head.exitCode === 0 && head.stdout.equals(index.stdout))
+            unchanged.add(entry.relativePath);
+        else {
+            preserveIndexPaths.push(entry.relativePath);
+            indexProofs.push({ relativePath: entry.relativePath, sha256: createHash('sha256').update(index.stdout).digest('hex') });
+        }
+    } const candidates: string[] = []; for (const path of selected) {
+        if (unchanged.has(path) || preserveIndexPaths.includes(path))
+            continue;
+        const info = await lstat(join(source.grant.root, path)).catch(() => null);
+        if (info?.isFile() && (info.size > CheapLfsPinThresholdBytes || stored.some(entry => entry.relativePath === path && entry.workingTreeState !== 'pointer')))
+            candidates.push(path);
+    } if (candidates.some(path => input.partialPaths?.includes(path)))
+        throw Error('Partially selected large files cannot be replaced by whole-file pointers'); let result: CheapLfsResult = { kind: 'result', operationId: randomUUID(), succeeded: [], failures: [], cancelled: false, message: '', requiredCommitPaths: [] }; const password = input.password ? Buffer.from(input.password) : await this.password(source, {}, false); try {
+        if (candidates.length) {
+            if (!input.reviewId)
+                throw Error('Review the large-file upload effect before preparing this commit');
+            if (!source.settings.autoPin)
+                throw Error('Selected large or previously managed payloads require pinning. Enable automatic pinning or pin them explicitly before committing.');
+            if (source.settings.encrypt && !password) {
+                result.failures = candidates.map(path => ({ path, reason: 'Encrypted upload requires a protected saved password or an interactive password; nothing uploaded.' }));
+            }
+            else
+                result = await this.perform(source, { kind: 'review', reviewId: result.operationId, worktreeId: input.worktreeId, task: 'pin', paths: candidates, provider: source.settings.provider, repository: source.repository.gitHubRepository!.fullName, bytes: 0, warnings: [], expiresAt: new Date().toISOString(), requiresPassword: source.settings.encrypt }, result.operationId, input.signal ?? new AbortController().signal, password ?? undefined, pins);
+        }
+        if (result.cancelled)
+            throw Error('Large-file preparation was canceled; no commit may proceed');
+        const excluded = new Set([...unchanged, ...result.failures.map(file => file.path)]);
+        const commitPaths = [...new Set([...selected.filter(path => !excluded.has(path)), ...(result.requiredCommitPaths ?? [])])];
+        const required = await resolveCheapLfsCommitKeyRequirement(source.repository.path, commitPaths, source.repository.gitHubRepository!.isPrivate ? 'verified-private' : 'verified-public');
+        if (required && !commitPaths.includes(required.relativePath))
+            commitPaths.push(required.relativePath);
+        const id = randomUUID();
+        const proofPaths = [...stored.filter(entry => entry.workingTreeState === 'pointer' && commitPaths.includes(entry.relativePath)).map(entry => entry.relativePath), ...(result.requiredCommitPaths ?? []), ...(required ? [required.relativePath, ...required.boundPointerFiles.map(file => file.relativePath)] : [])];
+        const captured = await captureCheapLfsCommitProof(source.repository.path, source.grant.head, proofPaths.filter(path => !preserveIndexPaths.includes(path)));
+        const proof = { ...captured, files: [...captured.files, ...indexProofs] };
+        this.commits.set(id, { source, pins, required, proof });
+        return { id, paths: commitPaths, preserveIndexPaths, excludedPaths: [...excluded], requiredPaths: result.requiredCommitPaths ?? [], requiredKey: required, failures: result.failures };
+    }
+    catch (error) {
+        const restored=await this.settlePins(source,pins);if(restored.recovery.length)throw Error(`${safeText(error)}. Recovery copies retained: ${restored.recovery.map(file=>file.backupPath).join(', ')}`);
+        throw error;
+    }
+    finally {
+        password?.fill(0);
+    } }); }
+    async verifyCommit(id: string, commitSha: string) { const pending = this.commits.get(id); if (!pending)
+        throw Error('Cheap LFS commit preparation expired'); await verifyCheapLfsCommit(pending.source.grant.root, commitSha, pending.proof, this.options.executeGit); pending.verifiedCommit = commitSha; }
+    async finishCommit(id: string, committed: boolean, signal?: AbortSignal) {
+        const pending=this.commits.get(id);this.commits.delete(id);if(!pending)return;
+        if(committed&&pending.verifiedCommit){const annotations=pending.pins.flatMap(pin=>{const pointer=parseCheapLfsPointer(pin.pointerText);return pointer?[{relativePath:pin.relativePath,sha256:pointer.sha256,releaseTag:pointer.releaseTag,assetName:pointer.assetName,partNames:pointer.parts?.map(part=>part.name)}]:[]});await annotateCheapLfsPinnedAssets(new CheapLfsReleaseGateway(pending.source.session),pending.source.repository,annotations,pending.verifiedCommit,AbortSignal.any([...(signal?[signal]:[]),AbortSignal.timeout(30000)])).catch(()=>undefined)}
+        return this.settlePins(pending.source,pending.pins);
+    }
+    private async settlePins(source:Source,pins:ICheapLfsRetainedPin[]){
+        const result=await restoreCheapLfsPinnedPayloads(source.repository,pins),safe=new Set(result.restored),recovery:Array<{path:string;backupPath:string;size:number;sha256:string}>=[];
+        for(const pin of pins){if(safe.has(pin.relativePath))continue;const current=await tracked.proveExisting(source.grant.root,pin.relativePath).catch(()=>null);if(current?.sha256===pin.sha256&&current.sizeInBytes===pin.sizeInBytes){safe.add(pin.relativePath);continue}const retained={path:pin.relativePath,backupPath:pin.owned.path,size:pin.sizeInBytes,sha256:pin.sha256};recovery.push(retained);try{await mkdir(this.options.preferencesDirectory,{recursive:true,mode:0o700});await writeFile(join(this.options.preferencesDirectory,`${sourceHash(source.grant.root)}-recovery-${randomUUID()}.json`),JSON.stringify({version:1,root:source.grant.root,...retained}),{flag:'wx',mode:0o600})}catch{/* The precise retained path is still returned to the user. */}}
+        const cleanup=await discardCheapLfsRetainedPins(pins.filter(pin=>safe.has(pin.relativePath)));
+        return {...result,recovery,failures:[...result.failures,...cleanup,...recovery.map(file=>({relativePath:file.path,message:`Original verified bytes retained at ${file.backupPath}; the current working file was preserved.`}))]};
+    }
+    private async recoveryInventory(root:string){const prefix=sourceHash(root)+'-recovery-',recoveries:Array<{path:string;backupPath:string;size:number;sha256:string}>=[];const files=(await readdir(this.options.preferencesDirectory).catch(()=>[])).filter(name=>name.startsWith(prefix)&&name.endsWith('.json')).slice(0,256);for(const name of files){try{const file=join(this.options.preferencesDirectory,name),entry=await lstat(file);if(!entry.isFile()||entry.isSymbolicLink()||entry.size>8192)continue;const data=JSON.parse(await readFile(file,'utf8'));if(data.version!==1||data.root!==root||typeof data.path!=='string'||validateCheapLfsTrackedPath(data.path)!==data.path||typeof data.backupPath!=='string'||typeof data.sha256!=='string'||!/^[a-f0-9]{64}$/.test(data.sha256)||!Number.isSafeInteger(data.size)||data.size<0)continue;const backup=await lstat(data.backupPath);if(!backup.isFile()||backup.isSymbolicLink()||backup.nlink!==1||backup.size!==data.size||await realpath(data.backupPath)!==data.backupPath)continue;recoveries.push({path:data.path,backupPath:data.backupPath,size:data.size,sha256:data.sha256})}catch{/* Missing or unrecognized records are preserved without acting on them. */}}return recoveries}
+}

@@ -14,6 +14,10 @@ For three local text files, use the separate [native file merge guide](git-file-
 | Identify patch | `patch-id --stable` or `--verbatim` | UTF-8 Git patch, at most 200 KiB; stable or whitespace-preserving identity |
 | Normalize draft | `stripspace [--strip-comments or --comment-lines]` | UTF-8 text, at most 200 KiB; keep, remove, or add `#` comments |
 
+Reference collections and selected history commits have independent local text searches with the shared regex workbench. Single-revision choices open searchable dialogs; filtering preserves the selected revision, and enum choices remain fixed. Invalid regex patterns show an error in the workbench and produce no matching choices. Refreshing native reference records resets single-revision dialog filters without replacing selected IDs.
+
+The adjacent advertised-reference panel has a separate search explicitly scoped to the current fetched page. Moving between pages reapplies that local search; filtering itself does not contact the remote. Its native reference-name prefix remains a separate literal server-side filter. `tests/git-reference-search.test.ts` uses actual local Git reference records in Chromium to verify independent searches, selection preservation, invalid patterns, page refresh, and narrow layouts.
+
 Contributor totals cover only the selected commit window on the current page. The default window contains up to 200 commits; users may select 1 to 1000. These are not full-history contributor totals split into contributor pages. The next page is allowed while the current window has contributors; a final empty page reports no matching records.
 
 Patch equivalence uses Git's patch comparison rather than object-ID equality. A minus sign means the selected head contains a patch equivalent to a change upstream; a plus sign means Git did not find an equivalent upstream patch. Range comparison shows Git's series alignment and patch differences without changing either branch. External diff drivers and text conversion are disabled explicitly.
@@ -33,6 +37,8 @@ It emits bubbling, composed `comparison-state` events with `{busy: boolean}` for
 ## 粵語
 
 比較面板提供貢獻者統計、修補等價比較、修補系列比較、參照名稱、身份對應、修補識別碼同草稿整理。參照同提交由原生儲存庫記錄提供，使用選擇器揀選，唔接受任意指令參數。
+
+參照集合、所選歷史提交同每個版本選擇器都有獨立文字搜尋同正則表達式工作台。篩選會保留已選參照；無效模式會顯示錯誤，而且唔會顯示符合選項。遠端參照搜尋只篩選目前已讀取嘅一頁，翻頁後會重新套用；搜尋本身唔會連接遠端。
 
 貢獻者數目只計算目前頁面嘅提交範圍，預設最多 200 個提交，可設定 1 至 1000 個。修補等價比較按內容判斷，唔係比較提交識別碼。系列比較會停用外部差異工具同文字轉換。所有比較都唔會改動分支、套用修補檔或者覆寫草稿。
 

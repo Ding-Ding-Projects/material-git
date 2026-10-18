@@ -32,9 +32,9 @@ export class MaterialConverters extends LitElement{
  static styles=css`
  :host{display:block;min-width:0;color:var(--md-sys-color-on-surface);font-family:var(--md-ref-typeface-plain,system-ui,sans-serif);font-size:var(--mg-body-size,.8125rem);line-height:1.5}
  *,*::before,*::after{box-sizing:border-box}mg-layout,mg-surface,mg-text,mg-search{min-width:0;max-width:100%}mg-text,p,h2,h3,label,small{overflow-wrap:anywhere}
- md-outlined-text-field,md-outlined-select,md-filled-select{min-width:0;max-width:100%;--md-outlined-text-field-container-shape:8px;--md-outlined-select-text-field-container-shape:8px;--md-filled-select-text-field-container-shape:8px;--md-outlined-text-field-input-text-size:var(--mg-body-size,.8125rem);--md-outlined-select-text-field-input-text-size:var(--mg-body-size,.8125rem)}
- md-filled-button,md-outlined-button,md-text-button{max-width:100%;--md-filled-button-container-shape:8px;--md-outlined-button-container-shape:8px;--md-text-button-container-shape:8px;--md-filled-button-label-text-size:var(--mg-body-size,.8125rem);--md-outlined-button-label-text-size:var(--mg-body-size,.8125rem);--md-text-button-label-text-size:var(--mg-body-size,.8125rem)}
- md-dialog{max-width:calc(100vw - 32px);--md-dialog-container-shape:12px;--md-dialog-container-color:var(--md-sys-color-surface-container-high)}
+ md-outlined-text-field,md-outlined-select,md-filled-select{min-width:0;max-width:100%;}
+ md-filled-button,md-outlined-button,md-text-button{max-width:100%;}
+ md-dialog{max-width:calc(100vw - 32px);--md-dialog-container-color:var(--md-sys-color-surface-container-high)}
  ::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-track{background:var(--md-sys-color-surface-container-low)}::-webkit-scrollbar-thumb{background:var(--md-sys-color-outline-variant);border:2px solid var(--md-sys-color-surface-container-low);border-radius:8px}::-webkit-scrollbar-thumb:hover{background:var(--md-sys-color-outline)}
 mg-layout{gap:12px;padding:16px}mg-layout mg-layout{padding:0}md-outlined-select,md-outlined-text-field{width:100%}md-slider{min-width:min(100%,140px);max-width:100%;flex:1}.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.row>*{min-width:0;max-width:100%}`;
  private label(key:string){const[en,yue]=copy[key]??[key,key];return this.settings.language==='yue'?yue:this.settings.language==='both'?en+' · '+yue:en;}
