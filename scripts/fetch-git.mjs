@@ -5,7 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { prepareGitPayload, assertGitPayloadPolicy } from './git-payload-policy.mjs';
-import { runGitPostInstall, postInstallArguments } from './git-post-install.mjs';
+import { runGitPostInstall, documentedPostInstallArguments } from './git-post-install.mjs';
 
 // Digest published by the official git-for-windows/git GitHub release asset API.
 export const gitRuntime = Object.freeze({
@@ -62,13 +62,15 @@ export async function fetchGit(platform = process.platform) {
  try {
    await prepareGitPayload(stage);
    // The pinned official README requires post-install after manual extraction.
-   // Inspect scripts first, then run the official launcher in this owned stage.
-   // The official batch script deletes itself when successful.
+   // Inspect the pinned official script before running it in this owned stage.
+   // Its cleanup removes the source name, so the helper uses a byte-for-byte
+   // wrapper and a stage-only PATH to keep Windows setup out of other Git installs.
    const postFile=path.join(stage,'post-install.bat'), postDetails=await stat(postFile);
    if (!postDetails.isFile() || postDetails.size>128*1024) throw new Error('PortableGit post-install program must be a bounded regular file');
    const postScript=(await readFile(postFile,'utf8')).replace(/\r\n/g,'\n');
    if (digest(postScript)!==gitRuntime.postInstallSha256) throw new Error('PortableGit post-install program does not match its pinned official source');
-   if (!postScript.includes(`git-bash.exe ${postInstallArguments.join(' ')}`)) throw new Error('PortableGit launcher invocation differs from its reviewed official instructions');
+   if (!postScript.includes(`git-bash.exe ${documentedPostInstallArguments.join(' ')}`)) throw new Error('PortableGit launcher invocation differs from its reviewed official instructions');
+   if (!postScript.includes('@DEL post-install.bat')) throw new Error('PortableGit post-install cleanup differs from its reviewed upstream batch');
    const postEnvironment={...process.env,GIT_CONFIG_GLOBAL:path.join(stage,'.verification-empty-global'),GIT_CONFIG_COUNT:'0',GIT_TERMINAL_PROMPT:'0'};
    for(const key of Object.keys(postEnvironment))if(/^(?:GIT_EXEC_PATH$|GIT_DIR$|GIT_WORK_TREE$|GIT_CONFIG_PARAMETERS$|GIT_CONFIG_KEY_|GIT_CONFIG_VALUE_)/.test(key))delete postEnvironment[key];
    runGitPostInstall(stage, postEnvironment);
