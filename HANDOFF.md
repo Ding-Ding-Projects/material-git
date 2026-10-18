@@ -1,12 +1,22 @@
 # Handoff
 
+## October 18 closeout addendum
+
+Immediately before this addendum, the verified `main` ref was `b28a76a18ddf8f9da12e38a1b572af2914048836`. The incomplete documentation ref `ai/feature/20261018-public-docs-delivery` remains present on GitHub at `b2c98be1dbd00d842a33002d455d7221560ff53d`; its three commits are not ancestors of `main`, so it remains separate and retained. The reviewed design change `b2869ea9a822921f76f509f4a0fd8fc49f83f4df` is an ancestor of `main`. After archive verification, its inactive task-owned ref was removed and read back absent. No other ref was removed. The three recovery refs `codex/build-repair`, `codex/material-design-controls`, and `codex/repository-tools` remain retained. The primary and linked checkouts were clean before archive creation; no stash was present.
+
+A private 7-Zip archive was created and read back before removal. Its integrity test passed. It contains all 1,773 expected tracked and nonignored file paths across the primary and linked checkouts, plus all 107 files in the primary administrative directory. It is 19,404,160 bytes. The 48,728 ignored paths were excluded. The archive's local destination and digest are retained in the private closeout record.
+
+The main-triggered run `39116302608` completed successfully from `b28a76a18ddf8f9da12e38a1b572af2914048836`. It published normal release `build-48-1`, Material Git 0.48.1, with `MaterialGit-0.48.1-full.nupkg`, `RELEASES`, `Setup.exe`, and `SHA256SUMS`. The release is not a draft or prerelease. GitHub reports `isImmutable: false`; this closeout does not change release settings. The installed application remains at the previously verified 0.16.1.
+
+An earlier filename remains in public commit history. No history rewrite was performed, so the historical naming concern remains open. Keep issue #3 open while the Pages endpoint, Wiki content, current application captures, and exact About homepage readback remain incomplete.
+
 ## October 18 closeout state
 
 The closeout commit on `main` includes the reviewed design handoff from `b2869ea9a822921f76f509f4a0fd8fc49f83f4df` under the neutral path `design/public-documentation-reference.md`. It does not integrate the unfinished public documentation source. The current task ref is `ai/feature/20261018-public-docs-delivery` at `b2c98be1dbd00d842a33002d455d7221560ff53d`; its documented builder checks remain bound to source `a958012f252944709b6222fa9c3f37fe9e563a16`.
 
 At the task source, the local static builder, `npm run check`, `site/build.test.mjs` (5/5), and `site/document-links.test.mjs` (2/2) passed. The build produced 291 documentation articles, zero Wiki articles, and 21 historical captures. Its receipt reports `currentCaptureSource: null`, `currentCaptureCount: 0`, `historicalCaptureCount: 21`, and `wikiStatus: unavailable`. These results cover local source and build behavior only.
 
-GitHub Pages is not configured; the Pages endpoint returned HTTP 404, and the repository `homepageUrl` remains empty. The Wiki is enabled, but its Git source has not been initialized; no Wiki content is included. There is no verified current application capture. The latest verified release remains 0.44.1 from `e1fc51556f064add017578e7f42bf3a8f95a26ce`; Windows run `39103223620` succeeded on a task ref but did not publish a release. The installed application remains 0.16.1. The supported updater launch was rejected by host policy before process start, and no installation files changed.
+GitHub Pages is not configured; the Pages endpoint returned HTTP 404, and the repository `homepageUrl` remains empty. The Wiki is enabled, but its Git source has not been initialized; no Wiki content is included. There is no verified current application capture. The latest verified release is now `build-48-1` from `b28a76a18ddf8f9da12e38a1b572af2914048836`. The installed application remains at the previously verified 0.16.1. The supported updater launch for the earlier accepted release was rejected by host policy before process start, and no installation files changed.
 
 The incomplete task ref remains retained. This handoff does not claim a live site, full content acceptance, application evidence, or release update. Do not add a README URL until a live home page has been verified. Keep issue #3 open while Pages, Wiki content, current captures, and exact About-field readback remain incomplete.
 
