@@ -2,7 +2,7 @@
 
 Material Git's website is the desktop product's landing page, documentation library, screenshot gallery, release history, and downloads guide. GitHub operations run in the desktop application. The website does not embed the application runtime, authenticate GitHub accounts, invoke commands, or represent catalog records as verified desktop workflows.
 
-The existing hosted address is <https://material-git.earlyray.chatgpt.site>. Hosting retains its existing owner-private audience. A source change or passing local check does not establish that the new source has been deployed. Native deployment and repository About metadata verification are separate steps.
+The public deployment target is <https://ding-ding-projects.github.io/material-git/>. Deployment remains unverified until the live home page, bundled assets, and repository About homepage value are read back from GitHub Pages. Source changes and local builds do not establish publication. An older owner-private hosting destination is not a public delivery route.
 
 ## Recorded Windows release checkpoint
 

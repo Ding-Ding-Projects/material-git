@@ -4,7 +4,7 @@ export function validateDocumentationBundle(sourceFiles,articles){
  const expected=new Set(sourceFiles);
  if(expected.size!==sourceFiles.length||articles.length!==expected.size)throw Error('Documentation count differs from source files');
  const actual=new Set();
- for(const article of articles){if(!article||typeof article.source!=='string'||!expected.has(article.source)||actual.has(article.source)||typeof article.title!=='string'||!article.title.trim()||typeof article.body!=='string'||!article.body.trim()||typeof article.html!=='string'||!article.html.trim()||article.id!==article.source.slice(5,-3))throw Error('Documentation article identity, body, title or rendered content is missing');actual.add(article.source)}
+ for(const article of articles){const expectedId=article?.source?.startsWith('docs/')?article.source.slice(5,-3):article?.source?.startsWith('wiki/')?article.source.slice(0,-3):'';if(!article||typeof article.source!=='string'||!expected.has(article.source)||actual.has(article.source)||typeof article.title!=='string'||!article.title.trim()||typeof article.body!=='string'||!article.body.trim()||typeof article.html!=='string'||!article.html.trim()||article.id!==expectedId)throw Error('Documentation article identity, body, title or rendered content is missing');actual.add(article.source)}
  for(const source of expected)if(!actual.has(source))throw Error('Source article is absent from bundle');
  return true;
 }

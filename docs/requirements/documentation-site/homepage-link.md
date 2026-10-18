@@ -14,7 +14,7 @@ This is a scoped implementation assessment, not a claim that the whole requireme
 
 ## Controls, defaults and limits
 
-The exact desired homepage is `https://material-git.earlyray.chatgpt.site`. The README link is present; the connected credential's repository About PATCH returned `HTTP 403`. No source edit changes that permission result or the site's owner-private audience.
+The required public homepage is `https://ding-ding-projects.github.io/material-git/`. GitHub Pages is not configured yet and the repository `homepageUrl` is empty. Verify the live home page, its required assets, the deployment source, and the exact About homepage readback before closing this requirement. An older owner-private hosting destination does not satisfy the public homepage requirement.
 
 ## Failures and remaining work
 

@@ -1,7 +1,8 @@
-export interface Article {id:string;title:string;category:string;source:string;body:string;html:string}
+export interface Article {id:string;title:string;category:string;source:string;sourceUrl?:string;body:string;html:string}
 export interface Capture {file:string;title:string;titleYue:string;description:string;descriptionYue:string;screen:string;sourceCommit:string;capturedAt:string}
 export const categories=[['Getting started','開始使用'],['Workflows','工作流程'],['Personalization','個人化'],['Security','安全'],['Reference','參考'],['Development','開發']] as const;
 export function categoryFor(file:string):string{
+ if(file.startsWith('wiki/'))return 'Wiki';
  if(/auth|security/.test(file))return 'Security';
  if(/personal|regex|ollama|converter|scroll/.test(file))return 'Personalization';
  if(/build|verif|coverage/.test(file))return 'Development';

@@ -14,7 +14,7 @@ README 已連結精確網站網址；About homepage PATCH 因目前認證缺少�
 
 ## 控制項、預設值同限制
 
-所需精確首頁係 `https://material-git.earlyray.chatgpt.site`。README 已有連結；目前認證執行儲存庫 About PATCH 回覆 `HTTP 403`。改原始碼唔會改遠端權限，亦唔會改網站只供擁有者嘅可見範圍。
+公開首頁必須使用 `https://ding-ding-projects.github.io/material-git/`。GitHub Pages 仲未設定，儲存庫 `homepageUrl` 亦係空白。完成之前，要讀返實際首頁、必要檔案、部署來源，同儲存庫 About 入面完全一致嘅首頁網址。舊嘅擁有者私人託管目的地唔符合公開首頁要求。
 
 ## 失敗情況同剩餘工作
 

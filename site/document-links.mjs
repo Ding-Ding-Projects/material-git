@@ -2,8 +2,9 @@ import path from 'node:path';
 import {Marked} from 'marked';
 
 const repository='https://github.com/Ding-Ding-Projects/material-git';
+function articleId(source){return source.startsWith('docs/')?source.slice(5,-3):source.slice(0,-3)}
 export function documentationRoute(source,section=''){
- return '#docs/'+encodeURIComponent(source.slice(5,-3))+(section?'?section='+encodeURIComponent(section):'');
+ return '#docs/'+encodeURIComponent(articleId(source))+(section?'?section='+encodeURIComponent(section):'');
 }
 export function renderArticle(body,source,sources){
  const ids=new Map();
