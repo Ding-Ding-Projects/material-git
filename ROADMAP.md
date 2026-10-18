@@ -1,6 +1,6 @@
 # Roadmap
 
-Current state: the user requested a preservation stop after resumed repository and build workflow implementation. Stop new implementation and retain source and evidence. The reported oversized/overlapping controls remain an open defect with no verified fix; reproduce that report first when work is authorized again. The inventory retains 104 requirements and 161 unresolved surface obligations. The first integrated full suite had ten failures; focused follow-ups do not establish full acceptance. Final matrix, Windows installation, authenticated provider behavior and site publication remain unverified. See [HANDOFF.md](HANDOFF.md) for the preserved source and evidence.
+Current state: the October 18 closeout includes the reviewed design handoff at `b2869ea` under a neutral filename and preserves the unfinished public documentation source at task source `a958012`. Local builder and focused source checks passed at that task source. The public documentation delivery remains incomplete: GitHub Pages is unconfigured, `homepageUrl` is empty, the Wiki source is uninitialized, and current application captures are absent. No live deployment, full-site interaction acceptance, or application update is claimed. Preserve the existing 104-row inventory with its 161 unresolved surface obligations. See [HANDOFF.md](HANDOFF.md) for exact evidence and next steps.
 
 Check a feature only after actual behavior, meaningful verification and a current capture where visible. All open canonical scope remains below.
 
@@ -104,13 +104,13 @@ The [current acceptance record](docs/local-verification.md#current-integration-a
 
 ## documentation-site
 
-- [ ] [A Material Design 3 GitHub Pages carrying every feature](docs/requirements/documentation-site/landing-site.md) — site: unknown. Implement visitor-owned equivalents for every applicable feature, local assets/settings/docs and truthful documented version; verify deployment separately.
-- [ ] [A mobile-friendly GitHub Pages](docs/requirements/documentation-site/responsive-documentation-site.md) — site: unknown. Verify320px-upward layout, internal overflow, touch paths and overlays with virtual keyboard raised.
+- [ ] [A Material Design 3 GitHub Pages carrying every feature](docs/requirements/documentation-site/landing-site.md) — site: partial. The local builder and source checks passed at task source `a958012`; visitor-owned feature coverage and live acceptance remain unverified.
+- [ ] [A mobile-friendly GitHub Pages](docs/requirements/documentation-site/responsive-documentation-site.md) — site: unverified. No deployed responsive, keyboard, touch, or narrow-layout capture was produced.
 - [ ] [Verified installer download on Home](docs/requirements/documentation-site/installer-download-button.md) — site: unknown. Show only immutable validated release asset with version/platform after release manifest verification.
-- [ ] [One detailed article per feature on the GitHub Pages](docs/requirements/documentation-site/feature-articles.md) — site: unknown. Verify each article appears on site with behavior/configuration/failures/privacy/checks and suggested links.
+- [ ] [One detailed article per feature on the GitHub Pages](docs/requirements/documentation-site/feature-articles.md) — site: partial. The local build included 291 documentation articles and zero Wiki articles; live completeness and every feature's full article remain unverified.
 - [ ] [Complete, scripted font vendoring](docs/requirements/documentation-site/vendored-fonts.md) — app: partial, site: unknown, repository: partial. Verify all returned weight/subset files, checksums and actual document.fonts/computed font in each built surface.
 - [ ] [A real picture when a link is pasted into Discord](docs/requirements/documentation-site/shared-link-embed.md) — site: unknown, repository: partial. Generate from real product screenshot, verify served metadata/image bytes anonymously and record manual repository-preview upload state.
-- [ ] [The GitHub Pages linked from the repository](docs/requirements/documentation-site/homepage-link.md) — site: blocked, repository: blocked. Release owner must resolve authorized permission and verify About URL; site owner-private audience remains unchanged.
+- [ ] [The GitHub Pages linked from the repository](docs/requirements/documentation-site/homepage-link.md) — site: blocked, repository: blocked. The Pages endpoint returned HTTP 404 and `homepageUrl` is empty; no live URL is available for the README or About field.
 - [ ] [private vocabulary only after authentication](docs/requirements/documentation-site/vocabulary-unlock-boundary.md) — app: partial, site: unknown. Scan all public pre-auth HTML/metadata/errors/assets and prevent private values in history/prompts/network/captures.
 
 ## status
@@ -152,9 +152,9 @@ The [current acceptance record](docs/local-verification.md#current-integration-a
 - [ ] [`ROADMAP.md` checklist](docs/requirements/repository/roadmap-checklist.md) — repository: partial. Only check items when implemented/verified/captured; preserve dropped scope with an explicit reason.
 - [ ] [One Markdown file per feature](docs/requirements/repository/feature-docs.md) — repository: partial. Validate every feature article, Cantonese twin, index/link and factual configuration/failure/privacy/check sections.
 - [ ] [Postman collections for HTTP APIs](docs/requirements/repository/postman-collections.md) — repository: partial. Provide token-free collections for actual endpoints and environments with documented permission/effect boundaries; no remote mutation during audit.
-- [ ] [Wiki and GitHub Pages source kept current](docs/requirements/repository/wiki-and-site-sync.md) — site: unknown, repository: partial. Verify published wiki/site independently and prevent publication loops; preserve owner-private site audience.
-- [ ] [`HANDOFF.md` and the GitHub handoff section](docs/requirements/repository/handoff-record.md) — repository: partial. Release owner posts only authorized record with commit/checks/blockers/next owner and proves remote state.
-- [ ] [pushed `CLOSEOUT_PROMPT.md`](docs/requirements/repository/closeout-prompt.md) — repository: partial. Root publishing owner pushes the approved checkpoint and verifies remote ref; absence of push proof remains open.
+- [ ] [Wiki and GitHub Pages source kept current](docs/requirements/repository/wiki-and-site-sync.md) — site: blocked, repository: partial. The Wiki is enabled but its Git source is uninitialized; the local build therefore contains zero Wiki articles and no live site exists to verify.
+- [ ] [`HANDOFF.md` and the GitHub handoff section](docs/requirements/repository/handoff-record.md) — repository: partial. The local handoff now records exact build checks and remaining publication blockers; the issue #3 closeout comment and remote-ref readback remain pending.
+- [ ] [pushed `CLOSEOUT_PROMPT.md`](docs/requirements/repository/closeout-prompt.md) — repository: partial. The closeout prompt records the current safe source; final commit and remote-ref readback are pending.
 - [ ] [Discussions as the running record](docs/requirements/repository/discussion-records.md) — repository: partial. Authorized publishing owner records actual milestones/artifacts and only replaces provably agent-managed pins.
 - [ ] [GitHub Project linked to the repository](docs/requirements/repository/project-board.md) — repository: partial. Authorized owner verifies repository link and item; Done requires completed evidence and remote ref.
 - [ ] [repository operational skill](docs/requirements/repository/operational-skill.md) — repository: partial. Create/validate the actual canonical skill with real UI/capture/release/recovery routes and sanitize any local mirror.

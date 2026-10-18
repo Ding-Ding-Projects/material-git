@@ -1,5 +1,15 @@
 # Handoff
 
+## October 18 closeout state
+
+The closeout commit on `main` includes the reviewed design handoff from `b2869ea9a822921f76f509f4a0fd8fc49f83f4df` under the neutral path `design/public-documentation-reference.md`. It does not integrate the unfinished public documentation source. That source remains preserved at `a958012f252944709b6222fa9c3f37fe9e563a16` on `ai/feature/20261018-public-docs-delivery`.
+
+At the task source, the local static builder, `npm run check`, `site/build.test.mjs` (5/5), and `site/document-links.test.mjs` (2/2) passed. The build produced 291 documentation articles, zero Wiki articles, and 21 historical captures. Its receipt reports `currentCaptureSource: null`, `currentCaptureCount: 0`, `historicalCaptureCount: 21`, and `wikiStatus: unavailable`. These results cover local source and build behavior only.
+
+GitHub Pages is not configured; the Pages endpoint returned HTTP 404, and the repository `homepageUrl` remains empty. The Wiki is enabled, but its Git source has not been initialized; no Wiki content is included. There is no verified current application capture. The latest verified release remains 0.44.1 from `e1fc51556f064add017578e7f42bf3a8f95a26ce`; Windows run `39103223620` succeeded on a task ref but did not publish a release. The installed application remains 0.16.1. The supported updater launch was rejected by host policy before process start, and no installation files changed.
+
+The incomplete task ref remains retained. This handoff does not claim a live site, full content acceptance, application evidence, or release update. Do not add a README URL until a live home page has been verified. Keep issue #3 open while Pages, Wiki content, current captures, and exact About-field readback remain incomplete.
+
 Material Git remains an incomplete Git/GitHub desktop with a separate documentation site. The user requested an immediate preservation stop after resumed implementation. Stop new feature and GUI work, retain source and evidence, and perform only the authorized preservation closeout. No final full-suite, matrix or product acceptance is established.
 
 ## Open interface issue and next authorized work
